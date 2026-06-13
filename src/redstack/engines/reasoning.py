@@ -1,4 +1,12 @@
-"""REDSTACK Engines Layer — Factual explanation builders over top-K records without model calls."""
-from typing import Protocol
+"""ReasoningEngine — evidence-grounded, template-free, no-LLM/no-network clause assembly over top-K.
 
-__all__ = ["ReasoningEngine"]
+Owner layer: engines.
+Allowed imports: domain, ports (injected), features, config.schema.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "ReasoningEngine",
+)

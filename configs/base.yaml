@@ -1,0 +1,29 @@
+# Layer 0 — shared defaults for every run (online and offline).
+# Runtime/IO only: this file never carries scoring weights, anchors, or gates.
+# Later layers (runtime/<mode>.yaml, profiles/<profile>.yaml) deep-merge over it.
+schema_version: "1.1"
+
+determinism:
+  seed: 20240601
+  omp_num_threads: 1
+  mkl_num_threads: 1
+  onnx_intra_op_threads: 1
+  onnx_inter_op_threads: 1
+
+budget:
+  max_wall_seconds: 300.0      # disqualifying ceiling (spec: <= 5 min)
+  target_wall_seconds: 130.0   # internal regression alarm
+  max_rss_mb: 16384            # 16 GB ceiling
+
+paths:
+  artifacts_root: artifacts
+  data_root: data
+  candidates_path: data/raw/candidates.jsonl
+  golden_labels_path: data/golden/golden_labels.csv
+  manifest_path: artifacts/MANIFEST.json
+  submission_path: submission.csv
+  run_report_path: run_report.json
+
+logging:
+  level: INFO
+  deterministic: true

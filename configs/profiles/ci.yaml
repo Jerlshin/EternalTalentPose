@@ -1,0 +1,7 @@
+# Layer 2 (ci) — smallest-footprint overrides for the CI sample.
+logging:
+  level: WARNING
+offline:
+  search_budget: 64
+  embedding_batch_size: 32
+  feature_batch_size: 256

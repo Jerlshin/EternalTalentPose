@@ -1,4 +1,12 @@
-"""REDSTACK Engines Layer — Anomaly parsing and target honeypot risk analyzers."""
-from typing import Protocol
+"""IntegrityEngine — honeypot detection (O3 rules) + risk aggregation.
 
-__all__ = ["IntegrityEngine"]
+Owner layer: engines.
+Allowed imports: domain, ports (injected), features, config.schema.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "IntegrityEngine",
+)

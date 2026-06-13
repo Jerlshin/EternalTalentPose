@@ -1,5 +1,12 @@
-"""REDSTACK Interface Layer — Core Typer entry-point instance bindings."""
-import typer
+"""The Typer application object; wires the three verbs; global options (--config, --profile, --verbose).
 
-__all__ = ["cli_entrypoint"]
-cli_entrypoint = typer.Typer()
+Owner layer: cli.
+Allowed imports: typer, pipelines, config, observability.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "app",
+)

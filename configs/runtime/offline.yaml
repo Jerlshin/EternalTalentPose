@@ -1,0 +1,12 @@
+# Layer 1 (offline) — O0..O18 build parameters.
+determinism:
+  seed: 20240601
+
+offline:
+  seed: 20240601
+  st_model_id: "sentence-transformers/all-MiniLM-L6-v2"
+  st_model_revision: "fa97f6e7cb1a59073dff9e6b13e2715cf7475ac9"  # pinned
+  kmeans_k: 24
+  search_budget: 2000
+  embedding_batch_size: 256
+  feature_batch_size: 4096

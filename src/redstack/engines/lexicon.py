@@ -1,4 +1,12 @@
-"""REDSTACK Engines Layer — Word graph mining and terminology dictionary lookups."""
-from typing import Protocol
+"""LexiconEngine — compiled-lexicon symbolic matching; anti keyword-stuffing corroboration.
 
-__all__ = ["LexiconEngine"]
+Owner layer: engines.
+Allowed imports: domain, ports (injected), features, config.schema.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "LexiconEngine",
+)

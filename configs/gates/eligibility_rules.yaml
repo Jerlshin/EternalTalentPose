@@ -1,0 +1,15 @@
+# O6 eligibility SEED — JD hard disqualifiers + soft penalties, keyed by code.
+# Codes are cross-checked against domain.EligibilityCode when O6 packages this
+# into artifacts/gates/eligibility_rules.yaml. Hard blocks carry no penalty.
+hard_blocks:
+  - code: NO_MIN_EXPERIENCE
+    description: "Total relevant experience below the JD minimum threshold."
+  - code: LOCATION_INELIGIBLE
+    description: "Not located in, and unwilling to relocate to, any JD hub."
+soft_penalties:
+  - code: NOTICE_TOO_LONG
+    description: "Notice period exceeds the preferred onboarding window."
+    penalty: 0.15
+  - code: SALARY_OUT_OF_BAND
+    description: "Expected compensation materially above the role band."
+    penalty: 0.10

@@ -1,0 +1,13 @@
+# Mirrors the portal submission metadata (spec 10.3). Filled pre-submission.
+team: {}
+github_repo: ""
+sandbox_link: ""
+reproduce_command: "uv run redstack rank --candidates data/raw/candidates.jsonl --out submission.csv"
+compute:
+  cpu_only: true
+  network: false
+  max_ram_gb: 16
+  max_wall_minutes: 5
+ai_tools_declaration: ""
+methodology_summary: ""
+declarations: {}

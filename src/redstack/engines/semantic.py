@@ -1,4 +1,12 @@
-"""REDSTACK Engines Layer — Retrieval lookup matrix functions and archetype distance matches."""
-from typing import Protocol
+"""SemanticEngine (Retrieval) — anchor cosine + nearest-centroid; lookup-first, encode-fallback. The only port-dependent engine.
 
-__all__ = ["SemanticEngine"]
+Owner layer: engines.
+Allowed imports: domain, ports (injected), features, config.schema.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "SemanticEngine",
+)

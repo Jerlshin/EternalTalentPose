@@ -1,0 +1,366 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+# ============================================================================
+# Project metadata
+# ============================================================================
+[project]
+name = "redstack"
+version = "1.1.0"
+description = "REDSTACK — Redrob Evidence-Driven Symbolic + Semantic Ranker"
+readme = "README.md"
+requires-python = "==3.12.*"
+license = { text = "Proprietary" }
+authors = [{ name = "REDSTACK" }]
+
+# --- core: the online hot path. CPU-only, network-isolated, <=16GB RAM. ----
+# Nothing here may transitively pull a training runtime or a socket library.
+dependencies = [
+  "pydantic>=2.7,<3",
+  "numpy>=1.26,<2.2",
+  "pyarrow>=16,<18",
+  "onnxruntime>=1.18,<2",
+  "typer>=0.12,<1",
+  "pyyaml>=6,<7",
+]
+
+[project.scripts]
+redstack = "redstack.cli.app:app"
+
+# ============================================================================
+# Dependency groups (PEP 735). `uv sync --group <name>` installs a group.
+#   core    : runtime hot path (mirrors [project].dependencies; kept thin)
+#   offline : heavy authoring-time ML — NEVER reachable from pipelines.online
+#   dev     : lint / type / test / boundary tooling
+# Future deps: add to the appropriate group; never widen `core` casually.
+# ============================================================================
+[dependency-groups]
+core = [
+  "pydantic>=2.7,<3",
+  "numpy>=1.26,<2.2",
+  "pyarrow>=16,<18",
+  "onnxruntime>=1.18,<2",
+  "typer>=0.12,<1",
+  "pyyaml>=6,<7",
+]
+offline = [
+  "sentence-transformers>=3,<4",
+  "scikit-learn>=1.5,<2",
+  "torch>=2.2,<3",
+]
+dev = [
+  "ruff>=0.6,<1",
+  "mypy>=1.11,<2",
+  "import-linter>=2.1,<3",
+  "pytest>=8.2,<9",
+  "pytest-cov>=5,<6",
+  "coverage>=7.6,<8",
+  "hypothesis>=6.108,<7",
+  "pre-commit>=3.8,<4",
+  "types-PyYAML>=6,<7",
+]
+
+# ============================================================================
+# uv configuration
+# ----------------------------------------------------------------------------
+# uv.lock strategy: a single fully-resolved, committed lockfile pins the
+# ENTIRE graph (core + offline + dev) so the Stage-3 sandbox resolves byte
+# -identically to the build host. Regenerate ONLY via an explicit dep bump:
+#     uv lock                 # re-resolve after editing groups above
+#     uv sync --frozen        # CI / sandbox: install exactly from uv.lock, no re-resolve
+# The sandbox install path is `uv sync --frozen --group core` (hot path only);
+# offline artifact builds use `--group core --group offline`; CI uses all three.
+# `--frozen` guarantees the lock is authoritative — a drifted lock fails fast.
+# ============================================================================
+[tool.uv]
+default-groups = ["core", "dev"]
+package = true
+
+# ============================================================================
+# Ruff — lint + format
+# ============================================================================
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",      # pycodestyle + pyflakes
+  "I",                # isort
+  "N",                # pep8-naming
+  "UP",               # pyupgrade
+  "B",                # bugbear
+  "A",                # builtins shadowing
+  "C4",               # comprehensions
+  "SIM",              # simplify
+  "TID",              # tidy imports (banned-api / relative-import bans)
+  "PTH",              # prefer pathlib
+  "RUF",              # ruff-specific
+  "ANN",              # require annotations (mypy --strict companion)
+]
+ignore = [
+  "ANN401",           # allow narrowed Any only where explicitly justified
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN", "S101"]
+"__init__.py" = ["F401"]   # curated re-exports
+
+[tool.ruff.lint.isort]
+known-first-party = ["redstack"]
+
+[tool.ruff.format]
+quote-style = "double"
+line-ending = "lf"
+
+# ============================================================================
+# MyPy — strict, zero un-narrowed Any
+# ============================================================================
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_unimported = true
+disallow_any_explicit = false
+disallow_any_generics = true
+disallow_untyped_decorators = true
+no_implicit_reexport = true
+extra_checks = true
+plugins = ["pydantic.mypy"]
+mypy_path = "src"
+packages = ["redstack"]
+
+[[tool.mypy.overrides]]
+module = ["onnxruntime.*", "sentence_transformers.*", "sklearn.*", "torch.*"]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# ============================================================================
+# Pytest
+# ============================================================================
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "unit: pure, fast, no IO",
+  "property: hypothesis-driven invariants",
+  "contract: shared port suite against adapter + fake",
+  "golden: snapshot/byte-stability",
+  "integration: full pipeline end-to-end on sample",
+  "determinism: byte-identical / thread-invariant",
+]
+filterwarnings = ["error"]
+
+# ============================================================================
+# Coverage
+# ============================================================================
+[tool.coverage.run]
+branch = true
+source = ["redstack"]
+parallel = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@(abc\\.)?abstractmethod",
+  "\\.\\.\\.",
+]
+
+# ============================================================================
+# Import Linter — the eight architecture boundary contracts (§17).
+# A violated arrow is a BUILD BREAK. Run in CI and pre-commit via `lint-imports`.
+# ============================================================================
+[tool.importlinter]
+root_packages = ["redstack"]
+include_external_packages = true
+
+# (1) Layered contract: domain < ports < features < engines < pipelines < cli.
+[[tool.importlinter.contracts]]
+name = "1. Layered architecture (no upward imports)"
+type = "layers"
+layers = [
+  "redstack.cli",
+  "redstack.pipelines",
+  "redstack.engines",
+  "redstack.features",
+  "redstack.ports",
+  "redstack.domain",
+]
+
+# (2) Domain purity: domain imports only stdlib + pydantic + numpy.
+[[tool.importlinter.contracts]]
+name = "2. Domain purity"
+type = "forbidden"
+source_modules = ["redstack.domain"]
+forbidden_modules = [
+  "redstack.ports",
+  "redstack.features",
+  "redstack.engines",
+  "redstack.adapters",
+  "redstack.pipelines",
+  "redstack.config.loader",
+  "redstack.observability",
+  "redstack.cli",
+  "onnxruntime",
+  "sentence_transformers",
+  "sklearn",
+  "pandas",
+  "pyarrow",
+  "torch",
+  "yaml",
+  "requests",
+  "httpx",
+  "urllib3",
+  "socket",
+]
+
+# (3) Ports isolation: ports import only domain (+ stdlib typing / numpy typing).
+[[tool.importlinter.contracts]]
+name = "3. Ports isolation"
+type = "forbidden"
+source_modules = ["redstack.ports"]
+forbidden_modules = [
+  "redstack.features",
+  "redstack.engines",
+  "redstack.adapters",
+  "redstack.pipelines",
+  "redstack.config",
+  "redstack.observability",
+  "redstack.cli",
+]
+
+# (4) Feature isolation: features import domain + config.schema only.
+[[tool.importlinter.contracts]]
+name = "4. Feature isolation"
+type = "forbidden"
+source_modules = ["redstack.features"]
+forbidden_modules = [
+  "redstack.ports",
+  "redstack.engines",
+  "redstack.adapters",
+  "redstack.pipelines",
+  "redstack.observability",
+  "redstack.cli",
+  "redstack.config.loader",
+  "onnxruntime",
+  "sentence_transformers",
+  "sklearn",
+  "torch",
+  "requests",
+  "httpx",
+  "urllib3",
+  "socket",
+]
+
+# (5) Engine isolation: pure; no adapters/pipelines/observability/loader/ML/net;
+#     engines never import each other (enforced as independence below).
+[[tool.importlinter.contracts]]
+name = "5. Engine purity (no infra / ML / network)"
+type = "forbidden"
+source_modules = ["redstack.engines"]
+forbidden_modules = [
+  "redstack.adapters",
+  "redstack.pipelines",
+  "redstack.observability",
+  "redstack.config.loader",
+  "redstack.cli",
+  "onnxruntime",
+  "sentence_transformers",
+  "sklearn",
+  "torch",
+  "requests",
+  "httpx",
+  "urllib3",
+  "socket",
+]
+
+[[tool.importlinter.contracts]]
+name = "5b. Engines are independent (the graph is a forest)"
+type = "independence"
+modules = [
+  "redstack.engines.integrity",
+  "redstack.engines.eligibility",
+  "redstack.engines.lexicon",
+  "redstack.engines.semantic",
+  "redstack.engines.cqv",
+  "redstack.engines.behavioral",
+  "redstack.engines.logistics",
+  "redstack.engines.scoring",
+  "redstack.engines.ranking",
+  "redstack.engines.reasoning",
+  "redstack.engines.validation",
+]
+
+# (6) Adapter isolation: adapters never import engines or pipelines.
+[[tool.importlinter.contracts]]
+name = "6. Adapter isolation"
+type = "forbidden"
+source_modules = ["redstack.adapters"]
+forbidden_modules = [
+  "redstack.engines",
+  "redstack.pipelines",
+  "redstack.cli",
+]
+
+# (7) Online containment: pipelines.online subgraph bans ML + network.
+[[tool.importlinter.contracts]]
+name = "7. Online pipeline containment (no ML / no network)"
+type = "forbidden"
+source_modules = ["redstack.pipelines.online"]
+forbidden_modules = [
+  "sentence_transformers",
+  "sklearn",
+  "torch",
+  "redstack.adapters.st_embedder",
+  "requests",
+  "httpx",
+  "urllib3",
+  "socket",
+]
+
+# (8) Config split + composition-root-only adapter usage.
+#     config.loader (IO) importable only by pipelines/cli;
+#     only pipelines import adapters.
+[[tool.importlinter.contracts]]
+name = "8a. Config loader IO is reachable only from pipelines/cli"
+type = "forbidden"
+source_modules = [
+  "redstack.domain",
+  "redstack.ports",
+  "redstack.features",
+  "redstack.engines",
+  "redstack.adapters",
+  "redstack.observability",
+]
+forbidden_modules = ["redstack.config.loader"]
+
+[[tool.importlinter.contracts]]
+name = "8b. Adapters are instantiated only at the composition root (pipelines)"
+type = "forbidden"
+source_modules = [
+  "redstack.domain",
+  "redstack.ports",
+  "redstack.features",
+  "redstack.engines",
+  "redstack.observability",
+  "redstack.cli",
+]
+forbidden_modules = ["redstack.adapters"]
+
+[[tool.importlinter.contracts]]
+name = "8c. Ports/observability mutual independence"
+type = "independence"
+modules = ["redstack.ports", "redstack.observability"]

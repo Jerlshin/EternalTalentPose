@@ -1,4 +1,12 @@
-"""REDSTACK Engines Layer — Quality array vector assemblers."""
-from typing import Protocol
+"""CQVAssembler — folds populated slices into the (N,D) CandidateQualityVector aligned to FeatureLayout.
 
-__all__ = ["CQVAssembler"]
+Owner layer: engines.
+Allowed imports: domain, ports (injected), features, config.schema.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "CQVAssembler",
+)

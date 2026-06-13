@@ -1,2 +1,12 @@
-"""REDSTACK Features Layer — Redrob activity metrics mapping handling sentinel fields."""
-__all__ = ["extract_signal_features"]
+"""23 redrob_signals -> bhv.* composites with sentinel->UNKNOWN discipline; single-ownership routing.
+
+Owner layer: features.
+Allowed imports: domain.candidate.behavioral.
+
+Sprint 0 placeholder: declarations only, no implementation.
+"""
+from __future__ import annotations
+
+__all__: tuple[str, ...] = (
+    "extract_signals",
+)

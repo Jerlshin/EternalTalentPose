@@ -1,0 +1,19 @@
+# O3 honeypot SEED — human-declared rule shapes, keyed by integrity flag.
+# Flags are cross-checked against domain.IntegrityFlag at the O3 artifact
+# boundary; O3 calibrates the numeric thresholds against the census.
+rules:
+  - flag: EXPERIENCE_EXCEEDS_COMPANY_AGE
+    severity: hard
+    description: "Claimed tenure at an employer exceeds that employer's age."
+  - flag: SKILL_DURATION_EXCEEDS_EXPERIENCE
+    severity: hard
+    description: "A single skill's claimed duration exceeds total career experience."
+  - flag: EXPERT_AT_ZERO_MONTHS
+    severity: hard
+    description: "Expert proficiency claimed with zero months and zero endorsements."
+  - flag: OVERLAPPING_FULL_TIME_POSITIONS
+    severity: soft
+    description: "Concurrent full-time positions with implausible time overlap."
+  - flag: KEYWORD_STUFFING
+    severity: soft
+    description: "Dense skill array with no corroborating evidence in descriptions."

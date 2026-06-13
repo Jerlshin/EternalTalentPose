@@ -1,0 +1,21 @@
+# O6 anchor authoring SEED — positive/negative jd.* intents (re-authored per JD).
+# Embedded offline into artifacts/embeddings/anchor_vectors.npy keyed by id.
+anchors:
+  - id: jd.retrieval_ranking
+    polarity: positive
+    text: "Builds production retrieval and ranking systems with dense embeddings and learning-to-rank."
+  - id: jd.production_ml
+    polarity: positive
+    text: "Ships and operates machine learning models in production with monitoring and evaluation."
+  - id: jd.product_company
+    polarity: positive
+    text: "Engineering at a product company owning end-to-end systems rather than client deliverables."
+  - id: jd.keyword_only
+    polarity: negative
+    text: "Lists many tools and keywords without corroborating projects, endorsements, or assessments."
+  - id: jd.consulting_only
+    polarity: negative
+    text: "Services and consulting delivery work with no product ownership or production exposure."
+  - id: jd.pure_researcher
+    polarity: negative
+    text: "Purely academic research with publications but no production engineering responsibility."

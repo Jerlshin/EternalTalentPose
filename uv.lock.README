@@ -1,0 +1,3 @@
+uv.lock is generated, never hand-edited. Run `uv lock` (or `make lock`) to
+produce the committed, fully-pinned lockfile. The sandbox installs with
+`uv sync --frozen` so resolution matches the build host exactly.
