@@ -17,7 +17,14 @@ from datetime import date
 from types import MappingProxyType
 from typing import Any, final
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_serializer,
+    field_validator,
+)
 
 from redstack.domain.enums import (
     CompanySize,
@@ -164,6 +171,13 @@ class RawSignals(BaseModel):
             if not (0.0 <= score <= 100.0):
                 raise ValueError("skill_assessment_scores out of range [0, 100]")
         return MappingProxyType(dict(value))
+
+    @field_serializer("skill_assessment_scores")
+    def _dump_scores(self, value: Mapping[str, float]) -> dict[str, float]:
+        # ``MappingProxyType`` is not natively serializable; project the
+        # read-only view back to a plain ``dict`` so ``RawCandidate`` round-trips
+        # to JSON losslessly (provenance depends on this, §P).
+        return dict(value)
 
 
 @final

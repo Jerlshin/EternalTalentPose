@@ -1,20 +1,22 @@
-"""``EligibilityReport`` slice — JD hard blocks + soft penalties (R4).
+"""``CredibilityProfile`` slice — anti keyword-stuffing trust layer (R2).
 
 Owner layer: domain.
-Allowed imports: ids, enums, provenance, pydantic.
+Allowed imports: ids, enums, pydantic.
 
-``is_eligible`` is true iff there are no hard blocks; soft penalties never make
-a candidate ineligible — they feed scoring as down-weights.
+Skill trust combines endorsement weight x duration evidence x assessment
+coherence; assessment scores are routed here (single-ownership).
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import final
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
-from redstack.domain.enums import EligibilityCode, Severity
-from redstack.domain.provenance import EvidenceRef
+from redstack.domain.enums import Proficiency
+from redstack.domain.ids import Months, SkillName, UnitScore
 
 _STRICT = ConfigDict(
     frozen=True, extra="forbid", str_strip_whitespace=True, validate_default=True
@@ -22,47 +24,49 @@ _STRICT = ConfigDict(
 
 
 @final
-class EligibilityFinding(BaseModel):
-    """A single eligibility predicate outcome with its evidence."""
+class SkillTrust(BaseModel):
+    """Per-skill trust derived from endorsement, duration, and assessment."""
 
     model_config = _STRICT
 
-    code: EligibilityCode
-    severity: Severity
-    evidence: tuple[EvidenceRef, ...] = Field(min_length=1)
-    detail: str
+    name: SkillName
+    proficiency: Proficiency
+    endorsements: int = Field(ge=0)
+    duration_months: Months | None = Field(default=None, ge=0)
+    assessment_score: UnitScore | None = Field(
+        default=None, ge=0.0, le=1.0, allow_inf_nan=False
+    )
+    trust: UnitScore = Field(ge=0.0, le=1.0, allow_inf_nan=False)
+    is_credible: bool
 
 
 @final
-class EligibilityReport(BaseModel):
-    """JD disqualifier / penalty verdict."""
+class CredibilityProfile(BaseModel):
+    """Trustworthiness of claimed skills/profile."""
 
     model_config = _STRICT
 
-    hard_blocks: tuple[EligibilityFinding, ...]
-    soft_penalties: tuple[EligibilityFinding, ...]
-    is_eligible: bool
-    gates_passed: frozenset[EligibilityCode]
+    skill_trust: Mapping[SkillName, SkillTrust]
+    keyword_stuffing_score: UnitScore = Field(ge=0.0, le=1.0, allow_inf_nan=False)
+    claimed_vs_assessed_gap: UnitScore = Field(ge=0.0, le=1.0, allow_inf_nan=False)
+    title_description_coherence: UnitScore = Field(ge=0.0, le=1.0, allow_inf_nan=False)
+    relevant_skill_credibility: UnitScore = Field(ge=0.0, le=1.0, allow_inf_nan=False)
 
-    @model_validator(mode="after")
-    def _check(self) -> EligibilityReport:
-        if (
-            tuple(sorted(self.hard_blocks, key=lambda f: f.code.value))
-            != self.hard_blocks
-        ):
-            raise ValueError("hard_blocks must be sorted by code")
-        if (
-            tuple(sorted(self.soft_penalties, key=lambda f: f.code.value))
-            != self.soft_penalties
-        ):
-            raise ValueError("soft_penalties must be sorted by code")
-        if any(f.severity is not Severity.HARD for f in self.hard_blocks):
-            raise ValueError("every hard_block must have severity HARD")
-        if any(f.severity is not Severity.SOFT for f in self.soft_penalties):
-            raise ValueError("every soft_penalty must have severity SOFT")
-        if self.is_eligible != (len(self.hard_blocks) == 0):
-            raise ValueError("is_eligible must equal (no hard_blocks)")
-        return self
+    @field_validator("skill_trust", mode="after")
+    @classmethod
+    def _freeze_trust(
+        cls, value: Mapping[SkillName, SkillTrust]
+    ) -> Mapping[SkillName, SkillTrust]:
+        for key, trust in value.items():
+            if trust.name != key:
+                raise ValueError("skill_trust key must equal SkillTrust.name")
+        return MappingProxyType(dict(value))
+
+    @field_serializer("skill_trust")
+    def _dump_trust(
+        self, value: Mapping[SkillName, SkillTrust]
+    ) -> dict[SkillName, SkillTrust]:
+        return dict(value)
 
 
-__all__: tuple[str, ...] = ("EligibilityFinding", "EligibilityReport")
+__all__: tuple[str, ...] = ("CredibilityProfile", "SkillTrust")

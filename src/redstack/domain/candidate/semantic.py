@@ -1,7 +1,7 @@
 """``SemanticProfile`` slice — dense fit vs JD anchors (R3).
 
 Owner layer: domain.
-Allowed imports: ids, provenance, pydantic.
+Allowed imports: ids, pydantic.
 
 References (never inlines) the candidate vector via ``VectorRef``; the 384-d
 array lives in the mmap'd store behind a port.
@@ -13,7 +13,14 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import final
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 
 from redstack.domain.ids import AnchorId, Similarity, UnitScore
 
@@ -55,6 +62,12 @@ class SemanticProfile(BaseModel):
             if not (-1.0 <= sim <= 1.0):
                 raise ValueError("anchor similarity out of range [-1, 1]")
         return MappingProxyType(dict(value))
+
+    @field_serializer("anchor_similarities")
+    def _dump_similarities(
+        self, value: Mapping[AnchorId, Similarity]
+    ) -> dict[AnchorId, Similarity]:
+        return dict(value)
 
     @model_validator(mode="after")
     def _best_anchor_present(self) -> SemanticProfile:

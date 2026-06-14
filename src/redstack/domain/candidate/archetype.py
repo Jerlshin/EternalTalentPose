@@ -1,7 +1,7 @@
 """``ArchetypeAssignment`` slice — O7 cluster membership (R3).
 
 Owner layer: domain.
-Allowed imports: ids, enums, pydantic.
+Allowed imports: ids, pydantic.
 
 Nearest-centroid under a fixed metric; ties break by ``ArchetypeId`` ascending.
 """

@@ -1,7 +1,7 @@
 """``CareerProfile`` slice — structured career facts + derivations (R2).
 
 Owner layer: domain.
-Allowed imports: ids, enums, provenance, pydantic, stdlib datetime.
+Allowed imports: ids, enums, pydantic, stdlib datetime.
 
 Positions are recent-first; at most one is current; durations are
 non-negative. Recency fields are computed against an injected ``as_of`` by the
