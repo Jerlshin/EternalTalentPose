@@ -23,7 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, final
 
 import numpy as np
@@ -78,6 +78,7 @@ from redstack.domain.ranking import (
 )
 from redstack.domain.source import RawCandidate
 from redstack.features.evidence import mint
+from redstack.features.extraction import extract_row
 from redstack.features.parsing import parse
 from redstack.features.registry import FeatureRegistry
 from redstack.ports._types import Malformed, Ok
@@ -229,7 +230,7 @@ def r0_load(
     )
 
 
-def _as_f32(array: npt.NDArray[object]) -> npt.NDArray[np.float32]:
+def _as_f32(array: npt.NDArray[np.generic]) -> npt.NDArray[np.float32]:
     """Coerce a loaded npy array to a contiguous float32 view (no copy if able)."""
     return np.ascontiguousarray(array, dtype=np.float32)
 
@@ -411,8 +412,11 @@ def r1_ingest(ctx: OnlineRunContext) -> list[IngestedCandidate]:
                 raise SchemaError(f"duplicate candidate_id {cid!r}")
             continue
         seen.add(cid)
+        # Canonical ProvenanceHandle is XOR(inline, source_index). Online survivors
+        # keep the inline raw for R7 re-hydration; source order is tracked on the
+        # IngestedCandidate itself (source_index field), so inline is the choice here.
         provenance = ProvenanceHandle(
-            candidate_id=cid, inline=candidate, source_index=record.source_index
+            candidate_id=cid, inline=candidate, source_index=None
         )
         representation = CandidateRepresentation(
             candidate_id=cid, provenance=provenance, source_index=record.source_index
@@ -859,7 +863,7 @@ def _integrity_report(raw: RawCandidate, threshold: float) -> IntegrityReport:
         if position.is_current and position.end_date is not None:
             ev = _safe_refs(
                 raw_map,
-                ((EvidenceKind.CAREER_FIELD, f"career_history.{idx}.end_date"),),
+                ((EvidenceKind.CAREER_FIELD, f"career_history[{idx}].end_date"),),
             )
             if ev:
                 findings.append(
@@ -876,7 +880,7 @@ def _integrity_report(raw: RawCandidate, threshold: float) -> IntegrityReport:
         if edu.end_year < edu.start_year:
             ev = _safe_refs(
                 raw_map,
-                ((EvidenceKind.EDUCATION, f"education.{idx}.end_year"),),
+                ((EvidenceKind.EDUCATION, f"education[{idx}].end_year"),),
             )
             if ev:
                 findings.append(
@@ -914,7 +918,7 @@ def _integrity_report(raw: RawCandidate, threshold: float) -> IntegrityReport:
     ]
     if len(stuffed) >= 8:
         ev = _safe_refs(
-            raw_map, ((EvidenceKind.SKILL, f"skills.{stuffed[0]}.proficiency"),)
+            raw_map, ((EvidenceKind.SKILL, f"skills[{stuffed[0]}].proficiency"),)
         )
         if ev:
             findings.append(
@@ -953,7 +957,7 @@ def _eligibility_report(
     career = representation.career
     if career is not None and career.track is CareerTrack.SERVICES:
         ev = _safe_refs(
-            raw_map, ((EvidenceKind.CAREER_FIELD, "career_history.0.industry"),)
+            raw_map, ((EvidenceKind.CAREER_FIELD, "career_history[0].industry"),)
         )
         if ev:
             hard.append(
@@ -1251,8 +1255,9 @@ def _build_clauses(
                 ReasoningClause(
                     polarity=ReasoningPolarity.STRENGTH,
                     text=(
-                        f"current role '{raw.profile.current_title}' aligns with the "
-                        f"JD focus"
+                        f"as {raw.profile.current_title} at "
+                        f"{raw.profile.current_company}, strong JD-topic alignment "
+                        f"(fit {semantic.net_semantic_fit:.2f})"
                     ),
                     jd_link=ScoreComponent.SEMANTIC_FIT,
                     evidence=title_ref,
@@ -1272,16 +1277,26 @@ def _build_clauses(
             )
         )
 
-    # Context (tail band): a measured note from the strongest available evidence.
-    if rank > 50 and len(clauses) < 2:
+    # Distinguishing context: any candidate with thin reasoning gets a clause from
+    # its own facts (company/title/track) so reasonings are substantively distinct
+    # (Stage-4 variation). Rank band shapes tone elsewhere, not whether we add this.
+    if len(clauses) < 2:
         company_ref = _safe_refs(
             raw_map, ((EvidenceKind.PROFILE_FIELD, "profile.current_company"),)
         )
         if company_ref:
+            track = (
+                representation.career.track.value
+                if representation.career is not None
+                else "unknown"
+            )
             clauses.append(
                 ReasoningClause(
                     polarity=ReasoningPolarity.CONTEXT,
-                    text=f"currently at {raw.profile.current_company}",
+                    text=(
+                        f"{raw.profile.current_title} at {raw.profile.current_company} "
+                        f"({track} track, {len(raw.career_history)} roles)"
+                    ),
                     jd_link=ScoreComponent.CAREER_FIT,
                     evidence=company_ref,
                 )
@@ -1683,7 +1698,3 @@ def _score_digest(ranking: Ranking) -> str:
     ]
     text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-# Late import to avoid a heavy module-load cost at import time (kept local). ---- #
-from redstack.features.extraction import extract_row  # noqa: E402

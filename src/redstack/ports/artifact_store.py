@@ -17,7 +17,7 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 import numpy.typing as npt
 
-from redstack.domain.errors import ArtifactContractError, DomainError
+from redstack.domain.errors import DomainError
 from redstack.ports._types import ArtifactKey, ArtifactLocator, Manifest
 
 
@@ -89,8 +89,11 @@ class ArtifactStorePort(Protocol):
         """
         ...
 
-    def load_npy(self, key: ArtifactKey) -> npt.NDArray[np.generic]:
-        """Return the verified ndarray for a ``.npy`` ``key`` (dtype as stored).
+    def load_npy(self, key: ArtifactKey) -> npt.NDArray[np.float32]:
+        """Return the verified ndarray for a ``.npy`` ``key``.
+
+        The offline build pipeline guarantees all arrays are serialized as float32,
+        ensuring online semantic operations are strictly typed end-to-end.
 
         Raises:
             ArtifactContractError: missing key or sha256 mismatch.
@@ -110,7 +113,6 @@ class ArtifactStorePort(Protocol):
 
 
 __all__: tuple[str, ...] = (
-    "ArtifactContractError",
     "ArtifactStorePort",
     "ManifestError",
 )
