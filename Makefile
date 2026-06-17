@@ -8,6 +8,8 @@ SHELL := /bin/bash
 # match the network-isolated sandbox byte-for-byte.
 export OMP_NUM_THREADS := 1
 export MKL_NUM_THREADS := 1
+export OPENBLAS_NUM_THREADS := 1
+export VECLIB_MAXIMUM_THREADS := 1
 
 UV ?= uv
 
@@ -33,32 +35,35 @@ lint: ## Lint without mutating (ruff)
 	$(UV) run ruff check src tests
 	$(UV) run ruff format --check src tests
 
-typecheck: ## mypy --strict over the package
-	$(UV) run mypy
+typecheck: ## mypy --strict over the source package and test suites
+	$(UV) run mypy --strict src tests
 
 imports: ## Enforce the eight architecture boundary contracts
 	$(UV) run lint-imports
 
 test: ## Full test suite with coverage
-	$(UV) run pytest --cov --cov-report=term-missing
+	$(UV) run pytest --cov=src --cov-report=term-missing tests/
 
 test-unit: ## Fast unit + property suites only
-	$(UV) run pytest -m "unit or property"
+	$(UV) run pytest -m "unit or property" tests/
 
 test-integration: ## Integration + determinism suites
-	$(UV) run pytest -m "integration or determinism"
+	$(UV) run pytest -m "integration or determinism" tests/
 
 build: ## Offline: O0..O18 -> artifacts/ + MANIFEST.json
+	@mkdir -p artifacts/embeddings artifacts/models artifacts/gates artifacts/weights artifacts/calibration artifacts/lexicon artifacts/archetypes
 	$(UV) run redstack build --config configs/runtime/offline.yaml
 
-rank: ## Online: R0..R9 -> submission.csv + run_report.json (spec 10.3)
+rank: ## Online: R0..R9 -> submission.csv + run_report.json
+	@mkdir -p artifacts
 	$(UV) run redstack rank \
-		--candidates data/raw/candidates.jsonl \
-		--out submission.csv
+		--input data/raw/candidates.jsonl \
+		--output artifacts/submission.csv
 
-validate: ## Validate a finished submission.csv
-	$(UV) run redstack validate --submission submission.csv
+validate: ## Validate a finished submission.csv against validate_submission.py rules
+	$(UV) run redstack validate --submission artifacts/submission.csv
 
-clean: ## Remove caches and build noise (never touches data/ or artifacts/)
-	rm -rf .mypy_cache .ruff_cache .pytest_cache .coverage htmlcov \
-		dist build **/__pycache__
+clean: ## Remove caches and build noise (never touches data/ or configurations)
+	rm -rf .mypy_cache .ruff_cache .pytest_cache .coverage htmlcov typecover \
+		dist build
+	find . -type d -name "__pycache__" -exec rm -rf {} +

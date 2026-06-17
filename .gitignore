@@ -1,0 +1,165 @@
+# ==========================================================
+# Python
+# ==========================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# UV
+.uv/
+.python-version
+
+# ==========================================================
+# Testing
+# ==========================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Pyright
+.pyright/
+
+# Hypothesis
+.hypothesis/
+
+# ==========================================================
+# IDEs / Editors
+# ==========================================================
+.vscode/
+.idea/
+
+*.swp
+*.swo
+*~
+
+# ==========================================================
+# OS Files
+# ==========================================================
+.DS_Store
+Thumbs.db
+
+# ==========================================================
+# Logs
+# ==========================================================
+logs/
+*.log
+
+# ==========================================================
+# Runtime Outputs
+# ==========================================================
+tmp/
+temp/
+.cache/
+
+# ==========================================================
+# Local Configuration Overrides
+# ==========================================================
+configs/profiles/local.yaml
+
+# Secrets (if ever added)
+.env
+.env.*
+*.secret
+secrets/
+
+# ==========================================================
+# Generated Data
+# ==========================================================
+data/raw/*
+data/golden/*
+
+!data/raw/.gitkeep
+!data/golden/.gitkeep
+
+# ==========================================================
+# Generated Artifacts
+# ==========================================================
+artifacts/archetypes/*
+artifacts/calibration/*
+artifacts/embeddings/*
+artifacts/gates/*
+artifacts/lexicon/*
+artifacts/model/*
+artifacts/weights/*
+
+!artifacts/archetypes/.gitkeep
+!artifacts/calibration/.gitkeep
+!artifacts/embeddings/.gitkeep
+!artifacts/gates/.gitkeep
+!artifacts/lexicon/.gitkeep
+!artifacts/model/.gitkeep
+!artifacts/weights/.gitkeep
+
+# ==========================================================
+# Offline Pipeline Outputs
+# ==========================================================
+*.onnx
+*.pt
+*.pth
+*.bin
+*.joblib
+*.pkl
+*.pickle
+*.parquet
+*.feather
+*.npy
+*.npz
+
+# Embedding stores
+*.faiss
+*.index
+*.sqlite
+*.db
+
+# ==========================================================
+# Reports / Generated Results
+# ==========================================================
+reports/
+outputs/
+runs/
+
+# Ranking submissions
+submission.csv
+
+# Generated metadata
+run_report.json
+
+# ==========================================================
+# Jupyter
+# ==========================================================
+.ipynb_checkpoints/
+
+# ==========================================================
+# Claude / AI Tooling
+# ==========================================================
+.claude/
+.claude-cache/
+
+# ==========================================================
+# Misc
+# ==========================================================
+*.bak
+*.tmp
+*.temp
