@@ -68,7 +68,7 @@ _CONCERN_PHRASING: Final[Mapping[EligibilityCode, str]] = {
     EligibilityCode.LANGCHAIN_OPENAI_ONLY_RECENT: "framework-level exposure without corroborated depth",
     EligibilityCode.NO_PRODUCTION_CODE_18M: "no recent production engineering",
     EligibilityCode.CONSULTING_FIRMS_ONLY_CAREER: "exclusively consulting-firm experience",
-    EligibilityCode.PRIMARY_CV_SPEECH_ROBOTICS_NO_NLP: "primary expertise in an adjacent domain",
+    EligibilityCode.PRIMARY_CV_SPEECH_ROBOTICS_NO_NLP: "no demonstrated relevant ML/AI skill credibility",
     EligibilityCode.CLOSED_SOURCE_5Y_NO_VALIDATION: "long closed-source tenure without external validation",
 }
 

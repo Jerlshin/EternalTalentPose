@@ -506,6 +506,7 @@ class EligibilityRuleSet(_FrozenConfig):
     production_recency_max_months: int = Field(ge=0)
     adjacent_domain_min_relevant_credibility: float = Field(ge=0.0, le=1.0)
     adjacent_domain_min_negative_fit: float = Field(ge=-1.0, le=1.0)
+    adjacent_domain_min_skill_match: float = Field(ge=0.0, le=1.0)
     closed_source_min_years: float = Field(ge=0.0)
     closed_source_max_credible_skills: int = Field(ge=0)
     title_chaser_min_hop_rate: float = Field(ge=0.0, le=1.0)

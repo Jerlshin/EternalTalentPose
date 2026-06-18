@@ -88,14 +88,23 @@ class EligibilityEngine(BaseModel):
         semantic: SemanticProfile,
         logistics: LogisticsProfile,
         jd: JobDescriptionSpec,
+        skill_match: float = 1.0,
     ) -> EligibilityReport:
-        """Evaluate every gate; partition into hard blocks and soft penalties."""
+        """Evaluate every gate; partition into hard blocks and soft penalties.
+
+        ``skill_match`` is the mean of the nine retr/rank/recsys/ir/nlp/llm/
+        mle/mlops/eval ``.competency`` cells (the same aggregate Scoring's
+        ``SKILL_MATCH`` component reads) — the one component diagnostic
+        evidence showed reliably tracks ML/AI domain relevance. Defaults to
+        ``1.0`` (never blocks) so existing call sites that don't pass it keep
+        their prior behavior.
+        """
         candidates: list[EligibilityFinding | None] = [
             self._pure_research_no_production(career, semantic),
             self._langchain_openai_only_recent(credibility),
             self._no_production_code_18m(career),
             self._consulting_firms_only_career(career),
-            self._primary_cv_speech_robotics_no_nlp(credibility, semantic),
+            self._primary_cv_speech_robotics_no_nlp(credibility, semantic, skill_match),
             self._closed_source_5y_no_validation(career, credibility),
             self._title_chaser_sub_18m_hops(career),
             self._notice_over_30(logistics),
@@ -231,13 +240,37 @@ class EligibilityEngine(BaseModel):
         )
 
     def _primary_cv_speech_robotics_no_nlp(
-        self, credibility: CredibilityProfile, semantic: SemanticProfile
+        self,
+        credibility: CredibilityProfile,
+        semantic: SemanticProfile,
+        skill_match: float,
     ) -> EligibilityFinding | None:
+        """Gate on demonstrated relevant-skill credibility OR skill_match.
+
+        Originally required ``negative_fit`` to also clear a threshold (i.e.
+        the candidate had to resemble a *specific* adjacent archetype —
+        vision/speech/robotics). Diagnostic evidence across 27 real candidates
+        showed ``negative_fit`` clustering at 0.21-0.36 for both clearly
+        relevant (ML/Applied-Science/RecSys, ``relevant_skill_credibility``
+        0.80-0.94) and clearly irrelevant (HR Manager, Civil Engineer,
+        Accountant, ..., 0.11-0.50) candidates alike — it carries no domain
+        signal here, so AND-ing it in only suppressed the gate.
+
+        ``relevant_skill_credibility`` alone (fraction of *all* claimed skills
+        that are corroborated) still let through a second failure mode: a
+        candidate whose few listed skills are all non-ML but well-corroborated
+        (e.g. a Marketing Manager with credibly-endorsed marketing skills)
+        scores high on it despite zero ML/AI overlap. ``skill_match`` (mean of
+        the nine ML-specific competency cells) catches that case directly —
+        every sampled non-ML title scored at or near 0.0 there, regardless of
+        how well-corroborated their (non-ML) skills were. Both bars must clear
+        to pass — failing *either* is sufficient grounds to block.
+        """
         rel = float(credibility.relevant_skill_credibility)
         neg = float(semantic.negative_fit)
         if (
             rel >= self.rules.adjacent_domain_min_relevant_credibility
-            or neg < self.rules.adjacent_domain_min_negative_fit
+            and skill_match >= self.rules.adjacent_domain_min_skill_match
         ):
             return None
         return self._finding(
@@ -252,8 +285,11 @@ class EligibilityEngine(BaseModel):
                 make_evidence(
                     EvidenceKind.DERIVED, "semantic.negative_fit", neg
                 ),
+                make_evidence(
+                    EvidenceKind.DERIVED, "derived.skill_match", skill_match
+                ),
             ),
-            "primary expertise in an adjacent vision/speech/robotics domain",
+            "no demonstrated relevant ML/AI skill credibility for this role",
         )
 
     def _closed_source_5y_no_validation(

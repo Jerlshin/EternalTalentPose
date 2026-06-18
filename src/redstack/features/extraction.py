@@ -306,17 +306,29 @@ def build_logistics_profile(
     sig = raw.redrob_signals
     country = raw.profile.country.strip().casefold()
     city = raw.profile.location.strip().casefold()
+    # ``profile.location`` is consistently "<City>, <State>" in this dataset;
+    # ``jd_hubs`` holds bare city names, so an exact match on the full string
+    # never fires — every hub resident (~18% of the pool) was silently
+    # mis-banded to a relocation tier instead of PREFERRED_HUB. Match on the
+    # substring before the first comma (falling back to the full string for
+    # any location with no comma at all, e.g. a bare city name).
+    city_only = city.split(",", 1)[0].strip()
     is_india = country in ("india", "in")
-    in_hub = city in jd_hubs
+    in_hub = city in jd_hubs or city_only in jd_hubs
 
-    if in_hub:
-        location_fit = LocationFit.PREFERRED_HUB
-    elif is_india and sig.willing_to_relocate:
-        location_fit = LocationFit.INDIA_RELOCATABLE
-    elif is_india:
-        location_fit = LocationFit.INDIA_NON_RELOCATABLE
-    else:
+    # ``profile.country`` is the sole authority on nationality/sponsorship —
+    # checked first so a hub-named city can never override it. A non-India
+    # candidate gets OUTSIDE_INDIA_NO_SPONSOR regardless of city string or
+    # willing_to_relocate (the JD's "we don't sponsor work visas" is
+    # unconditional); hub/relocation banding only applies once is_india holds.
+    if not is_india:
         location_fit = LocationFit.OUTSIDE_INDIA_NO_SPONSOR
+    elif in_hub:
+        location_fit = LocationFit.PREFERRED_HUB
+    elif sig.willing_to_relocate:
+        location_fit = LocationFit.INDIA_RELOCATABLE
+    else:
+        location_fit = LocationFit.INDIA_NON_RELOCATABLE
 
     notice_days = int(sig.notice_period_days)
     if notice_days <= 30:

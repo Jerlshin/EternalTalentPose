@@ -102,10 +102,15 @@ def _hub_match_value(logistics: LogisticsProfile, jd_hubs: frozenset[str]) -> fl
     Authoritative signal is the pre-derived ``LocationFit.PREFERRED_HUB``; the
     injected ``jd_hubs`` set is a corroborating cross-check on the normalized
     city string (so an updated hub set is honoured without re-deriving the enum).
+    ``location`` is consistently "<City>, <State>" in this dataset and
+    ``jd_hubs`` holds bare city names, so the full-string check alone never
+    matches a hub resident — also check the substring before the first comma.
     """
     if logistics.location_fit is LocationFit.PREFERRED_HUB:
         return 1.0
-    return 1.0 if normalize_text(logistics.location) in jd_hubs else 0.0
+    normalized = normalize_text(logistics.location)
+    city_only = normalized.split(",", 1)[0].strip()
+    return 1.0 if normalized in jd_hubs or city_only in jd_hubs else 0.0
 
 
 def _salary_overlap(

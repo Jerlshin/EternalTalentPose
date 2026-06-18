@@ -45,6 +45,7 @@ import json
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, final
 
 import numpy as np
@@ -108,6 +109,7 @@ from redstack.features.extraction import (
     extract_row,
     fold_semantic,
 )
+from redstack.features.layout import GROUP_ORDER
 from redstack.features.parsing import validate as validate_raw
 from redstack.features.registry import FEATURE_REGISTRY, FeatureRegistry
 from redstack.features.view import FeatureCell, clamp_unit, make_evidence
@@ -185,6 +187,38 @@ _COMPETENCY_GROUPS: Final[tuple[str, ...]] = (
     "eval",
 )
 _RANKING_SIZE: Final[int] = 100
+
+# Per-group weight for the R5 confidence average that drives ``_shrink``'s pull
+# toward the neutral prior. A flat ``np.mean`` over all 32 CQV groups let
+# structurally-sparse optional groups (``oss``/``bhv``/``risk``/``hp``/...  —
+# low-confidence for most of the population regardless of domain fit, e.g. a
+# missing GitHub link or no prior offer history) dilute the handful of groups
+# that actually carry domain-fit signal, collapsing genuine skill/semantic
+# differences into a narrow band around 0.5 for everyone. Weights below are
+# proportional to each group's role in the locked ``ScoringWeights``: the nine
+# competency groups get the largest share (skill_match's 0.15, plus standing in
+# for semantic_fit's 0.30 since ``SemanticProfile`` carries no confidence field
+# of its own — these groups' nested ``.semantic`` cells are the closest proxy);
+# career/pvs/cons/edu/exp follow their own component weights. Every other group
+# (logistics/behavioral/integrity/identity) keeps a small non-zero floor so it
+# still nudges confidence — never a hard zero, per the "never create or
+# destroy relevance outright" multiplier discipline — but can no longer
+# dominate the average.
+_DOMAIN_FIT_GROUP_WEIGHT: Final[Mapping[str, float]] = MappingProxyType(
+    {
+        **{group: 3.0 for group in _COMPETENCY_GROUPS},
+        "career": 1.5,
+        "pvs": 1.5,
+        "cons": 1.5,
+        "edu": 1.0,
+        "exp": 1.0,
+    }
+)
+_OTHER_GROUP_CONFIDENCE_WEIGHT: Final[float] = 0.2
+_GROUP_CONFIDENCE_WEIGHTS: Final[npt.NDArray[np.float64]] = np.array(
+    [_DOMAIN_FIT_GROUP_WEIGHT.get(group, _OTHER_GROUP_CONFIDENCE_WEIGHT) for group in GROUP_ORDER],
+    dtype=np.float64,
+)
 
 
 # =========================================================================== #
@@ -318,8 +352,20 @@ def r0_load(
         framework_only_stuffing_min=0.6,
         framework_only_gap_min=0.3,
         production_recency_max_months=18,
-        adjacent_domain_min_relevant_credibility=0.3,
+        # Raised from 0.3: diagnostic evidence across 27 real candidates found
+        # a clean gap between domain-irrelevant titles (HR Manager, Civil
+        # Engineer, Accountant, ... — 0.11-0.50) and genuinely ML-titled ones
+        # (Senior ML Engineer / Applied Scientist / RecSys Engineer —
+        # 0.80-0.94); 0.6 sits in that gap with margin on both sides.
+        adjacent_domain_min_relevant_credibility=0.6,
         adjacent_domain_min_negative_fit=0.3,
+        # Catches the complementary failure mode: a candidate whose few
+        # listed skills are all non-ML but well-corroborated (so
+        # relevant_skill_credibility alone reads high) still needs *some*
+        # claimed ML-specific competency to pass. 0.05 sits comfortably below
+        # every genuinely ML-titled sample observed (0.15-0.19+) and at/above
+        # the near-zero values non-ML titles showed.
+        adjacent_domain_min_skill_match=0.05,
         closed_source_min_years=5.0,
         closed_source_max_credible_skills=0,
         title_chaser_min_hop_rate=0.5,
@@ -746,6 +792,7 @@ def r4_gates(ctx: OnlineRunContext, situated: SituatedSet) -> GatedSet:
             semantic=semantic,
             logistics=logistics,
             jd=_JD_SPEC,
+            skill_match=_skill_match_value(situated.cells[i]),
         )
         floor[i] = integrity_report.is_honeypot or not eligibility_report.is_eligible
         reps.append(
@@ -799,7 +846,9 @@ def r5_score(ctx: OnlineRunContext, gated: GatedSet) -> ScoredSet:
         )
         logistics_multiplier = logistics_engine.multiplier(rep.require_logistics())
         archetype_adjustment = _archetype_adjustment(rep.archetype)
-        confidence = UnitScore(float(np.mean(gated.confidence[i])))
+        confidence = UnitScore(
+            float(np.average(gated.confidence[i], weights=_GROUP_CONFIDENCE_WEIGHTS))
+        )
 
         scored.append(
             scoring_engine.score(
@@ -814,6 +863,19 @@ def r5_score(ctx: OnlineRunContext, gated: GatedSet) -> ScoredSet:
             )
         )
     return ScoredSet(scored=tuple(scored), base=gated)
+
+
+def _skill_match_value(cells: Mapping[str, FeatureCell]) -> float:
+    """Mean of the nine ``{group}.competency`` cells (Scoring's SKILL_MATCH raw).
+
+    Shared by ``_score_components`` (the scored component) and ``r4_gates``
+    (the eligibility gate input) so both read the identical aggregate.
+    """
+    ids = [f"{group}.competency" for group in _COMPETENCY_GROUPS]
+    found = [cells[fid] for fid in ids if fid in cells]
+    if not found:
+        return 0.0
+    return clamp_unit(math.fsum(c.value for c in found) / len(found))
 
 
 def _score_components(
@@ -831,7 +893,13 @@ def _score_components(
         evidence = tuple(c.evidence[0] for c in found)
         return (value, evidence)
 
-    skill_match = agg([f"{group}.competency" for group in _COMPETENCY_GROUPS])
+    skill_match_value = _skill_match_value(cells)
+    skill_match_evidence = tuple(
+        cells[fid].evidence[0]
+        for fid in (f"{group}.competency" for group in _COMPETENCY_GROUPS)
+        if fid in cells
+    )
+    skill_match: ComponentRaw = (UnitScore(skill_match_value), skill_match_evidence)
     career_fit = agg(["career.progression_quality", "pvs.product_density"])
     experience_fit = agg(["exp.in_band", "career.experience_authenticity"])
     education_fit = agg(["edu.tier_score", "edu.field_relevance", "edu.timeline_valid"])
