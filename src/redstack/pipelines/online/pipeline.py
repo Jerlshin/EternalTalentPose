@@ -1,29 +1,42 @@
 """The R0…R9 online orchestrator — the literal Stage-3 reproduce spine.
 
-Builds the immutable ``OnlineRunContext`` (binds ``CandidateSource``,
-``SemanticVectorStore``, ``EmbeddingModel(onnx)``, ``SubmissionSink``,
-``RunReportSink``, ``OnlineEntropy``; loads + verifies every artifact), then runs
-the stages strictly sequentially R0→R9, threading the growing state
+The composition root for the online run: it binds every adapter to its port,
+loads + verifies the artifact set, and sequences the ten pure R-stages strictly
+R0→R9, threading the growing ``CandidateRepresentation`` set forward
 copy-on-write. Ports are touched only at R0/R1/R3/R8/R9; R2/R4/R5/R6/R7 are pure
-engine work. Fail-fast on any integrity/coherence failure; the context is never
-returned partially bound (R0 builds it whole or raises).
+engine work (the property that keeps the ≤150 s budget predictable).
 
-This module is the composition root: it imports the online stages and the bound
-ports, never adapters directly (those are injected). The online containment
-contract (no ``sentence_transformers``/``sklearn``/networking imports) holds —
-nothing here or in ``stages.py`` pulls a budget-busting dependency.
+Architectural contract (Architecture §2/§5/§6; Online Part 1/§14/§17):
+* **Composition root.** This is the *only* place adapters meet ports; the
+  orchestrator imports ``stages`` + the port Protocols, never an adapter.
+* **Determinism asserted at startup.** ``config.determinism.pin_determinism`` is
+  invoked once, before any numeric work or onnx session init, so BLAS/OMP threads
+  are pinned and the output is **thread-count-invariant**. No wall clock in logic
+  (recency uses ``as_of``); no online RNG (``OnlineEntropy`` raises on
+  ``numpy_generator``); ties resolve by ascending ``candidate_id``.
+* **Fail-fast, never partial.** Any integrity/coherence failure raises; the
+  context is built whole by R0 or not at all; ``submission.csv``/``run_report.json``
+  are written atomically only at R8/R9, so a crash before R8 leaves no partial,
+  rejectable file.
+* **Budget guard.** Per-stage wall-ms + ``within_budget`` + ``peak_rss_mb`` are
+  recorded and carried to R9.
+
+Online containment (import-linter-enforced elsewhere): nothing here or in
+``stages`` imports ``sentence_transformers``/``sklearn``/``adapters.st_embedder``/
+networking — the online package cannot pull a budget-busting dependency.
 """
 
 from __future__ import annotations
 
+import resource
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from typing import final
 
+from redstack.config.determinism import DeterminismPolicy, pin_determinism
 from redstack.domain.errors import ArtifactContractError
-from redstack.domain.ids import CandidateId
 from redstack.ports.artifact_store import ArtifactStorePort
 from redstack.ports.candidate_source import CandidateSourcePort
 from redstack.ports.embedding import EmbeddingModelPort
@@ -48,7 +61,12 @@ __all__: tuple[str, ...] = (
 class OnlineRunConfig:
     """Resolved online runtime config (IO/runtime only — never weights).
 
-    Sourced from ``runtime/online.yaml`` by the composition root.
+    Sourced from ``configs/runtime/online.yaml`` + ``base.yaml`` + the active
+    profile by the composition root. Holds the participant id (output filename
+    stem), the determinism seed + thread pins, the ingestion abort policy, the
+    FLOOR sentinel, the score-presentation decimals, and the wall-clock budget
+    ceiling. Behaviour-defining weights/thresholds are consumed online from
+    ``artifacts/``, never from here.
     """
 
     participant_id: str
@@ -60,6 +78,18 @@ class OnlineRunConfig:
     score_decimals: int = 6
     abort_on_malformed: bool = True
     budget_limit_seconds: float = 300.0
+    blas_threads: int = 1
+    onnx_intra_op_threads: int = 1
+    onnx_inter_op_threads: int = 1
+
+    def determinism_policy(self) -> DeterminismPolicy:
+        """The determinism policy this config pins at startup (one owner)."""
+        return DeterminismPolicy(
+            seed=self.seed,
+            blas_threads=self.blas_threads,
+            intra_op_threads=self.onnx_intra_op_threads,
+            inter_op_threads=self.onnx_inter_op_threads,
+        )
 
 
 @final
@@ -70,7 +100,9 @@ class OnlineRunContext:
     Assembled whole by R0 (``OnlinePipeline._r0``) or not at all — there is no
     partially-bound context. ``artifacts`` holds the loaded artifact objects
     (parsed JSON/YAML, npy matrices) keyed by registry key; ``manifest`` is the
-    verified manifest mapping; ``as_of``/``seed`` are the determinism anchors.
+    verified manifest mapping; ``as_of``/``seed`` are the determinism anchors. The
+    stages read this immutable carrier and return new representation state — they
+    never mutate the context.
     """
 
     config: OnlineRunConfig
@@ -95,6 +127,7 @@ class OnlineRunContext:
 
     @property
     def layout_version(self) -> str:
+        """The layout_version the manifest pins (asserted coherent at R0)."""
         value = self.manifest.get("layout_version")
         return value if isinstance(value, str) else ""
 
@@ -102,7 +135,7 @@ class OnlineRunContext:
 @final
 @dataclass(frozen=True, slots=True)
 class OnlinePipelineResult:
-    """The terminal result of a full R0→R9 run."""
+    """The terminal result of a full R0→R9 run (the orchestrator's return)."""
 
     submission_path: str
     output_sha256: str
@@ -110,6 +143,7 @@ class OnlinePipelineResult:
     report_path: str
     honeypot_rate_top100: float
     within_budget: bool
+    peak_rss_mb: float
     stage_timings_ms: Mapping[str, float]
 
 
@@ -121,11 +155,33 @@ class _StageClock:
     timings_ms: dict[str, float] = field(default_factory=dict)
 
     def record(self, stage: str, started: float) -> None:
+        """Record ``stage``'s elapsed wall-ms since ``started`` (monotonic clock)."""
         self.timings_ms[stage] = round((time.perf_counter() - started) * 1000.0, 3)
+
+    def total_seconds(self) -> float:
+        """Total wall-seconds across all recorded stages."""
+        return sum(self.timings_ms.values()) / 1000.0
+
+
+def _peak_rss_mb() -> float:
+    """Peak resident set size in MiB (Linux ``ru_maxrss`` is KiB).
+
+    Pure of any wall clock; reads the OS-reported high-water mark so R9's budget
+    block can record ``peak_rss_mb`` without sampling. The online sandbox is Linux
+    (KiB), the assumed unit here.
+    """
+    raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return round(raw / 1024.0, 3)
 
 
 class OnlinePipeline:
-    """The R0…R9 composition root; runs the stages strictly sequentially."""
+    """The R0…R9 composition root; runs the stages strictly sequentially.
+
+    Constructed with every bound port (the composition root injects concrete
+    adapters); ``run`` pins determinism, executes R0→R9 fail-fast, and returns the
+    terminal result. The instance is stateless across stages — all run state lives
+    on the immutable ``OnlineRunContext`` and the forward-threaded stage outputs.
+    """
 
     def __init__(
         self,
@@ -151,10 +207,26 @@ class OnlinePipeline:
     def run(self, *, input_file_sha256: str) -> OnlinePipelineResult:
         """Execute R0→R9 and return the terminal result.
 
-        Strictly sequential; the representation set flows forward copy-on-write.
-        Any integrity/coherence failure raises (fail-fast); outputs are written
-        atomically only at R8/R9, so a crash before R8 leaves no partial file.
+        Pins determinism *first* (before any numeric work / onnx init), then runs
+        the stages strictly sequentially with the representation set flowing
+        forward copy-on-write. Any integrity/coherence failure raises (fail-fast);
+        outputs are written atomically only at R8/R9, so a crash before R8 leaves
+        no partial submission file.
+
+        Args:
+            input_file_sha256: the sha256 of ``candidates.jsonl`` (the provenance
+                anchor recorded in the R9 reproducible block; computed by the
+                composition root, not re-read here — no wall clock / extra IO).
+
+        Returns:
+            The terminal :class:`OnlinePipelineResult` (submission + report paths,
+            output hash, honeypot rate, budget verdict, peak RSS, stage timings).
         """
+        # Determinism is owned in config/determinism.py and asserted here, at the
+        # very top, before any numeric reduction or onnx session creation — so the
+        # output is thread-count-invariant (Architecture §2 / Online Part 1).
+        pin_determinism(self._config.determinism_policy())
+
         clock = _StageClock()
 
         # R0 — load + verify all artifacts; bind ports; build the context whole.
@@ -162,7 +234,7 @@ class OnlinePipeline:
         ctx = self._r0(input_file_sha256)
         clock.record("R0", started)
 
-        # R1 — stream + validate candidates (lazy; materialized for the bulk path).
+        # R1 — stream + validate candidates (lazy at the port; bulk path here).
         started = time.perf_counter()
         ingested = stages.r1_ingest(ctx)
         clock.record("R1", started)
@@ -179,17 +251,17 @@ class OnlinePipeline:
         situated = stages.r3_semantic(ctx, featured)
         clock.record("R3", started)
 
-        # R4 — integrity + eligibility gates → floor mask.
+        # R4 — integrity + eligibility gates → floor mask (verdicts are data).
         started = time.perf_counter()
         gated = stages.r4_gates(ctx, situated)
         clock.record("R4", started)
 
-        # R5 — scoring (locked weights, gates, bounded multipliers).
+        # R5 — scoring (locked weights, gates, bounded multipliers; no calibration).
         started = time.perf_counter()
         scored = stages.r5_score(ctx, gated)
         clock.record("R5", started)
 
-        # R6 — ranking (raw scores, floor-partitioned, top-100, invariants).
+        # R6 — ranking (raw scores, floor-partitioned, top-100, invariants enforced).
         started = time.perf_counter()
         ranking = stages.r6_rank(ctx, scored)
         clock.record("R6", started)
@@ -199,7 +271,7 @@ class OnlinePipeline:
         reasoned = stages.r7_reason(ctx, ranking, gated)
         clock.record("R7", started)
 
-        # R8 — validate + write the submission CSV atomically.
+        # R8 — validate (structural + Stage-4) then write the CSV atomically.
         started = time.perf_counter()
         receipt = stages.r8_submit(ctx, reasoned)
         clock.record("R8", started)
@@ -216,7 +288,7 @@ class OnlinePipeline:
         )
         clock.record("R9", started)
 
-        used_seconds = sum(clock.timings_ms.values()) / 1000.0
+        used_seconds = clock.total_seconds()
         within_budget = used_seconds <= self._config.budget_limit_seconds
         return OnlinePipelineResult(
             submission_path=report_outcome.submission_path,
@@ -225,6 +297,7 @@ class OnlinePipeline:
             report_path=report_outcome.report_path,
             honeypot_rate_top100=report_outcome.honeypot_rate_top100,
             within_budget=within_budget,
+            peak_rss_mb=_peak_rss_mb(),
             stage_timings_ms=dict(clock.timings_ms),
         )
 
@@ -234,10 +307,11 @@ class OnlinePipeline:
     def _r0(self, input_file_sha256: str) -> OnlineRunContext:
         """Load + verify artifacts, then assemble the immutable context.
 
-        Delegates the manifest verification + artifact loading + cross-artifact
+        Delegates manifest verification + artifact loading + cross-artifact
         coherence to ``stages.r0_load``; binds every port; never returns a
         partially-bound context (a failure inside ``r0_load`` raises before the
-        context is constructed).
+        ``OnlineRunContext`` is constructed). ``as_of``/``seed`` come from the
+        injected ``OnlineEntropy`` (no wall clock; RNG forbidden).
         """
         loaded = stages.r0_load(
             artifact_store=self._artifact_store,
@@ -261,13 +335,3 @@ class OnlinePipeline:
             seed=self._entropy.seed,
             input_file_sha256=input_file_sha256,
         )
-
-
-def _resolve_candidate_ids(records: Sequence[object]) -> tuple[CandidateId, ...]:
-    """Defensive helper: extract candidate ids from ingested records (audit use)."""
-    out: list[CandidateId] = []
-    for rec in records:
-        cid = getattr(rec, "candidate_id", None)
-        if isinstance(cid, str):
-            out.append(CandidateId(cid))
-    return tuple(out)
