@@ -32,11 +32,11 @@ from pydantic import BaseModel, ConfigDict
 
 from redstack.domain.candidate.quality import CandidateQualityVector
 from redstack.domain.errors import CQVInvariantError
-from redstack.features.layout import FEATURE_LAYOUT, layout_version
+from redstack.features.layout import FEATURE_LAYOUT, LAYOUT_VERSION
 from redstack.features.view import FeatureView
 
 # Number of features in the frozen layout (CQV dimensionality D).
-_DIM: Final[int] = len(FEATURE_LAYOUT)
+_DIM: Final[int] = FEATURE_LAYOUT.dim
 # Float comparison slack for bound checks (float32 round-trip tolerance).
 _BOUND_EPS: Final[float] = 1e-6
 
@@ -58,7 +58,7 @@ class CQVAssembler(BaseModel):
         values: npt.NDArray[np.float32] = np.empty(_DIM, dtype=np.float32)
         self._fill(values, view)
         values.setflags(write=False)  # §N: inlined arrays are non-aliasable
-        return CandidateQualityVector(values=values, schema_version=layout_version)
+        return CandidateQualityVector(values=values, schema_version=LAYOUT_VERSION)
 
     def fold_row(
         self, matrix: npt.NDArray[np.float32], row: int, view: FeatureView
@@ -84,8 +84,8 @@ class CQVAssembler(BaseModel):
     @staticmethod
     def _fill(target: npt.NDArray[np.float32], view: FeatureView) -> None:
         """Populate ``target`` (length ``D``) from the view in layout order."""
-        for entry in FEATURE_LAYOUT:
-            feature_id = entry.feature_id
+        for entry in FEATURE_LAYOUT.entries:
+            feature_id = entry.name
             if not view.has(feature_id):
                 raise CQVInvariantError(
                     f"feature {feature_id!r} absent from view at fold time"
@@ -95,7 +95,7 @@ class CQVAssembler(BaseModel):
                 raise CQVInvariantError(
                     f"feature {feature_id!r} is non-finite ({value!r}) at fold time"
                 )
-            low, high = entry.bounds
+            low, high = entry.lower, entry.upper
             if value < low - _BOUND_EPS or value > high + _BOUND_EPS:
                 raise CQVInvariantError(
                     f"feature {feature_id!r} value {value!r} outside bounds "

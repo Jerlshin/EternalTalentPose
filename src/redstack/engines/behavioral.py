@@ -98,9 +98,12 @@ class BehavioralEngine(BaseModel):
     def _family_availability(
         profile: BehavioralProfile,
     ) -> dict[str, SignalAvailability]:
-        flags = profile.availability_flags
         return {
-            family: flags.get(family, SignalAvailability.PRESENT) for family in _FAMILIES
+            "availability": profile.availability_status,
+            "responsiveness": profile.responsiveness_status,
+            "engagement": profile.engagement_status,
+            "reliability": profile.reliability_status,
+            "verification": profile.verification_status,
         }
 
     def _to_multiplier(self, base: float) -> Multiplier:

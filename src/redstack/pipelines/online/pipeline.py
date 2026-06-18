@@ -37,6 +37,7 @@ from typing import final
 
 from redstack.config.determinism import DeterminismPolicy, pin_determinism
 from redstack.domain.errors import ArtifactContractError
+from redstack.pipelines.online import stages
 from redstack.ports.artifact_store import ArtifactStorePort
 from redstack.ports.candidate_source import CandidateSourcePort
 from redstack.ports.embedding import EmbeddingModelPort
@@ -46,13 +47,12 @@ from redstack.ports.online import (
     SemanticVectorStorePort,
     SubmissionSinkPort,
 )
-from redstack.pipelines.online import stages
 
 __all__: tuple[str, ...] = (
-    "OnlineRunConfig",
-    "OnlineRunContext",
     "OnlinePipeline",
     "OnlinePipelineResult",
+    "OnlineRunConfig",
+    "OnlineRunContext",
 )
 
 

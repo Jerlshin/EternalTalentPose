@@ -50,11 +50,9 @@ class IntegrityReport(BaseModel):
         ordered = tuple(sorted(self.findings, key=lambda f: f.code.value))
         if ordered != self.findings:
             raise ValueError("integrity findings must be sorted by code")
-        if (
-            any(f.severity is Severity.HARD for f in self.findings)
-            and not self.is_honeypot
-        ):
-            raise ValueError("a HARD finding forces is_honeypot=True")
+        hard_count = sum(1 for f in self.findings if f.severity is Severity.HARD)
+        if hard_count >= 2 and not self.is_honeypot:
+            raise ValueError("two or more HARD findings force is_honeypot=True")
         for finding in self.findings:
             if finding.code not in self.rules_evaluated:
                 raise ValueError("every fired finding must be in rules_evaluated")

@@ -314,7 +314,7 @@ class EligibilityEngine(BaseModel):
             (
                 make_evidence(
                     EvidenceKind.SIGNAL,
-                    "logistics.notice_period_days",
+                    "redrob_signals.notice_period_days",
                     int(logistics.notice_period_days),
                 ),
             ),
@@ -331,7 +331,7 @@ class EligibilityEngine(BaseModel):
             Severity.SOFT,
             (
                 make_evidence(
-                    EvidenceKind.PROFILE_FIELD, "logistics.country", logistics.country
+                    EvidenceKind.PROFILE_FIELD, "profile.country", logistics.country
                 ),
             ),
             "located outside India without sponsorship path",

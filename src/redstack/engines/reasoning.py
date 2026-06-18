@@ -68,12 +68,6 @@ _CONCERN_PHRASING: Final[Mapping[EligibilityCode, str]] = {
     EligibilityCode.CLOSED_SOURCE_5Y_NO_VALIDATION: "long closed-source tenure without external validation",
 }
 
-_LEAD_IN: Final[Mapping[str, str]] = {
-    "top": "Top-tier fit:",
-    "mid": "Solid fit:",
-    "tail": "Meets the bar with caveats:",
-}
-
 _MAX_STRENGTHS: Final[int] = 2
 _MAX_CONCERNS: Final[int] = 2
 
@@ -113,14 +107,9 @@ class ReasoningEngine(BaseModel):
         if not clauses:
             # Defence: a ranked candidate always has a positive contributor.
             clauses = (self._fallback_strength(ranked),)
-            strengths = clauses
 
-        rendered = self._render(band, strengths, concerns)
-        return CandidateReasoning(
-            candidate_id=ranked.candidate_id,
-            clauses=clauses,
-            rendered=rendered,
-            rank_band=band,
+        return CandidateReasoning.assemble(
+            candidate_id=ranked.candidate_id, clauses=clauses, rank_band=band
         )
 
     # --------------------------------------------------------------- internals
@@ -207,21 +196,6 @@ class ReasoningEngine(BaseModel):
             evidence=best.evidence,
             jd_link=best.component,
         )
-
-    @staticmethod
-    def _render(
-        band: RankBand,
-        strengths: tuple[ReasoningClause, ...],
-        concerns: tuple[ReasoningClause, ...],
-    ) -> str:
-        sentences: list[str] = []
-        if strengths:
-            body = "; ".join(c.fragment for c in strengths)
-            sentences.append(f"{_LEAD_IN[band]} {body}.")
-        if concerns:
-            body = "; ".join(c.fragment for c in concerns)
-            sentences.append(f"Concerns: {body}.")
-        return " ".join(sentences)
 
 
 __all__: tuple[str, ...] = ("RankBand", "ReasoningEngine")

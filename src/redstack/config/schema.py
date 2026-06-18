@@ -5,10 +5,12 @@ model declared here (Repository Layout §11, Architecture §8). All models set
 ``frozen=True`` and ``extra="forbid"`` so that a misspelled key fails loudly at
 startup instead of silently disabling a gate or thread pin.
 
-This module is **pure**: it imports only the standard library and ``pydantic``.
-It performs no IO and reads no clock, so it is importable from any layer
-(engines, features, adapters, pipelines, cli). The IO-bearing composition lives
-in :mod:`redstack.config.loader`.
+This module is **pure**: it imports only the standard library, ``pydantic``,
+and closed ``domain`` enums (for the calibrated artifact-shaped policy models
+below, whose keys are typed against the domain vocabulary rather than raw
+strings). It performs no IO and reads no clock, so it is importable from any
+layer (engines, features, adapters, pipelines, cli). The IO-bearing
+composition lives in :mod:`redstack.config.loader`.
 
 Two families of config live here:
 
@@ -44,6 +46,8 @@ from pydantic import (
     model_validator,
 )
 
+from redstack.domain.enums import IntegrityFlag, LocationFit, NoticeFit, Severity
+
 __all__ = [
     "RunMode",
     "Profile",
@@ -69,6 +73,11 @@ __all__ = [
     "EligibilityRulesConfig",
     "HoneypotRule",
     "HoneypotRulesConfig",
+    "IntegrityThresholds",
+    "EligibilityRuleSet",
+    "ScoringPolicy",
+    "BehavioralPolicy",
+    "LogisticsPolicy",
 ]
 
 
@@ -446,4 +455,88 @@ class HoneypotRulesConfig(_FrozenConfig):
         flags = [rule.flag for rule in self.rules]
         if len(set(flags)) != len(flags):
             raise ValueError("honeypot rule flags must be unique")
+        return self
+
+
+# --------------------------------------------------------------------------- #
+# Calibrated artifact-shaped policy models — consumed *online* by the engines #
+# (sourced from compiled O3/O6/O9/O11 artifacts at R0, never hand-authored).  #
+# --------------------------------------------------------------------------- #
+class IntegrityThresholds(_FrozenConfig):
+    """Calibrated honeypot thresholds (O3 artifact); consumed by ``IntegrityEngine``.
+
+    Sourced from ``artifacts/calibration/integrity_thresholds.json``. Per-flag
+    ``flag_severity``/``flag_weights`` default to empty (the engine falls back
+    to ``Severity.HARD`` / weight ``0.0`` for any flag absent from the map).
+    """
+
+    honeypot_threshold: float = Field(ge=0.0, le=1.0)
+    flag_severity: dict[IntegrityFlag, Severity] = Field(default_factory=dict)
+    flag_weights: dict[IntegrityFlag, float] = Field(default_factory=dict)
+    tolerance_experience_years: float = Field(ge=0.0)
+    duration_date_tolerance_months: float = Field(ge=0.0)
+    expert_zero_usage_min_count: int = Field(ge=1)
+    experience_predates_tolerance_years: int = Field(ge=0)
+
+
+class EligibilityRuleSet(_FrozenConfig):
+    """Calibrated eligibility-gate thresholds (O6 artifact); consumed by
+    ``EligibilityEngine``.
+
+    Sourced from the compiled ``gates/eligibility_rules.yaml`` artifact — the
+    JD-derived numeric thresholds behind each hard block / soft penalty.
+    """
+
+    research_min_semantic_fit: float = Field(ge=0.0, le=1.0)
+    framework_only_stuffing_min: float = Field(ge=0.0, le=1.0)
+    framework_only_gap_min: float = Field(ge=0.0, le=1.0)
+    production_recency_max_months: int = Field(ge=0)
+    adjacent_domain_min_relevant_credibility: float = Field(ge=0.0, le=1.0)
+    adjacent_domain_min_negative_fit: float = Field(ge=-1.0, le=1.0)
+    closed_source_min_years: float = Field(ge=0.0)
+    closed_source_max_credible_skills: int = Field(ge=0)
+    title_chaser_min_hop_rate: float = Field(ge=0.0, le=1.0)
+    experience_band_min_years: float = Field(ge=0.0)
+    experience_band_max_years: float = Field(ge=0.0)
+
+
+class ScoringPolicy(_FrozenConfig):
+    """Scoring combination policy (floor + neutral prior); consumed by
+    ``ScoringEngine``."""
+
+    floor: float = Field(default=0.0)
+    neutral_prior: float = Field(default=0.5, ge=0.0, le=1.0)
+
+
+class BehavioralPolicy(_FrozenConfig):
+    """Behavioral-multiplier policy (O11 artifact); consumed by ``BehavioralEngine``."""
+
+    family_weights: dict[str, float] = Field(default_factory=dict)
+    unknown_neutral_base: float = Field(default=0.5, ge=0.0, le=1.0)
+    m_min: float = Field(ge=0.0, le=1.0)
+    m_max: float = Field(ge=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def _bounds_ordered(self) -> BehavioralPolicy:
+        if self.m_min > self.m_max:
+            raise ValueError("m_min must not exceed m_max")
+        return self
+
+
+class LogisticsPolicy(_FrozenConfig):
+    """Logistics-multiplier policy; consumed by ``LogisticsEngine``."""
+
+    location_fit_factor: dict[LocationFit, float] = Field(default_factory=dict)
+    location_default_factor: float = Field(default=1.0)
+    notice_fit_factor: dict[NoticeFit, float] = Field(default_factory=dict)
+    notice_default_factor: float = Field(default=1.0)
+    work_mode_weight: float = Field(default=0.0, ge=0.0, le=1.0)
+    salary_inversion_factor: float = Field(default=1.0, ge=0.0, le=1.0)
+    m_min: float = Field(ge=0.0, le=1.0)
+    m_max: float = Field(ge=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def _bounds_ordered(self) -> LogisticsPolicy:
+        if self.m_min > self.m_max:
+            raise ValueError("m_min must not exceed m_max")
         return self
