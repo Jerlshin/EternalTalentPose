@@ -1,0 +1,4234 @@
+[
+  {
+    "rank": 1,
+    "score": 0.514974,
+    "candidate_id": "CAND_0029037",
+    "name": "Aisha Subramanian",
+    "current_title": "Cloud Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 8.0,
+    "location": "Kolkata, West Bengal, India",
+    "education_summary": "B.E. from Regional Technical Institute",
+    "behavioral": {
+      "response_rate": 0.59,
+      "last_active": "2026-01-23",
+      "notice_period_days": 30,
+      "github_score": 9.1,
+      "expected_salary_min_max": [
+        13.1,
+        15.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Mobile Developer",
+        "Java Developer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Mphasis",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.615805) against the JD anchors; career trajectory aligned with the role (0.814669); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 2,
+    "score": 0.50725,
+    "candidate_id": "CAND_0018499",
+    "name": "Aarav Trivedi",
+    "current_title": "Senior Machine Learning Engineer",
+    "current_company": "Zomato",
+    "years_of_experience": 7.2,
+    "location": "Noida, Uttar Pradesh, India",
+    "education_summary": "B.Sc from Massachusetts Institute of Technology",
+    "behavioral": {
+      "response_rate": 0.61,
+      "last_active": "2026-05-13",
+      "notice_period_days": 15,
+      "github_score": 94.8,
+      "expected_salary_min_max": [
+        36.8,
+        56.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 17,
+      "ai_skills_count": 7,
+      "ai_skills_ratio": 0.41,
+      "career_trajectory_titles": [
+        "Senior Machine Learning Engineer",
+        "Staff Machine Learning Engineer",
+        "Senior Machine Learning Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Zomato",
+        "Google",
+        "Flipkart"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.603172) against the JD anchors; relevant educational background (1.000000); career trajectory aligned with the role (0.535264)."
+  },
+  {
+    "rank": 3,
+    "score": 0.506,
+    "candidate_id": "CAND_0039754",
+    "name": "Mira Banerjee",
+    "current_title": "Senior Applied Scientist",
+    "current_company": "Meta",
+    "years_of_experience": 16.2,
+    "location": "Indore, Madhya Pradesh, India",
+    "education_summary": "M.Sc from IIT Hyderabad",
+    "behavioral": {
+      "response_rate": 0.81,
+      "last_active": "2026-05-14",
+      "notice_period_days": 30,
+      "github_score": 77.5,
+      "expected_salary_min_max": [
+        30.1,
+        62.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 20,
+      "ai_skills_count": 3,
+      "ai_skills_ratio": 0.15,
+      "career_trajectory_titles": [
+        "Senior Applied Scientist",
+        "Senior ML Engineer — Search & Ranking",
+        "Senior Applied Scientist"
+      ],
+      "career_trajectory_companies": [
+        "Meta",
+        "Apple",
+        "Observe.AI"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.599388) against the JD anchors; career trajectory aligned with the role (0.728006); relevant educational background (0.966667)."
+  },
+  {
+    "rank": 4,
+    "score": 0.505735,
+    "candidate_id": "CAND_0027542",
+    "name": "Jay Verma",
+    "current_title": "Software Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 5.1,
+    "location": "Jaipur, Rajasthan, India",
+    "education_summary": "Ph.D from VJTI Mumbai",
+    "behavioral": {
+      "response_rate": 0.81,
+      "last_active": "2025-12-08",
+      "notice_period_days": 30,
+      "github_score": 4.2,
+      "expected_salary_min_max": [
+        21.0,
+        25.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        ".NET Developer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.643912) against the JD anchors; career trajectory aligned with the role (0.812294); relevant educational background (0.783333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 5,
+    "score": 0.499413,
+    "candidate_id": "CAND_0066472",
+    "name": "Naina Chatterjee",
+    "current_title": "Cloud Engineer",
+    "current_company": "Acme Corp",
+    "years_of_experience": 9.5,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "M.S. from VIT Chennai",
+    "behavioral": {
+      "response_rate": 0.7,
+      "last_active": "2026-02-24",
+      "notice_period_days": 30,
+      "github_score": 40.3,
+      "expected_salary_min_max": [
+        19.2,
+        34.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.08,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Frontend Engineer",
+        "Java Developer"
+      ],
+      "career_trajectory_companies": [
+        "Acme Corp",
+        "Hooli",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.615453) against the JD anchors; career trajectory aligned with the role (0.658265); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 6,
+    "score": 0.499358,
+    "candidate_id": "CAND_0017177",
+    "name": "Aditya Kapoor",
+    "current_title": "DevOps Engineer",
+    "current_company": "TCS",
+    "years_of_experience": 6.9,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "B.Sc from Christ University",
+    "behavioral": {
+      "response_rate": 0.76,
+      "last_active": "2026-03-09",
+      "notice_period_days": 30,
+      "github_score": 43.6,
+      "expected_salary_min_max": [
+        8.1,
+        15.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        ".NET Developer"
+      ],
+      "career_trajectory_companies": [
+        "TCS",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.624876) against the JD anchors; career trajectory aligned with the role (0.653502); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 7,
+    "score": 0.487317,
+    "candidate_id": "CAND_0095276",
+    "name": "Sanjay Sen",
+    "current_title": "DevOps Engineer",
+    "current_company": "Razorpay",
+    "years_of_experience": 9.8,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.S. from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.78,
+      "last_active": "2026-01-19",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.8,
+        16.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        "DevOps Engineer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Razorpay",
+        "CRED",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.599159) against the JD anchors; career trajectory aligned with the role (0.719487); experience squarely in the target band (0.664729)."
+  },
+  {
+    "rank": 8,
+    "score": 0.486632,
+    "candidate_id": "CAND_0034683",
+    "name": "Avni Bose",
+    "current_title": "Mobile Developer",
+    "current_company": "Initech",
+    "years_of_experience": 9.1,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "M.Sc from IIT Delhi",
+    "behavioral": {
+      "response_rate": 0.7,
+      "last_active": "2026-05-19",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        15.8,
+        32.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mobile Developer",
+        "QA Engineer",
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Stark Industries",
+        "HCL"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.617332) against the JD anchors; career trajectory aligned with the role (0.750194); relevant educational background (1.000000)."
+  },
+  {
+    "rank": 9,
+    "score": 0.485969,
+    "candidate_id": "CAND_0099093",
+    "name": "Arjun Shetty",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 5.3,
+    "location": "Chandigarh, Chandigarh, India",
+    "education_summary": "B.Sc from VJTI Mumbai",
+    "behavioral": {
+      "response_rate": 0.63,
+      "last_active": "2026-02-17",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        10.1,
+        18.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Sales Executive"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Wayne Enterprises"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.577767) against the JD anchors; career trajectory aligned with the role (0.990847); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 10,
+    "score": 0.48442,
+    "candidate_id": "CAND_0053225",
+    "name": "Aarohi Desai",
+    "current_title": "Civil Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 6.8,
+    "location": "Trivandrum, Kerala, India",
+    "education_summary": "B.E. from Tier-3 Engineering College",
+    "behavioral": {
+      "response_rate": 0.73,
+      "last_active": "2025-11-30",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.2,
+        16.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Civil Engineer",
+        "Civil Engineer",
+        "Mechanical Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Dunder Mifflin",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.558443) against the JD anchors; career trajectory aligned with the role (0.848730); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 11,
+    "score": 0.482318,
+    "candidate_id": "CAND_0034684",
+    "name": "Advik Bose",
+    "current_title": "Cloud Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 8.0,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.E. from RV College of Engineering",
+    "behavioral": {
+      "response_rate": 0.79,
+      "last_active": "2026-04-03",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        9.3,
+        14.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "QA Engineer",
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Cognizant",
+        "Capgemini"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.618391) against the JD anchors; career trajectory aligned with the role (0.744530); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 12,
+    "score": 0.481124,
+    "candidate_id": "CAND_0056444",
+    "name": "Nisha Patel",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Dunder Mifflin",
+    "years_of_experience": 12.7,
+    "location": "Ahmedabad, Gujarat, India",
+    "education_summary": "B.Tech from Anna University",
+    "behavioral": {
+      "response_rate": 0.54,
+      "last_active": "2025-12-27",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        8.6,
+        25.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Accountant",
+        "Content Writer"
+      ],
+      "career_trajectory_companies": [
+        "Dunder Mifflin",
+        "Wayne Enterprises",
+        "Infosys"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.583204) against the JD anchors; career trajectory aligned with the role (0.943765); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 13,
+    "score": 0.478,
+    "candidate_id": "CAND_0028507",
+    "name": "Dhruv Joshi",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 9.7,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.Sc from NIT Surathkal",
+    "behavioral": {
+      "response_rate": 0.74,
+      "last_active": "2026-05-19",
+      "notice_period_days": 30,
+      "github_score": 25.9,
+      "expected_salary_min_max": [
+        5.1,
+        6.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Customer Support",
+        "Project Manager"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Pied Piper",
+        "Wayne Enterprises"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.592955) against the JD anchors; career trajectory aligned with the role (0.876753); relevant educational background (1.000000)."
+  },
+  {
+    "rank": 14,
+    "score": 0.476131,
+    "candidate_id": "CAND_0059519",
+    "name": "Avni Sen",
+    "current_title": "QA Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 5.4,
+    "location": "Vizag, Andhra Pradesh, India",
+    "education_summary": "B.Sc from Bharati Vidyapeeth",
+    "behavioral": {
+      "response_rate": 0.84,
+      "last_active": "2026-03-06",
+      "notice_period_days": 30,
+      "github_score": 15.0,
+      "expected_salary_min_max": [
+        16.3,
+        16.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.07,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.606420) against the JD anchors; career trajectory aligned with the role (0.815465); relevant educational background (0.650000). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 15,
+    "score": 0.473603,
+    "candidate_id": "CAND_0054931",
+    "name": "Anika Mukherjee",
+    "current_title": "Business Analyst",
+    "current_company": "Hooli",
+    "years_of_experience": 12.3,
+    "location": "Mumbai, Maharashtra, India",
+    "education_summary": "M.S. from Tier-3 Engineering College",
+    "behavioral": {
+      "response_rate": 0.49,
+      "last_active": "2026-05-25",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.8,
+        22.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Business Analyst",
+        "Marketing Manager",
+        "Marketing Manager"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Wipro",
+        "Acme Corp"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.585819) against the JD anchors; career trajectory aligned with the role (0.845093); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 16,
+    "score": 0.473473,
+    "candidate_id": "CAND_0041610",
+    "name": "Anil Subramanian",
+    "current_title": "Recommendation Systems Engineer",
+    "current_company": "Zoho",
+    "years_of_experience": 6.7,
+    "location": "Indore, Madhya Pradesh, India",
+    "education_summary": "B.Tech from SRM University",
+    "behavioral": {
+      "response_rate": 0.52,
+      "last_active": "2026-05-14",
+      "notice_period_days": 30,
+      "github_score": 52.1,
+      "expected_salary_min_max": [
+        35.4,
+        59.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 17,
+      "ai_skills_count": 3,
+      "ai_skills_ratio": 0.18,
+      "career_trajectory_titles": [
+        "Recommendation Systems Engineer",
+        "Applied ML Engineer",
+        "Search Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Zoho",
+        "Observe.AI",
+        "InMobi"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.599937) against the JD anchors; career trajectory aligned with the role (0.830158); relevant educational background (0.883333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 17,
+    "score": 0.471905,
+    "candidate_id": "CAND_0081793",
+    "name": "Aarav Chowdary",
+    "current_title": "Full Stack Developer",
+    "current_company": "Wayne Enterprises",
+    "years_of_experience": 9.1,
+    "location": "Noida, Uttar Pradesh, India",
+    "education_summary": "B.Tech from Generic State University",
+    "behavioral": {
+      "response_rate": 0.23,
+      "last_active": "2026-02-12",
+      "notice_period_days": 30,
+      "github_score": 10.0,
+      "expected_salary_min_max": [
+        6.7,
+        32.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Full Stack Developer",
+        "Full Stack Developer",
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Wayne Enterprises",
+        "Razorpay",
+        "Globex Inc"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.607140) against the JD anchors; career trajectory aligned with the role (0.633191); experience squarely in the target band (0.656014)."
+  },
+  {
+    "rank": 18,
+    "score": 0.471663,
+    "candidate_id": "CAND_0019467",
+    "name": "Ananya Pillai",
+    "current_title": "HR Manager",
+    "current_company": "Pied Piper",
+    "years_of_experience": 13.2,
+    "location": "Pune, Maharashtra, India",
+    "education_summary": "B.Sc from COEP Pune",
+    "behavioral": {
+      "response_rate": 0.75,
+      "last_active": "2026-04-24",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.8,
+        16.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "HR Manager",
+        "Business Analyst",
+        "Civil Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Pied Piper",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.544145) against the JD anchors; career trajectory aligned with the role (0.670941); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 19,
+    "score": 0.471429,
+    "candidate_id": "CAND_0023902",
+    "name": "Aarav Shetty",
+    "current_title": "Cloud Engineer",
+    "current_company": "Dunder Mifflin",
+    "years_of_experience": 9.8,
+    "location": "Jaipur, Rajasthan, India",
+    "education_summary": "M.S. from Generic State University",
+    "behavioral": {
+      "response_rate": 0.81,
+      "last_active": "2026-05-27",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        8.1,
+        24.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.07,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Cloud Engineer",
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Dunder Mifflin",
+        "Tech Mahindra",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.607342) against the JD anchors; career trajectory aligned with the role (0.916172); experience squarely in the target band (0.668919)."
+  },
+  {
+    "rank": 20,
+    "score": 0.470934,
+    "candidate_id": "CAND_0067521",
+    "name": "Sunil Bansal",
+    "current_title": "Full Stack Developer",
+    "current_company": "Swiggy",
+    "years_of_experience": 4.4,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.Sc from Amity University",
+    "behavioral": {
+      "response_rate": 0.72,
+      "last_active": "2026-02-08",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        18.2,
+        26.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.08,
+      "career_trajectory_titles": [
+        "Full Stack Developer",
+        "QA Engineer",
+        "Software Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Swiggy",
+        "Dunder Mifflin",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.618816) against the JD anchors; career trajectory aligned with the role (0.679512); relevant educational background (0.733333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 21,
+    "score": 0.470157,
+    "candidate_id": "CAND_0025946",
+    "name": "Kavya Sethi",
+    "current_title": "Java Developer",
+    "current_company": "Initech",
+    "years_of_experience": 9.7,
+    "location": "Bhubaneswar, Odisha, India",
+    "education_summary": "B.E. from Amity University",
+    "behavioral": {
+      "response_rate": 0.76,
+      "last_active": "2026-02-06",
+      "notice_period_days": 30,
+      "github_score": 14.7,
+      "expected_salary_min_max": [
+        15.6,
+        20.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.11,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "Java Developer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Globex Inc",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.618019) against the JD anchors; career trajectory aligned with the role (0.606625); relevant educational background (0.666667)."
+  },
+  {
+    "rank": 22,
+    "score": 0.468962,
+    "candidate_id": "CAND_0020338",
+    "name": "Amit Mittal",
+    "current_title": "Software Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 9.5,
+    "location": "Kolkata, West Bengal, India",
+    "education_summary": "B.E. from Jadavpur University",
+    "behavioral": {
+      "response_rate": 0.5,
+      "last_active": "2026-01-23",
+      "notice_period_days": 30,
+      "github_score": 16.1,
+      "expected_salary_min_max": [
+        6.6,
+        19.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        ".NET Developer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Wayne Enterprises",
+        "Tech Mahindra"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.634266) against the JD anchors; relevant educational background (1.000000); career trajectory aligned with the role (0.586799)."
+  },
+  {
+    "rank": 23,
+    "score": 0.468606,
+    "candidate_id": "CAND_0085215",
+    "name": "Ira Iyengar",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Stark Industries",
+    "years_of_experience": 10.9,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "M.S. from Tier-3 Engineering College",
+    "behavioral": {
+      "response_rate": 0.67,
+      "last_active": "2026-02-21",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        13.8,
+        20.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Business Analyst",
+        "Graphic Designer"
+      ],
+      "career_trajectory_companies": [
+        "Stark Industries",
+        "Dunder Mifflin",
+        "Wayne Enterprises"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.563192) against the JD anchors; career trajectory aligned with the role (0.808985); relevant educational background (0.750000)."
+  },
+  {
+    "rank": 24,
+    "score": 0.468139,
+    "candidate_id": "CAND_0098520",
+    "name": "Sneha Goyal",
+    "current_title": "Cloud Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 4.1,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "M.E. from Jadavpur University",
+    "behavioral": {
+      "response_rate": 0.84,
+      "last_active": "2026-04-26",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        14.9,
+        16.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.622484) against the JD anchors; career trajectory aligned with the role (0.565465); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 25,
+    "score": 0.466955,
+    "candidate_id": "CAND_0080629",
+    "name": "Naina Agarwal",
+    "current_title": "Sales Executive",
+    "current_company": "Initech",
+    "years_of_experience": 10.6,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.E. from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.6,
+      "last_active": "2026-04-08",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.2,
+        24.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Sales Executive",
+        "Content Writer",
+        "Content Writer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Acme Corp",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.562491) against the JD anchors; career trajectory aligned with the role (0.765008); relevant educational background (0.750000)."
+  },
+  {
+    "rank": 26,
+    "score": 0.466388,
+    "candidate_id": "CAND_0010142",
+    "name": "Rajesh Goyal",
+    "current_title": "Full Stack Developer",
+    "current_company": "Hooli",
+    "years_of_experience": 8.1,
+    "location": "Bhubaneswar, Odisha, India",
+    "education_summary": "M.Sc from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.8,
+      "last_active": "2026-04-17",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        16.2,
+        12.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Full Stack Developer",
+        "Java Developer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Initech",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.620411) against the JD anchors; career trajectory aligned with the role (0.540601); high evidence credibility (0.444873), low keyword-stuffing risk."
+  },
+  {
+    "rank": 27,
+    "score": 0.46569,
+    "candidate_id": "CAND_0045010",
+    "name": "Sai Bhatia",
+    "current_title": "Customer Support",
+    "current_company": "Acme Corp",
+    "years_of_experience": 8.6,
+    "location": "Jaipur, Rajasthan, India",
+    "education_summary": "M.Sc from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.27,
+      "last_active": "2026-01-19",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        11.8,
+        20.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Customer Support",
+        "Graphic Designer",
+        "Business Analyst"
+      ],
+      "career_trajectory_companies": [
+        "Acme Corp",
+        "Hooli",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.580359) against the JD anchors; career trajectory aligned with the role (0.664343); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 28,
+    "score": 0.465302,
+    "candidate_id": "CAND_0070898",
+    "name": "Meera Naidu",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 11.2,
+    "location": "Gurgaon, Haryana, India",
+    "education_summary": "M.E. from Lovely Professional University",
+    "behavioral": {
+      "response_rate": 0.32,
+      "last_active": "2025-11-13",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.5,
+        13.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 16,
+      "ai_skills_count": 4,
+      "ai_skills_ratio": 0.25,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Graphic Designer",
+        "HR Manager"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Wayne Enterprises",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.557793) against the JD anchors; career trajectory aligned with the role (0.811961); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 29,
+    "score": 0.465108,
+    "candidate_id": "CAND_0000242",
+    "name": "Shaurya Desai",
+    "current_title": "Project Manager",
+    "current_company": "Globex Inc",
+    "years_of_experience": 9.1,
+    "location": "Kochi, Kerala, India",
+    "education_summary": "M.Tech from Lovely Professional University",
+    "behavioral": {
+      "response_rate": 0.38,
+      "last_active": "2026-02-11",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.6,
+        10.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Project Manager",
+        "Graphic Designer",
+        "Project Manager"
+      ],
+      "career_trajectory_companies": [
+        "Globex Inc",
+        "Initech",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.574586) against the JD anchors; career trajectory aligned with the role (0.766251); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 30,
+    "score": 0.464926,
+    "candidate_id": "CAND_0029642",
+    "name": "Amit Sen",
+    "current_title": "Frontend Engineer",
+    "current_company": "Wayne Enterprises",
+    "years_of_experience": 6.8,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "M.E. from Generic State University",
+    "behavioral": {
+      "response_rate": 0.8,
+      "last_active": "2026-05-17",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.5,
+        29.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Frontend Engineer",
+        "Mobile Developer",
+        "Mobile Developer"
+      ],
+      "career_trajectory_companies": [
+        "Wayne Enterprises",
+        "Initech",
+        "Zomato"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.631697) against the JD anchors; relevant educational background (0.716667); experience squarely in the target band (0.630279). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 31,
+    "score": 0.464634,
+    "candidate_id": "CAND_0080488",
+    "name": "Saanvi Nair",
+    "current_title": "QA Engineer",
+    "current_company": "TCS",
+    "years_of_experience": 7.3,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "M.Tech from SRM Chennai",
+    "behavioral": {
+      "response_rate": 0.38,
+      "last_active": "2026-03-09",
+      "notice_period_days": 30,
+      "github_score": 16.5,
+      "expected_salary_min_max": [
+        16.7,
+        30.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        "Frontend Engineer",
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "TCS",
+        "Hooli",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.636928) against the JD anchors; relevant educational background (0.833333); experience squarely in the target band (0.643800)."
+  },
+  {
+    "rank": 32,
+    "score": 0.464088,
+    "candidate_id": "CAND_0040069",
+    "name": "Om Nair",
+    "current_title": "Java Developer",
+    "current_company": "Initech",
+    "years_of_experience": 9.1,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "B.E. from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.58,
+      "last_active": "2026-04-25",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        10.3,
+        29.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "DevOps Engineer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Zomato",
+        "Wayne Enterprises"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.609907) against the JD anchors; career trajectory aligned with the role (0.679064); experience squarely in the target band (0.660527)."
+  },
+  {
+    "rank": 33,
+    "score": 0.463658,
+    "candidate_id": "CAND_0052248",
+    "name": "Sneha Subramanian",
+    "current_title": "Business Analyst",
+    "current_company": "Wayne Enterprises",
+    "years_of_experience": 14.5,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "B.E. from Chandigarh University",
+    "behavioral": {
+      "response_rate": 0.42,
+      "last_active": "2025-11-08",
+      "notice_period_days": 30,
+      "github_score": 36.6,
+      "expected_salary_min_max": [
+        6.1,
+        18.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Business Analyst",
+        "Project Manager",
+        "Content Writer"
+      ],
+      "career_trajectory_companies": [
+        "Wayne Enterprises",
+        "Dunder Mifflin",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.581125) against the JD anchors; career trajectory aligned with the role (0.756787); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 34,
+    "score": 0.4636,
+    "candidate_id": "CAND_0004911",
+    "name": "Rahul Kumar",
+    "current_title": "Marketing Manager",
+    "current_company": "Globex Inc",
+    "years_of_experience": 13.9,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "B.Tech from VIT Vellore",
+    "behavioral": {
+      "response_rate": 0.17,
+      "last_active": "2025-11-15",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        5.9,
+        24.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 23,
+      "ai_skills_count": 3,
+      "ai_skills_ratio": 0.13,
+      "career_trajectory_titles": [
+        "Marketing Manager",
+        "Accountant",
+        "Civil Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Globex Inc",
+        "Initech",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.545757) against the JD anchors; career trajectory aligned with the role (0.690301); relevant educational background (1.000000)."
+  },
+  {
+    "rank": 35,
+    "score": 0.463153,
+    "candidate_id": "CAND_0000492",
+    "name": "Meera Sharma",
+    "current_title": "Civil Engineer",
+    "current_company": "Wipro",
+    "years_of_experience": 14.2,
+    "location": "Chennai, Tamil Nadu, India",
+    "education_summary": "M.Tech from Regional Technical Institute",
+    "behavioral": {
+      "response_rate": 0.43,
+      "last_active": "2026-04-29",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        10.4,
+        19.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Civil Engineer",
+        "Project Manager",
+        "Marketing Manager"
+      ],
+      "career_trajectory_companies": [
+        "Wipro",
+        "Hooli",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.590992) against the JD anchors; career trajectory aligned with the role (0.660131); experience squarely in the target band (0.683718)."
+  },
+  {
+    "rank": 36,
+    "score": 0.462526,
+    "candidate_id": "CAND_0041537",
+    "name": "Arnav Mittal",
+    "current_title": "Customer Support",
+    "current_company": "Globex Inc",
+    "years_of_experience": 14.6,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "Ph.D from Chandigarh University",
+    "behavioral": {
+      "response_rate": 0.13,
+      "last_active": "2026-03-24",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        11.2,
+        25.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Customer Support",
+        "Civil Engineer",
+        "Sales Executive"
+      ],
+      "career_trajectory_companies": [
+        "Globex Inc",
+        "Pied Piper",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.590409) against the JD anchors; career trajectory aligned with the role (0.829266); relevant educational background (0.883333)."
+  },
+  {
+    "rank": 37,
+    "score": 0.462513,
+    "candidate_id": "CAND_0052005",
+    "name": "Siya Subramanian",
+    "current_title": ".NET Developer",
+    "current_company": "Mindtree",
+    "years_of_experience": 4.9,
+    "location": "Kochi, Kerala, India",
+    "education_summary": "M.Sc from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.6,
+      "last_active": "2026-01-08",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        11.1,
+        15.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        ".NET Developer",
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Mindtree",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.601591) against the JD anchors; career trajectory aligned with the role (0.634413); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 38,
+    "score": 0.462249,
+    "candidate_id": "CAND_0071447",
+    "name": "Vivaan Mehta",
+    "current_title": "Operations Manager",
+    "current_company": "Pied Piper",
+    "years_of_experience": 2.6,
+    "location": "Vizag, Andhra Pradesh, India",
+    "education_summary": "B.E. from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.66,
+      "last_active": "2026-05-01",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        17.5,
+        23.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Operations Manager",
+        "Graphic Designer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.535666) against the JD anchors; career trajectory aligned with the role (0.917776); relevant educational background (0.916667). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 39,
+    "score": 0.461309,
+    "candidate_id": "CAND_0054785",
+    "name": "Myra Arora",
+    "current_title": "Java Developer",
+    "current_company": "Initech",
+    "years_of_experience": 8.1,
+    "location": "Bhubaneswar, Odisha, India",
+    "education_summary": "Ph.D from SRM Chennai",
+    "behavioral": {
+      "response_rate": 0.26,
+      "last_active": "2025-12-26",
+      "notice_period_days": 30,
+      "github_score": 7.9,
+      "expected_salary_min_max": [
+        8.7,
+        15.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "Frontend Engineer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "HCL",
+        "Wipro"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.624291) against the JD anchors; relevant educational background (0.833333); career trajectory aligned with the role (0.511217)."
+  },
+  {
+    "rank": 40,
+    "score": 0.461279,
+    "candidate_id": "CAND_0066049",
+    "name": "Aryan Mittal",
+    "current_title": "Cloud Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 4.6,
+    "location": "Chennai, Tamil Nadu, India",
+    "education_summary": "Ph.D from Generic State University",
+    "behavioral": {
+      "response_rate": 0.52,
+      "last_active": "2026-01-01",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        9.2,
+        12.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 8,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.12,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Frontend Engineer",
+        "Java Developer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Wayne Enterprises",
+        "Acme Corp"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.607637) against the JD anchors; career trajectory aligned with the role (0.702462); relevant educational background (0.750000)."
+  },
+  {
+    "rank": 41,
+    "score": 0.460044,
+    "candidate_id": "CAND_0031515",
+    "name": "Aadhya Bhatia",
+    "current_title": "Software Engineer",
+    "current_company": "Flipkart",
+    "years_of_experience": 8.4,
+    "location": "Ahmedabad, Gujarat, India",
+    "education_summary": "B.Tech from KIIT University",
+    "behavioral": {
+      "response_rate": 0.64,
+      "last_active": "2025-12-31",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        14.5,
+        22.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 2,
+      "ai_skills_ratio": 0.17,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Mobile Developer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Flipkart",
+        "Globex Inc",
+        "Acme Corp"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.630396) against the JD anchors; career trajectory aligned with the role (0.558713); experience squarely in the target band (0.655626). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 42,
+    "score": 0.459716,
+    "candidate_id": "CAND_0087765",
+    "name": "Shreya Kumar",
+    "current_title": "Software Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 4.7,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "M.S. from SRM Chennai",
+    "behavioral": {
+      "response_rate": 0.6,
+      "last_active": "2026-05-11",
+      "notice_period_days": 30,
+      "github_score": 53.6,
+      "expected_salary_min_max": [
+        16.0,
+        21.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        ".NET Developer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Flipkart"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.617918) against the JD anchors; career trajectory aligned with the role (0.809845); relevant educational background (0.800000). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 43,
+    "score": 0.459437,
+    "candidate_id": "CAND_0075610",
+    "name": "Ayaan Sharma",
+    "current_title": "DevOps Engineer",
+    "current_company": "Wipro",
+    "years_of_experience": 3.7,
+    "location": "Chandigarh, Chandigarh, India",
+    "education_summary": "M.Tech from Tier-3 Engineering College",
+    "behavioral": {
+      "response_rate": 0.77,
+      "last_active": "2026-04-08",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        17.9,
+        23.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 8,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Wipro",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.642710) against the JD anchors; career trajectory aligned with the role (0.661457); relevant educational background (0.550000)."
+  },
+  {
+    "rank": 44,
+    "score": 0.459366,
+    "candidate_id": "CAND_0048136",
+    "name": "Aarohi Chatterjee",
+    "current_title": "Software Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 5.3,
+    "location": "Ahmedabad, Gujarat, India",
+    "education_summary": "M.Sc from Christ University",
+    "behavioral": {
+      "response_rate": 0.34,
+      "last_active": "2026-03-26",
+      "notice_period_days": 30,
+      "github_score": 59.8,
+      "expected_salary_min_max": [
+        9.0,
+        22.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 8,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "HCL"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.634419) against the JD anchors; career trajectory aligned with the role (0.814883); relevant educational background (0.666667). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 45,
+    "score": 0.458651,
+    "candidate_id": "CAND_0048556",
+    "name": "Pari Mukherjee",
+    "current_title": "Software Engineer",
+    "current_company": "Capgemini",
+    "years_of_experience": 3.9,
+    "location": "Mumbai, Maharashtra, India",
+    "education_summary": "M.Sc from Christ University",
+    "behavioral": {
+      "response_rate": 0.68,
+      "last_active": "2025-12-10",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        8.4,
+        32.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Mobile Developer"
+      ],
+      "career_trajectory_companies": [
+        "Capgemini",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.621742) against the JD anchors; career trajectory aligned with the role (0.646369); relevant educational background (0.666667). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 46,
+    "score": 0.4586,
+    "candidate_id": "CAND_0051301",
+    "name": "Kavya Mehta",
+    "current_title": "Project Manager",
+    "current_company": "Initech",
+    "years_of_experience": 4.1,
+    "location": "Chandigarh, Chandigarh, India",
+    "education_summary": "Ph.D from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.13,
+      "last_active": "2025-11-29",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        14.1,
+        22.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Project Manager",
+        "Sales Executive"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Infosys"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.554688) against the JD anchors; career trajectory aligned with the role (0.887327); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 47,
+    "score": 0.457831,
+    "candidate_id": "CAND_0016851",
+    "name": "Ishaan Chatterjee",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Wayne Enterprises",
+    "years_of_experience": 6.7,
+    "location": "Chandigarh, Chandigarh, India",
+    "education_summary": "M.S. from RV College of Engineering",
+    "behavioral": {
+      "response_rate": 0.31,
+      "last_active": "2026-03-25",
+      "notice_period_days": 30,
+      "github_score": 2.5,
+      "expected_salary_min_max": [
+        9.3,
+        21.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "HR Manager",
+        "HR Manager"
+      ],
+      "career_trajectory_companies": [
+        "Wayne Enterprises",
+        "Acme Corp",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.560040) against the JD anchors; career trajectory aligned with the role (0.748219); relevant educational background (0.883333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 48,
+    "score": 0.4568,
+    "candidate_id": "CAND_0064023",
+    "name": "Pooja Saxena",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 11.3,
+    "location": "Noida, Uttar Pradesh, India",
+    "education_summary": "M.S. from Tier-3 Engineering College",
+    "behavioral": {
+      "response_rate": 0.68,
+      "last_active": "2025-12-09",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.5,
+        7.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "HR Manager",
+        "Accountant"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Dunder Mifflin",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.584331) against the JD anchors; career trajectory aligned with the role (0.649023); experience squarely in the target band (0.678728)."
+  },
+  {
+    "rank": 49,
+    "score": 0.455932,
+    "candidate_id": "CAND_0091496",
+    "name": "Nikhil Bhatia",
+    "current_title": "QA Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 9.7,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.Sc from VJTI Mumbai",
+    "behavioral": {
+      "response_rate": 0.57,
+      "last_active": "2026-03-26",
+      "notice_period_days": 30,
+      "github_score": 52.5,
+      "expected_salary_min_max": [
+        17.6,
+        17.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 16,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        ".NET Developer",
+        ".NET Developer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Stark Industries",
+        "Mphasis"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.629017) against the JD anchors; relevant educational background (0.883333); career trajectory aligned with the role (0.541045). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 50,
+    "score": 0.455785,
+    "candidate_id": "CAND_0053598",
+    "name": "Pari Reddy",
+    "current_title": "QA Engineer",
+    "current_company": "Tech Mahindra",
+    "years_of_experience": 3.7,
+    "location": "Jaipur, Rajasthan, India",
+    "education_summary": "M.Sc from SRM University",
+    "behavioral": {
+      "response_rate": 0.66,
+      "last_active": "2025-11-29",
+      "notice_period_days": 30,
+      "github_score": 4.1,
+      "expected_salary_min_max": [
+        20.8,
+        34.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        "Mobile Developer"
+      ],
+      "career_trajectory_companies": [
+        "Tech Mahindra",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.601845) against the JD anchors; career trajectory aligned with the role (0.568824); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 51,
+    "score": 0.455084,
+    "candidate_id": "CAND_0080340",
+    "name": "Ved Patel",
+    "current_title": "DevOps Engineer",
+    "current_company": "Cognizant",
+    "years_of_experience": 5.8,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.S. from Generic State University",
+    "behavioral": {
+      "response_rate": 0.75,
+      "last_active": "2026-04-29",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        15.4,
+        29.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Cognizant",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.616449) against the JD anchors; relevant educational background (0.750000); career trajectory aligned with the role (0.458560). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 52,
+    "score": 0.455028,
+    "candidate_id": "CAND_0086186",
+    "name": "Karan Agarwal",
+    "current_title": "DevOps Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 5.9,
+    "location": "Pune, Maharashtra, India",
+    "education_summary": "M.S. from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.17,
+      "last_active": "2026-04-23",
+      "notice_period_days": 30,
+      "github_score": 21.0,
+      "expected_salary_min_max": [
+        7.3,
+        14.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        "Software Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.611982) against the JD anchors; career trajectory aligned with the role (0.745983); relevant educational background (0.650000)."
+  },
+  {
+    "rank": 53,
+    "score": 0.454729,
+    "candidate_id": "CAND_0045806",
+    "name": "Jay Banerjee",
+    "current_title": "QA Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 6.7,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "M.Tech from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.37,
+      "last_active": "2026-03-13",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        15.2,
+        27.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        "Frontend Engineer",
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Hooli",
+        "CRED"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.617239) against the JD anchors; career trajectory aligned with the role (0.609478); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 54,
+    "score": 0.454092,
+    "candidate_id": "CAND_0078166",
+    "name": "Kiara Iyengar",
+    "current_title": "Sales Executive",
+    "current_company": "Stark Industries",
+    "years_of_experience": 5.6,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "M.Tech from COEP Pune",
+    "behavioral": {
+      "response_rate": 0.58,
+      "last_active": "2026-04-15",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        12.2,
+        26.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Sales Executive",
+        "Civil Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Stark Industries",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.551592) against the JD anchors; relevant educational background (0.883333); career trajectory aligned with the role (0.583796)."
+  },
+  {
+    "rank": 55,
+    "score": 0.453855,
+    "candidate_id": "CAND_0032216",
+    "name": "Rahul Shetty",
+    "current_title": "ML Engineer",
+    "current_company": "upGrad",
+    "years_of_experience": 6.1,
+    "location": "Chennai, Tamil Nadu, India",
+    "education_summary": "B.Tech from VIT Chennai",
+    "behavioral": {
+      "response_rate": 0.35,
+      "last_active": "2026-04-24",
+      "notice_period_days": 30,
+      "github_score": 14.2,
+      "expected_salary_min_max": [
+        25.6,
+        35.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 4,
+      "ai_skills_ratio": 0.29,
+      "career_trajectory_titles": [
+        "ML Engineer",
+        "Junior ML Engineer",
+        "AI Research Engineer"
+      ],
+      "career_trajectory_companies": [
+        "upGrad",
+        "Zoho",
+        "Vedantu"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.613591) against the JD anchors; career trajectory aligned with the role (0.776101); relevant educational background (1.000000)."
+  },
+  {
+    "rank": 56,
+    "score": 0.4533,
+    "candidate_id": "CAND_0069558",
+    "name": "Ayaan Singh",
+    "current_title": "Mobile Developer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 7.9,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "M.Tech from VIT Chennai",
+    "behavioral": {
+      "response_rate": 0.42,
+      "last_active": "2026-04-30",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.7,
+        23.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mobile Developer",
+        "Mobile Developer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Initech",
+        "Zomato"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.619270) against the JD anchors; career trajectory aligned with the role (0.716265); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 57,
+    "score": 0.452859,
+    "candidate_id": "CAND_0007411",
+    "name": "Rahul Bansal",
+    "current_title": "Senior Machine Learning Engineer",
+    "current_company": "Amazon",
+    "years_of_experience": 8.0,
+    "location": "Kochi, Kerala, India",
+    "education_summary": "B.Tech from IIT Roorkee",
+    "behavioral": {
+      "response_rate": 0.12,
+      "last_active": "2025-12-02",
+      "notice_period_days": 15,
+      "github_score": 89.5,
+      "expected_salary_min_max": [
+        30.2,
+        59.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 3,
+      "ai_skills_ratio": 0.21,
+      "career_trajectory_titles": [
+        "Senior Machine Learning Engineer",
+        "Senior Machine Learning Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Amazon",
+        "Yellow.ai"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.579680) against the JD anchors; career trajectory aligned with the role (0.802065); relevant educational background (0.666667)."
+  },
+  {
+    "rank": 58,
+    "score": 0.452642,
+    "candidate_id": "CAND_0015633",
+    "name": "Arnav Mishra",
+    "current_title": "Cloud Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 4.3,
+    "location": "Mumbai, Maharashtra, India",
+    "education_summary": "Ph.D from Christ University",
+    "behavioral": {
+      "response_rate": 0.83,
+      "last_active": "2026-03-29",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.9,
+        15.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Software Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.611442) against the JD anchors; career trajectory aligned with the role (0.815465); relevant educational background (0.833333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 59,
+    "score": 0.45257,
+    "candidate_id": "CAND_0082932",
+    "name": "Krishna Banerjee",
+    "current_title": "Operations Manager",
+    "current_company": "Infosys",
+    "years_of_experience": 8.4,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "M.Sc from Anna University",
+    "behavioral": {
+      "response_rate": 0.28,
+      "last_active": "2025-11-25",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        4.3,
+        13.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Operations Manager",
+        "HR Manager",
+        "Graphic Designer"
+      ],
+      "career_trajectory_companies": [
+        "Infosys",
+        "Pied Piper",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.570671) against the JD anchors; career trajectory aligned with the role (0.634494); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 60,
+    "score": 0.451673,
+    "candidate_id": "CAND_0044056",
+    "name": "Ela Bhatia",
+    "current_title": "QA Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 1.7,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.S. from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.79,
+      "last_active": "2025-12-12",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        15.8,
+        28.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.07,
+      "career_trajectory_titles": [
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.633732) against the JD anchors; career trajectory aligned with the role (0.565465); relevant educational background (0.650000). Concerns: experience falls outside the target band."
+  },
+  {
+    "rank": 61,
+    "score": 0.451672,
+    "candidate_id": "CAND_0099214",
+    "name": "Vikram Trivedi",
+    "current_title": "Project Manager",
+    "current_company": "Dunder Mifflin",
+    "years_of_experience": 10.3,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "M.S. from Bharati Vidyapeeth",
+    "behavioral": {
+      "response_rate": 0.32,
+      "last_active": "2025-11-15",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        15.3,
+        19.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Project Manager",
+        "Business Analyst",
+        "Customer Support"
+      ],
+      "career_trajectory_companies": [
+        "Dunder Mifflin",
+        "Initech",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.534556) against the JD anchors; career trajectory aligned with the role (0.792053); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 62,
+    "score": 0.451612,
+    "candidate_id": "CAND_0058490",
+    "name": "Yash Shah",
+    "current_title": "Frontend Engineer",
+    "current_company": "Razorpay",
+    "years_of_experience": 2.3,
+    "location": "Kochi, Kerala, India",
+    "education_summary": "Ph.D from Regional Technical Institute",
+    "behavioral": {
+      "response_rate": 0.8,
+      "last_active": "2026-04-13",
+      "notice_period_days": 30,
+      "github_score": 14.2,
+      "expected_salary_min_max": [
+        14.4,
+        29.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Frontend Engineer",
+        "Mobile Developer"
+      ],
+      "career_trajectory_companies": [
+        "Razorpay",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.623712) against the JD anchors; career trajectory aligned with the role (0.615465); relevant educational background (0.700000). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 63,
+    "score": 0.451585,
+    "candidate_id": "CAND_0099043",
+    "name": "Aisha Chatterjee",
+    "current_title": "DevOps Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 8.6,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "B.Tech from Local Engineering College",
+    "behavioral": {
+      "response_rate": 0.69,
+      "last_active": "2026-01-09",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        21.4,
+        15.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 17,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.06,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        "Mobile Developer",
+        "Software Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Mphasis",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.604802) against the JD anchors; career trajectory aligned with the role (0.656430); relevant educational background (0.750000)."
+  },
+  {
+    "rank": 64,
+    "score": 0.451495,
+    "candidate_id": "CAND_0073028",
+    "name": "Sai Bose",
+    "current_title": "Sales Executive",
+    "current_company": "Hooli",
+    "years_of_experience": 4.0,
+    "location": "Gurgaon, Haryana, India",
+    "education_summary": "B.Tech from Christ University",
+    "behavioral": {
+      "response_rate": 0.25,
+      "last_active": "2026-01-01",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        12.0,
+        23.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Sales Executive"
+      ],
+      "career_trajectory_companies": [
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.561255) against the JD anchors; career trajectory aligned with the role (0.750000); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 65,
+    "score": 0.451153,
+    "candidate_id": "CAND_0090481",
+    "name": "Aarav Gupta",
+    "current_title": "Customer Support",
+    "current_company": "TCS",
+    "years_of_experience": 8.4,
+    "location": "Noida, Uttar Pradesh, India",
+    "education_summary": "B.Sc from Amity University",
+    "behavioral": {
+      "response_rate": 0.15,
+      "last_active": "2025-10-04",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        8.6,
+        10.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Customer Support",
+        "Civil Engineer",
+        "Customer Support"
+      ],
+      "career_trajectory_companies": [
+        "TCS",
+        "Globex Inc",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.576200) against the JD anchors; career trajectory aligned with the role (0.749873); relevant educational background (0.833333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 66,
+    "score": 0.451062,
+    "candidate_id": "CAND_0094991",
+    "name": "Sneha Chopra",
+    "current_title": "Software Engineer",
+    "current_company": "Stark Industries",
+    "years_of_experience": 7.9,
+    "location": "Indore, Madhya Pradesh, India",
+    "education_summary": "M.Sc from Regional Technical Institute",
+    "behavioral": {
+      "response_rate": 0.61,
+      "last_active": "2026-04-27",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        11.2,
+        16.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Mobile Developer",
+        "Java Developer"
+      ],
+      "career_trajectory_companies": [
+        "Stark Industries",
+        "Hooli",
+        "Infosys"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.625343) against the JD anchors; career trajectory aligned with the role (0.651919); experience squarely in the target band (0.650107)."
+  },
+  {
+    "rank": 67,
+    "score": 0.450831,
+    "candidate_id": "CAND_0032442",
+    "name": "Nisha Mukherjee",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 11.3,
+    "location": "Chandigarh, Chandigarh, India",
+    "education_summary": "Ph.D from KIIT University",
+    "behavioral": {
+      "response_rate": 0.57,
+      "last_active": "2026-01-22",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.9,
+        11.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Civil Engineer",
+        "Operations Manager"
+      ],
+      "career_trajectory_companies": [
+        "Initech",
+        "Pied Piper",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.566191) against the JD anchors; career trajectory aligned with the role (0.621743); relevant educational background (0.816667)."
+  },
+  {
+    "rank": 68,
+    "score": 0.45061,
+    "candidate_id": "CAND_0026995",
+    "name": "Sanjay Mittal",
+    "current_title": "Cloud Engineer",
+    "current_company": "Accenture",
+    "years_of_experience": 8.4,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "B.E. from VIT Chennai",
+    "behavioral": {
+      "response_rate": 0.71,
+      "last_active": "2026-03-17",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        16.9,
+        25.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Java Developer",
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Accenture",
+        "Hooli",
+        "Globex Inc"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.629522) against the JD anchors; career trajectory aligned with the role (0.616483); experience squarely in the target band (0.660678). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 69,
+    "score": 0.450516,
+    "candidate_id": "CAND_0093480",
+    "name": "Reyansh Bhatia",
+    "current_title": "Java Developer",
+    "current_company": "Razorpay",
+    "years_of_experience": 2.8,
+    "location": "Mumbai, Maharashtra, India",
+    "education_summary": "M.E. from KIIT University",
+    "behavioral": {
+      "response_rate": 0.73,
+      "last_active": "2026-01-27",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.9,
+        22.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "DevOps Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Razorpay",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.605477) against the JD anchors; career trajectory aligned with the role (0.786487); relevant educational background (0.833333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 70,
+    "score": 0.450454,
+    "candidate_id": "CAND_0002991",
+    "name": "Tanya Chopra",
+    "current_title": "Civil Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 8.8,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "Ph.D from RV College of Engineering",
+    "behavioral": {
+      "response_rate": 0.78,
+      "last_active": "2026-03-03",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        13.0,
+        25.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Civil Engineer",
+        "Project Manager",
+        "Customer Support"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Globex Inc",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.577328) against the JD anchors; relevant educational background (0.916667); experience squarely in the target band (0.655855)."
+  },
+  {
+    "rank": 71,
+    "score": 0.450311,
+    "candidate_id": "CAND_0033627",
+    "name": "Priya Bansal",
+    "current_title": "QA Engineer",
+    "current_company": "Globex Inc",
+    "years_of_experience": 7.5,
+    "location": "Ahmedabad, Gujarat, India",
+    "education_summary": "B.E. from RV College of Engineering",
+    "behavioral": {
+      "response_rate": 0.72,
+      "last_active": "2026-01-24",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        18.2,
+        33.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.09,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        "Mobile Developer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Globex Inc",
+        "Initech",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.619459) against the JD anchors; career trajectory aligned with the role (0.673430); relevant educational background (0.883333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 72,
+    "score": 0.450112,
+    "candidate_id": "CAND_0026595",
+    "name": "Pari Verma",
+    "current_title": "Marketing Manager",
+    "current_company": "Acme Corp",
+    "years_of_experience": 11.2,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.S. from Lovely Professional University",
+    "behavioral": {
+      "response_rate": 0.17,
+      "last_active": "2026-05-16",
+      "notice_period_days": 30,
+      "github_score": 22.8,
+      "expected_salary_min_max": [
+        4.5,
+        14.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Marketing Manager",
+        "Mechanical Engineer",
+        "Content Writer"
+      ],
+      "career_trajectory_companies": [
+        "Acme Corp",
+        "Pied Piper",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.556279) against the JD anchors; career trajectory aligned with the role (0.726370); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 73,
+    "score": 0.449945,
+    "candidate_id": "CAND_0051469",
+    "name": "Aisha Shetty",
+    "current_title": "HR Manager",
+    "current_company": "Dunder Mifflin",
+    "years_of_experience": 8.8,
+    "location": "Noida, Uttar Pradesh, India",
+    "education_summary": "M.S. from VIT Vellore",
+    "behavioral": {
+      "response_rate": 0.56,
+      "last_active": "2026-04-16",
+      "notice_period_days": 30,
+      "github_score": 23.6,
+      "expected_salary_min_max": [
+        11.4,
+        19.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "HR Manager",
+        "Mechanical Engineer",
+        "Operations Manager"
+      ],
+      "career_trajectory_companies": [
+        "Dunder Mifflin",
+        "Infosys",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.565026) against the JD anchors; relevant educational background (1.000000); career trajectory aligned with the role (0.620203)."
+  },
+  {
+    "rank": 74,
+    "score": 0.449473,
+    "candidate_id": "CAND_0037413",
+    "name": "Reyansh Verma",
+    "current_title": "Full Stack Developer",
+    "current_company": "Hooli",
+    "years_of_experience": 7.7,
+    "location": "Trivandrum, Kerala, India",
+    "education_summary": "M.E. from SRM Chennai",
+    "behavioral": {
+      "response_rate": 0.34,
+      "last_active": "2026-05-09",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        18.5,
+        16.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Full Stack Developer",
+        "DevOps Engineer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Swiggy",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.597760) against the JD anchors; career trajectory aligned with the role (0.751226); relevant educational background (0.650000)."
+  },
+  {
+    "rank": 75,
+    "score": 0.448878,
+    "candidate_id": "CAND_0033323",
+    "name": "Om Verma",
+    "current_title": "Software Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 7.1,
+    "location": "Hyderabad, Telangana, India",
+    "education_summary": "B.E. from Tier-3 Engineering College",
+    "behavioral": {
+      "response_rate": 0.39,
+      "last_active": "2025-11-30",
+      "notice_period_days": 30,
+      "github_score": 18.5,
+      "expected_salary_min_max": [
+        11.5,
+        26.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Frontend Engineer",
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Accenture",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.627439) against the JD anchors; career trajectory aligned with the role (0.533792); experience squarely in the target band (0.643325). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 76,
+    "score": 0.44872,
+    "candidate_id": "CAND_0093039",
+    "name": "Arnav Arora",
+    "current_title": "Marketing Manager",
+    "current_company": "Stark Industries",
+    "years_of_experience": 10.4,
+    "location": "Kochi, Kerala, India",
+    "education_summary": "B.Sc from VIT Vellore",
+    "behavioral": {
+      "response_rate": 0.43,
+      "last_active": "2026-01-08",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        5.3,
+        11.1
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 20,
+      "ai_skills_count": 4,
+      "ai_skills_ratio": 0.2,
+      "career_trajectory_titles": [
+        "Marketing Manager",
+        "Civil Engineer",
+        "Business Analyst"
+      ],
+      "career_trajectory_companies": [
+        "Stark Industries",
+        "Stark Industries",
+        "Stark Industries"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.539397) against the JD anchors; relevant educational background (0.883333); career trajectory aligned with the role (0.462820). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 77,
+    "score": 0.448639,
+    "candidate_id": "CAND_0096705",
+    "name": "Saanvi Shetty",
+    "current_title": "Java Developer",
+    "current_company": "Flipkart",
+    "years_of_experience": 9.3,
+    "location": "Mumbai, Maharashtra, India",
+    "education_summary": "M.E. from Chandigarh University",
+    "behavioral": {
+      "response_rate": 0.71,
+      "last_active": "2025-12-28",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        17.7,
+        23.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.07,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "Software Engineer",
+        ".NET Developer"
+      ],
+      "career_trajectory_companies": [
+        "Flipkart",
+        "Wayne Enterprises",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.603771) against the JD anchors; experience squarely in the target band (0.660530); relevant educational background (0.500000)."
+  },
+  {
+    "rank": 78,
+    "score": 0.447969,
+    "candidate_id": "CAND_0038225",
+    "name": "Anika Agarwal",
+    "current_title": "Cloud Engineer",
+    "current_company": "Accenture",
+    "years_of_experience": 6.1,
+    "location": "Indore, Madhya Pradesh, India",
+    "education_summary": "M.Tech from KIIT University",
+    "behavioral": {
+      "response_rate": 0.8,
+      "last_active": "2026-01-03",
+      "notice_period_days": 30,
+      "github_score": 35.5,
+      "expected_salary_min_max": [
+        11.2,
+        13.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 2,
+      "ai_skills_ratio": 0.22,
+      "career_trajectory_titles": [
+        "Cloud Engineer",
+        "Mobile Developer",
+        "Mobile Developer"
+      ],
+      "career_trajectory_companies": [
+        "Accenture",
+        "HCL",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.627303) against the JD anchors; relevant educational background (0.733333); career trajectory aligned with the role (0.418717). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 79,
+    "score": 0.447678,
+    "candidate_id": "CAND_0010686",
+    "name": "Yash Pandey",
+    "current_title": "Operations Manager",
+    "current_company": "Pied Piper",
+    "years_of_experience": 5.0,
+    "location": "Indore, Madhya Pradesh, India",
+    "education_summary": "B.Sc from Generic State University",
+    "behavioral": {
+      "response_rate": 0.56,
+      "last_active": "2026-01-13",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        9.5,
+        17.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Operations Manager",
+        "Customer Support"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.574747) against the JD anchors; career trajectory aligned with the role (0.614012); relevant educational background (0.750000)."
+  },
+  {
+    "rank": 80,
+    "score": 0.447099,
+    "candidate_id": "CAND_0043977",
+    "name": "Nisha Krishnan",
+    "current_title": "Full Stack Developer",
+    "current_company": "Dunder Mifflin",
+    "years_of_experience": 9.4,
+    "location": "Noida, Uttar Pradesh, India",
+    "education_summary": "B.Tech from Lovely Professional University",
+    "behavioral": {
+      "response_rate": 0.18,
+      "last_active": "2026-05-21",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        14.9,
+        23.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.09,
+      "career_trajectory_titles": [
+        "Full Stack Developer",
+        "Java Developer",
+        "Software Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Dunder Mifflin",
+        "Globex Inc",
+        "Zomato"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": true,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.609462) against the JD anchors; relevant educational background (0.833333); career trajectory aligned with the role (0.469035)."
+  },
+  {
+    "rank": 81,
+    "score": 0.446873,
+    "candidate_id": "CAND_0088976",
+    "name": "Arjun Chowdary",
+    "current_title": "DevOps Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 5.2,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "Ph.D from Chandigarh University",
+    "behavioral": {
+      "response_rate": 0.7,
+      "last_active": "2026-03-15",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        13.9,
+        28.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "DevOps Engineer",
+        "Full Stack Developer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Globex Inc",
+        "Acme Corp"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.626371) against the JD anchors; career trajectory aligned with the role (0.622197); relevant educational background (0.633333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 82,
+    "score": 0.446384,
+    "candidate_id": "CAND_0084677",
+    "name": "Siya Arora",
+    "current_title": "Civil Engineer",
+    "current_company": "Wayne Enterprises",
+    "years_of_experience": 7.4,
+    "location": "Mumbai, Maharashtra, India",
+    "education_summary": "M.S. from VJTI Mumbai",
+    "behavioral": {
+      "response_rate": 0.46,
+      "last_active": "2025-11-30",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        9.1,
+        10.3
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 7,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Civil Engineer",
+        "Business Analyst"
+      ],
+      "career_trajectory_companies": [
+        "Wayne Enterprises",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.551866) against the JD anchors; career trajectory aligned with the role (0.788620); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 83,
+    "score": 0.446236,
+    "candidate_id": "CAND_0055769",
+    "name": "Vivaan Joshi",
+    "current_title": "Mechanical Engineer",
+    "current_company": "Wayne Enterprises",
+    "years_of_experience": 4.9,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "M.E. from VIT Chennai",
+    "behavioral": {
+      "response_rate": 0.67,
+      "last_active": "2025-10-24",
+      "notice_period_days": 30,
+      "github_score": 3.9,
+      "expected_salary_min_max": [
+        5.4,
+        26.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 8,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Mechanical Engineer",
+        "Graphic Designer"
+      ],
+      "career_trajectory_companies": [
+        "Wayne Enterprises",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.548464) against the JD anchors; career trajectory aligned with the role (0.776639); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 84,
+    "score": 0.446133,
+    "candidate_id": "CAND_0085125",
+    "name": "Aditya Tiwari",
+    "current_title": "HR Manager",
+    "current_company": "Pied Piper",
+    "years_of_experience": 10.2,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "B.Sc from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.48,
+      "last_active": "2026-05-16",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        5.8,
+        6.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "HR Manager",
+        "Customer Support",
+        "Operations Manager"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Pied Piper",
+        "Wayne Enterprises"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.574602) against the JD anchors; career trajectory aligned with the role (0.691323); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 85,
+    "score": 0.446122,
+    "candidate_id": "CAND_0032279",
+    "name": "Krishna Arora",
+    "current_title": "Java Developer",
+    "current_company": "Flipkart",
+    "years_of_experience": 6.9,
+    "location": "Pune, Maharashtra, India",
+    "education_summary": "M.Tech from Christ University",
+    "behavioral": {
+      "response_rate": 0.76,
+      "last_active": "2026-05-09",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        20.0,
+        24.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 15,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "Mobile Developer",
+        "Software Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Flipkart",
+        "Hooli",
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.603654) against the JD anchors; career trajectory aligned with the role (0.814819); relevant educational background (0.883333). Concerns: frequent sub-18-month role changes."
+  },
+  {
+    "rank": 86,
+    "score": 0.445996,
+    "candidate_id": "CAND_0042404",
+    "name": "Ira Gupta",
+    "current_title": "Frontend Engineer",
+    "current_company": "Hooli",
+    "years_of_experience": 1.5,
+    "location": "Bhubaneswar, Odisha, India",
+    "education_summary": "M.S. from Bharati Vidyapeeth",
+    "behavioral": {
+      "response_rate": 0.79,
+      "last_active": "2026-01-23",
+      "notice_period_days": 30,
+      "github_score": 45.0,
+      "expected_salary_min_max": [
+        20.6,
+        17.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.638178) against the JD anchors; career trajectory aligned with the role (0.565465); relevant educational background (0.650000). Concerns: experience falls outside the target band."
+  },
+  {
+    "rank": 87,
+    "score": 0.44591,
+    "candidate_id": "CAND_0059535",
+    "name": "Divya Singh",
+    "current_title": "QA Engineer",
+    "current_company": "Initech",
+    "years_of_experience": 2.2,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "B.Sc from BITS Pilani",
+    "behavioral": {
+      "response_rate": 0.7,
+      "last_active": "2026-01-14",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        7.1,
+        21.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "QA Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Initech"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.628296) against the JD anchors; relevant educational background (0.966667); career trajectory aligned with the role (0.565465)."
+  },
+  {
+    "rank": 88,
+    "score": 0.445843,
+    "candidate_id": "CAND_0011181",
+    "name": "Ayaan Naidu",
+    "current_title": "Operations Manager",
+    "current_company": "Hooli",
+    "years_of_experience": 3.1,
+    "location": "Vizag, Andhra Pradesh, India",
+    "education_summary": "M.E. from Lovely Professional University",
+    "behavioral": {
+      "response_rate": 0.62,
+      "last_active": "2025-12-10",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        15.0,
+        20.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Operations Manager",
+        "Business Analyst"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Wipro"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.589254) against the JD anchors; career trajectory aligned with the role (0.852776); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 89,
+    "score": 0.445759,
+    "candidate_id": "CAND_0075604",
+    "name": "Saanvi Iyengar",
+    "current_title": "Software Engineer",
+    "current_company": "Globex Inc",
+    "years_of_experience": 8.2,
+    "location": "Coimbatore, Tamil Nadu, India",
+    "education_summary": "B.E. from Amity University",
+    "behavioral": {
+      "response_rate": 0.69,
+      "last_active": "2026-03-18",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        20.5,
+        31.8
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 10,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Software Engineer",
+        ".NET Developer"
+      ],
+      "career_trajectory_companies": [
+        "Globex Inc",
+        "Capgemini",
+        "Infosys"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.635286) against the JD anchors; career trajectory aligned with the role (0.549402); relevant educational background (0.700000)."
+  },
+  {
+    "rank": 90,
+    "score": 0.445686,
+    "candidate_id": "CAND_0057849",
+    "name": "Ishaan Menon",
+    "current_title": "Project Manager",
+    "current_company": "Pied Piper",
+    "years_of_experience": 9.2,
+    "location": "Pune, Maharashtra, India",
+    "education_summary": "B.Sc from PES University",
+    "behavioral": {
+      "response_rate": 0.7,
+      "last_active": "2026-02-02",
+      "notice_period_days": 30,
+      "github_score": 31.0,
+      "expected_salary_min_max": [
+        15.9,
+        27.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Project Manager",
+        "Sales Executive",
+        "Marketing Manager"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Hooli",
+        "Wayne Enterprises"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.556643) against the JD anchors; career trajectory aligned with the role (0.668635); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 91,
+    "score": 0.445588,
+    "candidate_id": "CAND_0007895",
+    "name": "Vikram Sethi",
+    "current_title": "Accountant",
+    "current_company": "Wipro",
+    "years_of_experience": 10.3,
+    "location": "Vizag, Andhra Pradesh, India",
+    "education_summary": "B.E. from Jadavpur University",
+    "behavioral": {
+      "response_rate": 0.73,
+      "last_active": "2026-01-27",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        3.8,
+        11.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Accountant",
+        "Mechanical Engineer",
+        "Accountant"
+      ],
+      "career_trajectory_companies": [
+        "Wipro",
+        "Globex Inc",
+        "Globex Inc"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.542424) against the JD anchors; career trajectory aligned with the role (0.619979); experience squarely in the target band (0.680613)."
+  },
+  {
+    "rank": 92,
+    "score": 0.445566,
+    "candidate_id": "CAND_0076941",
+    "name": "Priya Subramanian",
+    "current_title": "QA Engineer",
+    "current_company": "Infosys",
+    "years_of_experience": 5.7,
+    "location": "Kochi, Kerala, India",
+    "education_summary": "B.Sc from Generic State University",
+    "behavioral": {
+      "response_rate": 0.59,
+      "last_active": "2026-03-26",
+      "notice_period_days": 30,
+      "github_score": 60.7,
+      "expected_salary_min_max": [
+        17.6,
+        20.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 5,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "QA Engineer",
+        "Cloud Engineer",
+        "DevOps Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Infosys",
+        "Initech",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.619964) against the JD anchors; career trajectory aligned with the role (0.617955); experience squarely in the target band (0.610003)."
+  },
+  {
+    "rank": 93,
+    "score": 0.445289,
+    "candidate_id": "CAND_0088000",
+    "name": "Siya Mukherjee",
+    "current_title": "Java Developer",
+    "current_company": "Flipkart",
+    "years_of_experience": 7.0,
+    "location": "Chandigarh, Chandigarh, India",
+    "education_summary": "B.Sc from Symbiosis International",
+    "behavioral": {
+      "response_rate": 0.4,
+      "last_active": "2026-01-22",
+      "notice_period_days": 30,
+      "github_score": 49.0,
+      "expected_salary_min_max": [
+        15.8,
+        29.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "Java Developer",
+        "DevOps Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Flipkart",
+        "Pied Piper",
+        "Mindtree"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.609530) against the JD anchors; career trajectory aligned with the role (0.640811); relevant educational background (0.800000)."
+  },
+  {
+    "rank": 94,
+    "score": 0.445065,
+    "candidate_id": "CAND_0074209",
+    "name": "Aisha Krishnan",
+    "current_title": "Software Engineer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 5.8,
+    "location": "Chennai, Tamil Nadu, India",
+    "education_summary": "B.E. from Lovely Professional University",
+    "behavioral": {
+      "response_rate": 0.43,
+      "last_active": "2026-04-21",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        13.1,
+        22.6
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 13,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Software Engineer",
+        "Cloud Engineer",
+        "Frontend Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "HCL",
+        "Acme Corp"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.629009) against the JD anchors; career trajectory aligned with the role (0.679381); relevant educational background (0.916667)."
+  },
+  {
+    "rank": 95,
+    "score": 0.445065,
+    "candidate_id": "CAND_0088240",
+    "name": "Om Shah",
+    "current_title": "Content Writer",
+    "current_company": "Hooli",
+    "years_of_experience": 7.7,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "M.E. from COEP Pune",
+    "behavioral": {
+      "response_rate": 0.48,
+      "last_active": "2026-05-19",
+      "notice_period_days": 30,
+      "github_score": 36.7,
+      "expected_salary_min_max": [
+        5.0,
+        25.7
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 20,
+      "ai_skills_count": 3,
+      "ai_skills_ratio": 0.15,
+      "career_trajectory_titles": [
+        "Content Writer",
+        "Graphic Designer",
+        "Mechanical Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Hooli",
+        "Pied Piper",
+        "TCS"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.513145) against the JD anchors; career trajectory aligned with the role (0.817626); relevant educational background (0.733333)."
+  },
+  {
+    "rank": 96,
+    "score": 0.444736,
+    "candidate_id": "CAND_0078862",
+    "name": "Dhruv Vora",
+    "current_title": "Java Developer",
+    "current_company": "Pied Piper",
+    "years_of_experience": 9.4,
+    "location": "Jaipur, Rajasthan, India",
+    "education_summary": "M.Sc from Generic State University",
+    "behavioral": {
+      "response_rate": 0.42,
+      "last_active": "2026-01-26",
+      "notice_period_days": 30,
+      "github_score": 26.6,
+      "expected_salary_min_max": [
+        6.5,
+        16.9
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 12,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "DevOps Engineer",
+        "Full Stack Developer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Stark Industries",
+        "Accenture"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.606978) against the JD anchors; career trajectory aligned with the role (0.790282); relevant educational background (0.716667)."
+  },
+  {
+    "rank": 97,
+    "score": 0.44449,
+    "candidate_id": "CAND_0035133",
+    "name": "Neha Krishnan",
+    "current_title": "Content Writer",
+    "current_company": "Stark Industries",
+    "years_of_experience": 9.5,
+    "location": "Pune, Maharashtra, India",
+    "education_summary": "M.E. from Christ University",
+    "behavioral": {
+      "response_rate": 0.56,
+      "last_active": "2025-11-21",
+      "notice_period_days": 30,
+      "github_score": 6.9,
+      "expected_salary_min_max": [
+        4.2,
+        10.4
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 11,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Content Writer",
+        "Business Analyst",
+        "Civil Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Stark Industries",
+        "Pied Piper",
+        "Dunder Mifflin"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.557967) against the JD anchors; career trajectory aligned with the role (0.793143); relevant educational background (0.833333)."
+  },
+  {
+    "rank": 98,
+    "score": 0.44449,
+    "candidate_id": "CAND_0040410",
+    "name": "Pranav Tiwari",
+    "current_title": "Java Developer",
+    "current_company": "Mphasis",
+    "years_of_experience": 8.6,
+    "location": "Bangalore, Karnataka, India",
+    "education_summary": "B.Sc from SRM Chennai",
+    "behavioral": {
+      "response_rate": 0.61,
+      "last_active": "2026-01-04",
+      "notice_period_days": 30,
+      "github_score": 50.5,
+      "expected_salary_min_max": [
+        15.1,
+        21.5
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 14,
+      "ai_skills_count": 1,
+      "ai_skills_ratio": 0.07,
+      "career_trajectory_titles": [
+        "Java Developer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Mphasis",
+        "Hooli"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.604092) against the JD anchors; relevant educational background (0.700000); career trajectory aligned with the role (0.461289)."
+  },
+  {
+    "rank": 99,
+    "score": 0.444136,
+    "candidate_id": "CAND_0081075",
+    "name": "Shaurya Agarwal",
+    "current_title": "Full Stack Developer",
+    "current_company": "Razorpay",
+    "years_of_experience": 9.5,
+    "location": "Gurgaon, Haryana, India",
+    "education_summary": "Ph.D from VJTI Mumbai",
+    "behavioral": {
+      "response_rate": 0.61,
+      "last_active": "2026-04-05",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.6,
+        30.2
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 9,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Full Stack Developer",
+        ".NET Developer",
+        "Cloud Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Razorpay",
+        "CRED",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.595958) against the JD anchors; career trajectory aligned with the role (0.611042); relevant educational background (0.733333)."
+  },
+  {
+    "rank": 100,
+    "score": 0.444073,
+    "candidate_id": "CAND_0019215",
+    "name": "Ved Chowdary",
+    "current_title": "Project Manager",
+    "current_company": "Pied Piper",
+    "years_of_experience": 9.5,
+    "location": "Delhi, Delhi, India",
+    "education_summary": "M.Sc from VIT Chennai",
+    "behavioral": {
+      "response_rate": 0.56,
+      "last_active": "2025-10-08",
+      "notice_period_days": 30,
+      "github_score": -1,
+      "expected_salary_min_max": [
+        6.5,
+        11.0
+      ]
+    },
+    "telemetry": {
+      "total_skills_count": 6,
+      "ai_skills_count": 0,
+      "ai_skills_ratio": 0.0,
+      "career_trajectory_titles": [
+        "Project Manager",
+        "Graphic Designer",
+        "Mechanical Engineer"
+      ],
+      "career_trajectory_companies": [
+        "Pied Piper",
+        "Infosys",
+        "Pied Piper"
+      ]
+    },
+    "risk_flags": {
+      "low_availability_risk": false,
+      "keyword_stuffer_risk": false,
+      "location_mismatch": false,
+      "consulting_heavy": false
+    },
+    "submission_reasoning": "strong semantic fit (0.572791) against the JD anchors; career trajectory aligned with the role (0.863928); relevant educational background (0.800000)."
+  }
+]

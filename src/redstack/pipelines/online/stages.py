@@ -68,6 +68,8 @@ from redstack.domain.enums import (
     EligibilityCode,
     EvidenceKind,
     IntegrityFlag,
+    LocationFit,
+    NoticeFit,
     ScoreComponent,
     Severity,
 )
@@ -346,13 +348,20 @@ def r0_load(
     unknown_neutral_base = (
         0.5 if span <= 0.0 else clamp_unit((neutral_multiplier - m_min) / span)
     )
+    # Family weights are tilted toward availability/responsiveness (JD +
+    # redrob_signals_doc: "a perfect-on-paper candidate who hasn't logged in
+    # for 6 months and has a 5% recruiter response rate is, for hiring
+    # purposes, not actually available. Down-weight them appropriately.").
+    # Uniform weighting let a catastrophic response-rate/availability reading
+    # get diluted by three healthy-looking secondary families before the
+    # affine map ever saw it; this re-balances without zeroing any family.
     behavioral_policy = BehavioralPolicy(
         family_weights={
-            "availability": 1.0,
-            "responsiveness": 1.0,
-            "engagement": 1.0,
+            "availability": 1.5,
+            "responsiveness": 1.5,
+            "engagement": 0.75,
             "reliability": 1.0,
-            "verification": 1.0,
+            "verification": 0.5,
         },
         unknown_neutral_base=unknown_neutral_base,
         m_min=m_min,
@@ -360,17 +369,32 @@ def r0_load(
     )
 
     # No offline stage calibrates logistics at all (no "logistics_weights"
-    # artifact exists in the registry). Locked neutral default: m_min=m_max=1.0
-    # makes LogisticsEngine's affine map a no-op, so logistics never dampens or
-    # boosts a score (Repository Layout "expert heuristics locked in").
+    # artifact exists in the registry). Locked defaults below replace the
+    # previous m_min=m_max=1.0 no-op, which made the affine map a no-op so
+    # notice period, location, and salary inversion never affected score
+    # regardless of how poorly a candidate banded. ``notice_fit_factor``
+    # reuses the same calibration points as ``features.geography``'s
+    # ``_NOTICE_FIT_SCORE`` for consistency. Location/salary factors are new,
+    # conservative locked defaults: never above 1.0 (logistics only dampens,
+    # per Domain §G.2/§G.8), and salary inversion stays a small soft dampen
+    # (common in the pool, never a near-honeypot penalty).
     logistics_policy = LogisticsPolicy(
-        location_fit_factor={},
+        location_fit_factor={
+            LocationFit.PREFERRED_HUB: 1.0,
+            LocationFit.INDIA_RELOCATABLE: 1.0,
+            LocationFit.INDIA_NON_RELOCATABLE: 0.8,
+            LocationFit.OUTSIDE_INDIA_NO_SPONSOR: 0.55,
+        },
         location_default_factor=1.0,
-        notice_fit_factor={},
+        notice_fit_factor={
+            NoticeFit.SUB_30_IDEAL: 1.0,
+            NoticeFit.BUYOUTABLE: 0.6,
+            NoticeFit.OVER_30_HIGHER_BAR: 0.25,
+        },
         notice_default_factor=1.0,
         work_mode_weight=0.0,
-        salary_inversion_factor=1.0,
-        m_min=1.0,
+        salary_inversion_factor=0.9,
+        m_min=0.5,
         m_max=1.0,
     )
 
