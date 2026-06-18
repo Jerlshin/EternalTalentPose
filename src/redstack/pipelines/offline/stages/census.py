@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from redstack.domain.errors import SchemaError
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
 
@@ -199,10 +199,10 @@ class CensusStage(OfflineStage):
         country_freq: dict[str, int] = {}
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed):
+            if isinstance(record, SourceMalformed):
                 malformed += 1
                 continue
-            if not isinstance(record, Ok):  # exhaustive guard for the union
+            if not isinstance(record, SourceOk):  # exhaustive guard for the union
                 continue
             total += 1
             raw = record.raw

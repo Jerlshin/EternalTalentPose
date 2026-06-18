@@ -121,6 +121,7 @@ class _TorchOnnx(Protocol):
         dynamic_axes: Mapping[str, Mapping[int, str]],
         opset_version: int,
         do_constant_folding: bool,
+        dynamo: bool,
     ) -> None: ...
 
 
@@ -209,6 +210,17 @@ class SentenceTransformerEmbeddingAdapter:
     def model_id(self) -> str:
         """The stable model identifier for provenance."""
         return self._model_id
+
+    @property
+    def opset(self) -> int:
+        """The pinned ONNX opset :meth:`export_onnx` exports at by default.
+
+        Required by the ``OnnxExportCapable`` Protocol (a ``runtime_checkable``
+        Protocol checks attribute *presence*, not signature — without this
+        property ``isinstance(adapter, OnnxExportCapable)`` is ``False`` even
+        though :meth:`export_onnx` itself is fully implemented).
+        """
+        return _DEFAULT_OPSET
 
     def encode(
         self, texts: Sequence[str], *, batch_size: int | None = None
@@ -303,6 +315,11 @@ class SentenceTransformerEmbeddingAdapter:
                 },
                 opset_version=opset,
                 do_constant_folding=True,
+                # Force the legacy TorchScript-based exporter: the dynamic_axes
+                # kwarg above is that exporter's API, and the newer dynamo=True
+                # default (torch>=2.5) requires an additional `onnxscript`
+                # dependency this offline build does not declare.
+                dynamo=False,
             )
         except Exception as exc:  # torch/transformers raise bare exceptions
             raise EmbeddingError(f"onnx export failed: {exc}") from exc

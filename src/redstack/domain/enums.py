@@ -171,6 +171,7 @@ class IntegrityFlag(StrEnum):
     EDUCATION_TIMELINE_IMPOSSIBLE = "education_timeline_impossible"
     EXPERIENCE_PREDATES_PLAUSIBLE_START = "experience_predates_plausible_start"
     ASSESSMENT_FOR_ABSENT_SKILL = "assessment_for_absent_skill"
+    KEYWORD_STUFFING = "keyword_stuffing"
 
 
 class EligibilityCode(StrEnum):

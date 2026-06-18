@@ -190,12 +190,12 @@ def _education_career_anomaly(raw: RawCandidate) -> FeatureCell:
 
 def _salary_anomaly(raw: RawCandidate) -> FeatureCell:
     salary = raw.redrob_signals.expected_salary_range_inr_lpa
-    inverted = salary.min_lpa > salary.max_lpa
+    inverted = salary.min > salary.max
     # Soft only: inversion is common in the pool — cap the contribution low.
     value = 0.25 if inverted else 0.0
     evidence = [
-        make_evidence(_SIGNAL, "redrob_signals.expected_salary_range_inr_lpa.min_lpa", salary.min_lpa),
-        make_evidence(_SIGNAL, "redrob_signals.expected_salary_range_inr_lpa.max_lpa", salary.max_lpa),
+        make_evidence(_SIGNAL, "redrob_signals.expected_salary_range_inr_lpa.min", salary.min),
+        make_evidence(_SIGNAL, "redrob_signals.expected_salary_range_inr_lpa.max", salary.max),
     ]
     return cell(value, 0.4, tuple(evidence))
 

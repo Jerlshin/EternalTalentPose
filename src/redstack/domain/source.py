@@ -126,12 +126,16 @@ class RawLanguage(BaseModel):
 
 @final
 class RawSalaryRange(BaseModel):
-    """Expected salary range (INR lpa); inversion preserved, never corrected."""
+    """Expected salary range (INR lpa); inversion preserved, never corrected.
+
+    Field names mirror the source JSON verbatim (``{"min": ..., "max": ...}``),
+    not the ``*_lpa``-suffixed names used by downstream domain models.
+    """
 
     model_config = _STRICT
 
-    min_lpa: LpaAmount = Field(ge=0.0, allow_inf_nan=False)
-    max_lpa: LpaAmount = Field(ge=0.0, allow_inf_nan=False)
+    min: LpaAmount = Field(ge=0.0, allow_inf_nan=False)
+    max: LpaAmount = Field(ge=0.0, allow_inf_nan=False)
 
 
 @final

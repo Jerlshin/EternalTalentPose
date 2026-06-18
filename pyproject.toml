@@ -48,6 +48,7 @@ offline = [
   "sentence-transformers>=3,<4",
   "scikit-learn>=1.5,<2",
   "torch>=2.2,<3",
+  "onnx>=1.16,<2",  # required by torch.onnx.export's legacy (dynamo=False) path
 ]
 dev = [
   "ruff>=0.6,<1",
@@ -110,6 +111,12 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["redstack"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Typer's documented CLI pattern is `param: T = typer.Option(...)` in the
+# signature itself; these calls build immutable option specs, never mutable
+# defaults, so B008 would otherwise fire on every CLI parameter.
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
 
 [tool.ruff.format]
 quote-style = "double"

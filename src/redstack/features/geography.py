@@ -193,11 +193,11 @@ def extract_geography(
     # --- sal.* -------------------------------------------------------------- #
     sal_min_ev = mint_evidence(
         raw, EvidenceKind.SIGNAL,
-        "redrob_signals.expected_salary_range_inr_lpa.min_lpa",
+        "redrob_signals.expected_salary_range_inr_lpa.min",
     )
     sal_max_ev = mint_evidence(
         raw, EvidenceKind.SIGNAL,
-        "redrob_signals.expected_salary_range_inr_lpa.max_lpa",
+        "redrob_signals.expected_salary_range_inr_lpa.max",
     )
     if jd_salary is not None:
         sal_fit = _salary_overlap(

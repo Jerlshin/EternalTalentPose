@@ -42,11 +42,11 @@ from redstack.domain.errors import (
     SchemaError,
 )
 from redstack.features.extraction import extract_row
-from redstack.features.parsing import parse
+from redstack.features.parsing import validate as parse
 from redstack.domain.source import RawCandidate
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
 
@@ -86,10 +86,10 @@ class FeatureSnapshotStage(OfflineStage):
         row = 0
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed):
+            if isinstance(record, SourceMalformed):
                 # Malformed lines were already rejected at O2; skip defensively.
                 continue
-            if not isinstance(record, Ok):
+            if not isinstance(record, SourceOk):
                 continue
             candidate = self._parse_or_skip(record.raw)
             if candidate is None:
@@ -129,9 +129,11 @@ class FeatureSnapshotStage(OfflineStage):
             "feature_manifest",
             {
                 "layout_version": registry.layout_version,
-                "features": list(registry.feature_ids),
+                "features": [str(d.feature_id) for d in registry.definitions],
                 "groups": list(groups),
-                "group_of": dict(sorted(registry.group_of.items())),
+                "group_of": dict(
+                    sorted((str(d.feature_id), d.group) for d in registry.definitions)
+                ),
                 "feature_dim": dim,
                 "row_count": row,
             },

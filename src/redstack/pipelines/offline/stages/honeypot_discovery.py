@@ -50,7 +50,7 @@ from redstack.domain.provenance import EvidenceRef
 from redstack.features.evidence import mint
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
 
@@ -122,7 +122,7 @@ class HoneypotDiscoveryStage(OfflineStage):
         total = 0
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed) or not isinstance(record, Ok):
+            if isinstance(record, SourceMalformed) or not isinstance(record, SourceOk):
                 continue
             total += 1
             verdict = self._evaluate_candidate(record.raw)

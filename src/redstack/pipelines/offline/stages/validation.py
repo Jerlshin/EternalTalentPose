@@ -11,7 +11,7 @@ Output: ``validation_report.json`` — accept/reject counts and a bounded reject
 log (``line_no`` + reason per rejection). Validated by the registry's
 ``_v_validation_report`` (required ``accepted`` / ``rejected`` / ``reject_log``).
 
-Failure policy: a structurally-malformed *source line* (``Malformed``) and a
+Failure policy: a structurally-malformed *source line* (``SourceMalformed``) and a
 ``SchemaError`` from parsing are routed through the configured
 ``MalformedRecordPolicy`` — ``ABORT`` raises ``SchemaError`` immediately (the
 default full-run policy: exactly 100K well-formed rows are expected); ``SKIP``
@@ -30,10 +30,10 @@ from typing import Final
 
 from redstack.config.schema import MalformedRecordPolicy
 from redstack.domain.errors import SchemaError
-from redstack.features.parsing import parse
+from redstack.features.parsing import validate as parse
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
 
@@ -66,14 +66,14 @@ class ValidationStage(OfflineStage):
         reject_log: list[dict[str, object]] = []
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed):
+            if isinstance(record, SourceMalformed):
                 rejected += 1
                 self._log_reject(reject_log, record.line_no, f"malformed: {record.error}")
                 if policy is MalformedRecordPolicy.ABORT:
                     msg = f"malformed record at line {record.line_no}: {record.error}"
                     raise SchemaError(msg)
                 continue
-            if not isinstance(record, Ok):
+            if not isinstance(record, SourceOk):
                 continue
             outcome = self._validate_one(record.raw)
             if outcome is None:

@@ -328,9 +328,9 @@ def build_logistics_profile(
 
     salary = sig.expected_salary_range_inr_lpa
     salary_band = SalaryBand(
-        min_lpa=LpaAmount(float(salary.min_lpa)),
-        max_lpa=LpaAmount(float(salary.max_lpa)),
-        is_inverted=float(salary.min_lpa) > float(salary.max_lpa),
+        min_lpa=LpaAmount(float(salary.min)),
+        max_lpa=LpaAmount(float(salary.max)),
+        is_inverted=float(salary.min) > float(salary.max),
     )
 
     return LogisticsProfile(

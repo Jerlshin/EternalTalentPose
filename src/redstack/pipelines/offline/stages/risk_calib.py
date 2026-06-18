@@ -70,9 +70,6 @@ _HARD_FLAGS: Final[frozenset[str]] = frozenset(
         IntegrityFlag.EXPERT_SKILL_ZERO_USAGE.value,
         IntegrityFlag.EDUCATION_TIMELINE_IMPOSSIBLE.value,
         IntegrityFlag.ASSESSMENT_FOR_ABSENT_SKILL.value,
-        IntegrityFlag.EMPLOYMENT_OVERLAP_IMPOSSIBLE.value,
-        IntegrityFlag.SIGNAL_IMPOSSIBILITY.value,
-        IntegrityFlag.IDENTITY_ANOMALY.value,
     }
 )
 

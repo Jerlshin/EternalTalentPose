@@ -45,7 +45,7 @@ from redstack.pipelines.offline.stages.normalization import (
     EMBEDDING_DOC_RECIPE_VERSION,
     compose_embedding_document,
 )
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 from redstack.ports.embedding import OnnxExportCapable
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
@@ -139,9 +139,9 @@ class CandidateEmbeddingStage(_EmbeddingStageBase):
             pending_docs.clear()
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed):
+            if isinstance(record, SourceMalformed):
                 continue
-            if not isinstance(record, Ok):
+            if not isinstance(record, SourceOk):
                 continue
             raw = record.raw
             cid = raw.get("candidate_id")
@@ -285,7 +285,7 @@ class CareerEmbeddingStage(_EmbeddingStageBase):
             pending_docs.clear()
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed) or not isinstance(record, Ok):
+            if isinstance(record, SourceMalformed) or not isinstance(record, SourceOk):
                 continue
             raw = record.raw
             cid = raw.get("candidate_id")
@@ -404,7 +404,7 @@ class EmbeddingManifestStage(_EmbeddingStageBase):
         """
         sample: list[str] = []
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed) or not isinstance(record, Ok):
+            if isinstance(record, SourceMalformed) or not isinstance(record, SourceOk):
                 continue
             doc = compose_embedding_document(record.raw)
             if doc:

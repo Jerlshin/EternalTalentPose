@@ -390,8 +390,14 @@ class FilesystemArtifactStoreAdapter:
             )
         return {str(field): value for field, value in decoded.items()}
 
-    def load_npy(self, key: ArtifactKey) -> npt.NDArray[np.generic]:
-        """Return the verified ndarray for a ``.npy`` ``key`` (no pickle)."""
+    def load_npy(self, key: ArtifactKey) -> npt.NDArray[np.float32]:
+        """Return the verified ndarray for a ``.npy`` ``key`` (no pickle).
+
+        Raises:
+            ArtifactContractError: missing key, sha256 mismatch, the payload
+                does not decode to a single ndarray, or it is not float32 (the
+                offline build's float32-everywhere guarantee, Ports §3).
+        """
         data = self._read_and_verify(key)
         try:
             loaded = np.load(io.BytesIO(data), allow_pickle=False)
@@ -403,7 +409,11 @@ class FilesystemArtifactStoreAdapter:
             raise ArtifactContractError(
                 f"artifact {key!r} did not decode to a single ndarray"
             )
-        array: npt.NDArray[np.generic] = loaded
+        if loaded.dtype != np.float32:
+            raise ArtifactContractError(
+                f"artifact {key!r} is not float32 (dtype={loaded.dtype})"
+            )
+        array: npt.NDArray[np.float32] = loaded
         return array
 
     def locate(self, key: ArtifactKey) -> ArtifactLocator:

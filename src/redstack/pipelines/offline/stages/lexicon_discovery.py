@@ -49,7 +49,7 @@ from redstack.domain.errors import ArtifactContractError
 from redstack.pipelines.offline.registry import OfflineArtifactRegistry, OFFLINE_ARTIFACT_REGISTRY
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
 
@@ -173,9 +173,9 @@ class LexiconDiscoveryStage(OfflineStage):
         doc_total = 0
 
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed):
+            if isinstance(record, SourceMalformed):
                 continue
-            if not isinstance(record, Ok):
+            if not isinstance(record, SourceOk):
                 continue
             for tokens in self._iter_description_tokens(record.raw):
                 if not tokens:

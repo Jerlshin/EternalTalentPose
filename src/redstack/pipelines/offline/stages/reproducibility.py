@@ -50,7 +50,7 @@ from redstack.domain.errors import ArtifactContractError
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
 from redstack.pipelines.offline.stages.packaging import MANIFEST_FILENAME
-from redstack.ports._types import Malformed, Ok
+from redstack.ports._types import SourceMalformed, SourceOk
 
 from redstack.pipelines.offline.context import OfflinePipelineContext
 
@@ -247,7 +247,7 @@ class ReproducibilityStage(OfflineStage):
 
         try:
             from redstack.features.extraction import extract_row
-            from redstack.features.parsing import parse
+            from redstack.features.parsing import validate as parse
         except Exception as exc:  # noqa: BLE001
             return _Check("feature_parity", False, f"extractor import failed: {exc}")
 
@@ -255,7 +255,7 @@ class ReproducibilityStage(OfflineStage):
         checked = 0
         max_abs = 0.0
         for record in ctx.candidate_source.stream():
-            if isinstance(record, Malformed) or not isinstance(record, Ok):
+            if isinstance(record, SourceMalformed) or not isinstance(record, SourceOk):
                 continue
             raw = record.raw
             cid = raw.get("candidate_id")

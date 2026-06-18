@@ -260,11 +260,15 @@ class OnlineRuntimeConfig(_FrozenConfig):
 class OfflineRuntimeConfig(_FrozenConfig):
     """Offline build parameters (``runtime/offline.yaml``).
 
-    Holds the offline RNG seed, the pinned SentenceTransformer model id and
-    revision, the KMeans ``k`` for archetype discovery (O7), the listwise
-    weight-search budget (O9), and batch sizes for embedding/feature passes.
+    Holds the injected ``as_of`` clock (so recency-dependent feature
+    extraction in O14 is byte-stable across rebuilds, mirroring why
+    :class:`OnlineRuntimeConfig` injects its own), the offline RNG seed, the
+    pinned SentenceTransformer model id and revision, the KMeans ``k`` for
+    archetype discovery (O7), the listwise weight-search budget (O9), and
+    batch sizes for embedding/feature passes.
     """
 
+    as_of: datetime
     seed: int = Field(default=20240601, ge=0)
     st_model_id: str = Field(min_length=1)
     st_model_revision: str = Field(min_length=1)
@@ -272,6 +276,15 @@ class OfflineRuntimeConfig(_FrozenConfig):
     search_budget: int = Field(ge=1)
     embedding_batch_size: int = Field(default=256, ge=1)
     feature_batch_size: int = Field(default=4096, ge=1)
+
+    @field_validator("as_of")
+    @classmethod
+    def _as_of_must_be_aware(cls, value: datetime) -> datetime:
+        """Reject naive datetimes; ``as_of`` must carry an explicit timezone."""
+        if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+            msg = "offline.as_of must be timezone-aware (include an explicit offset)"
+            raise ValueError(msg)
+        return value
 
 
 class RedstackConfig(_FrozenConfig):
