@@ -46,13 +46,17 @@ RankBand = Literal["top", "mid", "tail"]
 # candidates with different dominant components render different skeletons. The
 # concrete value comes from the cited evidence (Stage-4 "specific facts").
 _STRENGTH_PHRASING: Final[Mapping[ScoreComponent, str]] = {
-    ScoreComponent.SKILL_MATCH: "corroborated skill match ({v:.2f}) to the role's core competencies",
-    ScoreComponent.SEMANTIC_FIT: "strong semantic fit ({v:.2f}) against the JD anchors",
-    ScoreComponent.CAREER_FIT: "career trajectory aligned with the role ({v:.2f})",
-    ScoreComponent.EXPERIENCE_FIT: "experience squarely in the target band ({v:.2f})",
-    ScoreComponent.EDUCATION_FIT: "relevant educational background ({v:.2f})",
-    ScoreComponent.CREDIBILITY: "high evidence credibility ({v:.2f}), low keyword-stuffing risk",
-    ScoreComponent.ARCHETYPE_FIT: "matches a target candidate archetype ({v:.2f})",
+    ScoreComponent.SKILL_MATCH: (
+        "corroborated skill match ({v:.6f}) to the role's core competencies"
+    ),
+    ScoreComponent.SEMANTIC_FIT: "strong semantic fit ({v:.6f}) against the JD anchors",
+    ScoreComponent.CAREER_FIT: "career trajectory aligned with the role ({v:.6f})",
+    ScoreComponent.EXPERIENCE_FIT: "experience squarely in the target band ({v:.6f})",
+    ScoreComponent.EDUCATION_FIT: "relevant educational background ({v:.6f})",
+    ScoreComponent.CREDIBILITY: (
+        "high evidence credibility ({v:.6f}), low keyword-stuffing risk"
+    ),
+    ScoreComponent.ARCHETYPE_FIT: "matches a target candidate archetype ({v:.6f})",
 }
 
 _CONCERN_PHRASING: Final[Mapping[EligibilityCode, str]] = {
@@ -68,8 +72,8 @@ _CONCERN_PHRASING: Final[Mapping[EligibilityCode, str]] = {
     EligibilityCode.CLOSED_SOURCE_5Y_NO_VALIDATION: "long closed-source tenure without external validation",
 }
 
-_MAX_STRENGTHS: Final[int] = 2
-_MAX_CONCERNS: Final[int] = 2
+_MAX_STRENGTHS: Final[int] = 3
+_MAX_CONCERNS: Final[int] = 3
 
 
 @final

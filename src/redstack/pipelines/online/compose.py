@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from redstack.adapters.artifact_store_fs import FilesystemArtifactStoreAdapter
 from redstack.adapters.candidate_jsonl import JsonlCandidateSourceAdapter

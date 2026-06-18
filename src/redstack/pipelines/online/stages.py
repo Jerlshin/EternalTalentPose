@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING, Final, final
 
 import numpy as np
 import numpy.typing as npt
+import yaml
 
 from redstack.config.schema import (
     BehavioralPolicy,
@@ -67,8 +68,6 @@ from redstack.domain.enums import (
     EligibilityCode,
     EvidenceKind,
     IntegrityFlag,
-    LocationFit,
-    NoticeFit,
     ScoreComponent,
     Severity,
 )
@@ -261,90 +260,124 @@ def r0_load(
         "embedding_dim": manifest.embedding.dim,
     }
 
-    weights_json = artifact_store.load_json(
-        ArtifactKey("weights/scoring_weights.locked")
-    )
+    # "scoring_weights" is registered as YAML (block-style, from O9's
+    # emit_yaml), not JSON — load_text + yaml.safe_load, not load_json.
+    weights_text = artifact_store.load_text(ArtifactKey("scoring_weights"))
+    weights_json = _as_mapping(yaml.safe_load(weights_text))
     weights_map = _as_mapping(weights_json["weights"])
     weights = ScoringWeights(
         weights={ScoreComponent(k): _as_float(v) for k, v in weights_map.items()},
-        schema_version=_as_str(weights_json["schema_version"]),
+        # The real artifact has no "schema_version" key (only O9's own
+        # "layout_version"); fall back to a fixed literal rather than KeyError.
+        schema_version=_as_str(weights_json.get("layout_version", "1.0")),
     )
     scoring_policy = ScoringPolicy(
         floor=config.floor_sentinel,
         neutral_prior=_as_float(weights_json.get("neutral_prior", 0.5)),
     )
 
-    thr = artifact_store.load_json(ArtifactKey("calibration/integrity_thresholds"))
-    flag_severity = _as_mapping(thr.get("flag_severity", {}))
-    flag_weights = _as_mapping(thr.get("flag_weights", {}))
+    # ``integrity_thresholds`` (real, from O3/O12) carries ``honeypot_threshold``
+    # and ``risk_weights`` (-> flag_weights) but no per-flag severity and none of
+    # the four online re-detection tolerances below — those are IntegrityEngine's
+    # own re-derivation constants (it independently re-runs all seven rules per
+    # candidate; it does not replay O3's bulk findings). Severity instead comes
+    # from the real ``integrity_rules`` artifact, which does carry it per flag.
+    thr = artifact_store.load_json(ArtifactKey("integrity_thresholds"))
+    flag_weights = _as_mapping(thr.get("risk_weights", {}))
+    rules_catalog = artifact_store.load_json(ArtifactKey("integrity_rules"))
+    flag_severity: dict[IntegrityFlag, Severity] = {}
+    for rule in _as_sequence(rules_catalog.get("rules", [])):
+        rule_obj = _as_mapping(rule)
+        flag_severity[IntegrityFlag(_as_str(rule_obj["code"]))] = Severity(
+            _as_str(rule_obj["severity"])
+        )
     integrity_thresholds = IntegrityThresholds(
         honeypot_threshold=_as_float(thr["honeypot_threshold"]),
-        flag_severity={
-            IntegrityFlag(k): Severity(_as_str(v)) for k, v in flag_severity.items()
-        },
+        flag_severity=flag_severity,
         flag_weights={IntegrityFlag(k): _as_float(v) for k, v in flag_weights.items()},
-        tolerance_experience_years=_as_float(thr["tolerance_experience_years"]),
-        duration_date_tolerance_months=_as_float(thr["duration_date_tolerance_months"]),
-        expert_zero_usage_min_count=_as_int(thr["expert_zero_usage_min_count"]),
-        experience_predates_tolerance_years=_as_int(
-            thr["experience_predates_tolerance_years"]
-        ),
+        # Locked online re-detection tolerances (Repository Layout "expert
+        # heuristics locked in" — no gold-labeled data exists to calibrate
+        # these; chosen consistent with the offline detectors' own constants
+        # where one exists, e.g. honeypot_discovery.py's expert-zero-usage
+        # minimum count of 5).
+        tolerance_experience_years=2.0,
+        duration_date_tolerance_months=1.0,
+        expert_zero_usage_min_count=5,
+        experience_predates_tolerance_years=3,
     )
 
-    rules = artifact_store.load_json(ArtifactKey("gates/eligibility_rules"))
+    # ``eligibility_rules`` (real, from O6) is YAML, and carries only human
+    # descriptions per code (no calibrated numeric thresholds — O6 never
+    # calibrates them, it authors rule *shape*). EligibilityEngine's thresholds
+    # are therefore locked defaults here, not loaded from the artifact; several
+    # are pinned by the EligibilityCode names themselves (18-month / 5-year).
+    _ = artifact_store.load_text(ArtifactKey("eligibility_rules"))  # presence check
     eligibility_rules = EligibilityRuleSet(
-        research_min_semantic_fit=_as_float(rules["research_min_semantic_fit"]),
-        framework_only_stuffing_min=_as_float(rules["framework_only_stuffing_min"]),
-        framework_only_gap_min=_as_float(rules["framework_only_gap_min"]),
-        production_recency_max_months=_as_int(rules["production_recency_max_months"]),
-        adjacent_domain_min_relevant_credibility=_as_float(
-            rules["adjacent_domain_min_relevant_credibility"]
-        ),
-        adjacent_domain_min_negative_fit=_as_float(
-            rules["adjacent_domain_min_negative_fit"]
-        ),
-        closed_source_min_years=_as_float(rules["closed_source_min_years"]),
-        closed_source_max_credible_skills=_as_int(
-            rules["closed_source_max_credible_skills"]
-        ),
-        title_chaser_min_hop_rate=_as_float(rules["title_chaser_min_hop_rate"]),
-        experience_band_min_years=_as_float(rules["experience_band_min_years"]),
-        experience_band_max_years=_as_float(rules["experience_band_max_years"]),
+        research_min_semantic_fit=0.5,
+        framework_only_stuffing_min=0.6,
+        framework_only_gap_min=0.3,
+        production_recency_max_months=18,
+        adjacent_domain_min_relevant_credibility=0.3,
+        adjacent_domain_min_negative_fit=0.3,
+        closed_source_min_years=5.0,
+        closed_source_max_credible_skills=0,
+        title_chaser_min_hop_rate=0.5,
+        experience_band_min_years=2.0,
+        experience_band_max_years=15.0,
     )
 
-    beh = artifact_store.load_json(ArtifactKey("calibration/behavioral_weights"))
-    family_weights = _as_mapping(beh["family_weights"])
+    # ``behavioral_weights`` (real, from O11) is calibrated as monotone curves
+    # keyed by {availability, hiring_probability_proxy, confidence_regression} —
+    # not the 5 fixed families (availability/responsiveness/engagement/
+    # reliability/verification) BehavioralEngine combines, so family_weights
+    # cannot be derived from it. Bounds and the neutral base translate directly:
+    # ``bounds.{lower,upper}`` are exactly ``m_min``/``m_max``; the pre-affine
+    # base that reproduces the real artifact's ``neutral_multiplier`` is solved
+    # from the engine's own affine map.
+    beh = artifact_store.load_json(ArtifactKey("behavioral_weights"))
+    bounds = _as_mapping(beh["bounds"])
+    m_min = _as_float(bounds["lower"])
+    # Clamped to 1.0: a multiplier only ever dampens relevance, never creates
+    # it (domain.scoring.MULTIPLIER_MAX / ScoreBreakdown.behavioral_multiplier
+    # both enforce <= 1.0 regardless), but the real calibration's upper bound
+    # (1.25) predates that invariant and would fail it untouched.
+    m_max = min(_as_float(bounds["upper"]), 1.0)
+    neutral_multiplier = _as_float(beh.get("neutral_multiplier", 1.0))
+    span = m_max - m_min
+    unknown_neutral_base = (
+        0.5 if span <= 0.0 else clamp_unit((neutral_multiplier - m_min) / span)
+    )
     behavioral_policy = BehavioralPolicy(
-        family_weights={str(k): _as_float(v) for k, v in family_weights.items()},
-        unknown_neutral_base=_as_float(beh.get("unknown_neutral_base", 0.5)),
-        m_min=_as_float(beh["m_min"]),
-        m_max=_as_float(beh["m_max"]),
+        family_weights={
+            "availability": 1.0,
+            "responsiveness": 1.0,
+            "engagement": 1.0,
+            "reliability": 1.0,
+            "verification": 1.0,
+        },
+        unknown_neutral_base=unknown_neutral_base,
+        m_min=m_min,
+        m_max=m_max,
     )
 
-    log = artifact_store.load_json(ArtifactKey("calibration/logistics_weights"))
-    location_fit_factor = _as_mapping(log["location_fit_factor"])
-    notice_fit_factor = _as_mapping(log["notice_fit_factor"])
+    # No offline stage calibrates logistics at all (no "logistics_weights"
+    # artifact exists in the registry). Locked neutral default: m_min=m_max=1.0
+    # makes LogisticsEngine's affine map a no-op, so logistics never dampens or
+    # boosts a score (Repository Layout "expert heuristics locked in").
     logistics_policy = LogisticsPolicy(
-        location_fit_factor={
-            LocationFit(k): _as_float(v) for k, v in location_fit_factor.items()
-        },
-        location_default_factor=_as_float(log.get("location_default_factor", 1.0)),
-        notice_fit_factor={
-            NoticeFit(k): _as_float(v) for k, v in notice_fit_factor.items()
-        },
-        notice_default_factor=_as_float(log.get("notice_default_factor", 1.0)),
-        work_mode_weight=_as_float(log.get("work_mode_weight", 0.0)),
-        salary_inversion_factor=_as_float(log.get("salary_inversion_factor", 1.0)),
-        m_min=_as_float(log["m_min"]),
-        m_max=_as_float(log["m_max"]),
+        location_fit_factor={},
+        location_default_factor=1.0,
+        notice_fit_factor={},
+        notice_default_factor=1.0,
+        work_mode_weight=0.0,
+        salary_inversion_factor=1.0,
+        m_min=1.0,
+        m_max=1.0,
     )
 
     dim = vector_store.dim
-    anchors = artifact_store.load_json(ArtifactKey("anchors/jd_anchors"))
-    anchor_set = _build_anchor_set(anchors, dim=dim)
-
-    centroids_json = artifact_store.load_json(ArtifactKey("archetypes/centroids"))
-    archetype_space = _build_archetype_space(centroids_json, dim=dim)
+    anchor_set = _load_anchor_set(artifact_store, dim=dim)
+    archetype_space = _load_archetype_space(artifact_store, dim=dim)
 
     artifacts: dict[str, object] = {
         "scoring_weights": weights,
@@ -360,21 +393,40 @@ def r0_load(
     return LoadedArtifacts(artifacts=artifacts, manifest=manifest_dict)
 
 
-def _build_anchor_set(anchors: Mapping[str, object], *, dim: int) -> AnchorSet:
-    def _side(key: str) -> tuple[tuple[AnchorId, ...], npt.NDArray[np.float32]]:
-        raw_entries = [_as_mapping(e) for e in _as_sequence(anchors.get(key, []))]
-        entries = sorted(raw_entries, key=lambda e: _as_str(e["id"]))
-        ids = tuple(AnchorId(_as_str(e["id"])) for e in entries)
-        if not entries:
-            return ids, np.zeros((0, dim), dtype=np.float32)
-        matrix = np.asarray(
-            [[_as_float(v) for v in _as_sequence(e["vector"])] for e in entries],
-            dtype=np.float32,
+def _load_anchor_set(artifact_store: ArtifactStorePort, *, dim: int) -> AnchorSet:
+    """Build the ``AnchorSet`` from the real ``jd_concepts`` + ``anchor_vectors``.
+
+    ``jd_concepts.json`` carries each anchor's id/polarity/text but no vector;
+    the vectors live separately in ``anchor_vectors.npy``, one row per anchor in
+    *global* (both polarities combined) ascending-id order — exactly the order
+    O13b (``AnchorEmbeddingStage``) writes them in (``sorted(anchors)`` over all
+    ids). Re-deriving that same global sort here is what lines a anchor id back
+    up with its row.
+    """
+    jd_concepts = artifact_store.load_json(ArtifactKey("jd_concepts"))
+    raw_anchors = [_as_mapping(a) for a in _as_sequence(jd_concepts.get("anchors", []))]
+    by_id = {_as_str(a["id"]): _as_str(a["polarity"]) for a in raw_anchors}
+    ordered_ids = sorted(by_id)
+
+    vectors = artifact_store.load_npy(ArtifactKey("anchor_vectors"))
+    if vectors.shape[0] != len(ordered_ids):
+        raise ArtifactContractError(
+            f"anchor_vectors row count {vectors.shape[0]} != "
+            f"jd_concepts anchor count {len(ordered_ids)}"
         )
-        if matrix.shape[1] != dim:
-            raise ArtifactContractError(
-                f"anchor vector dim {matrix.shape[1]} != embedding dim {dim}"
-            )
+    if vectors.shape[0] and vectors.shape[1] != dim:
+        raise ArtifactContractError(
+            f"anchor vector dim {vectors.shape[1]} != embedding dim {dim}"
+        )
+
+    def _side(polarity: str) -> tuple[tuple[AnchorId, ...], npt.NDArray[np.float32]]:
+        rows = [i for i, aid in enumerate(ordered_ids) if by_id[aid] == polarity]
+        ids = tuple(AnchorId(ordered_ids[i]) for i in rows)
+        matrix = (
+            np.ascontiguousarray(vectors[rows])
+            if rows
+            else np.zeros((0, dim), dtype=np.float32)
+        )
         return ids, matrix
 
     positive_ids, positive_matrix = _side("positive")
@@ -387,30 +439,45 @@ def _build_anchor_set(anchors: Mapping[str, object], *, dim: int) -> AnchorSet:
     )
 
 
-def _build_archetype_space(
-    centroids: Mapping[str, object], *, dim: int
+def _load_archetype_space(
+    artifact_store: ArtifactStorePort, *, dim: int
 ) -> ArchetypeSpace:
-    ids = tuple(ArchetypeId(_as_int(i)) for i in _as_sequence(centroids.get("ids", [])))
-    vectors = _as_sequence(centroids.get("vectors", []))
-    matrix = (
-        np.asarray(
-            [[_as_float(v) for v in _as_sequence(row)] for row in vectors],
-            dtype=np.float32,
-        )
-        if vectors
-        else np.zeros((0, dim), dtype=np.float32)
+    """Build the ``ArchetypeSpace`` from the real ``archetypes`` + ``centroids``.
+
+    ``archetypes.json``'s ``archetypes`` map is keyed by the archetype's id as a
+    string, and that key *is* its row index into ``centroids.npy`` (O7 writes
+    ``centroids[order]`` and the catalog by the same ``order``-derived id).
+    """
+    catalog = _as_mapping(
+        artifact_store.load_json(ArtifactKey("archetypes")).get("archetypes", {})
     )
+    matrix = artifact_store.load_npy(ArtifactKey("centroids"))
+    if matrix.shape[0] != len(catalog):
+        raise ArtifactContractError(
+            f"centroids row count {matrix.shape[0]} != "
+            f"archetype catalog size {len(catalog)}"
+        )
     if matrix.shape[0] and matrix.shape[1] != dim:
         raise ArtifactContractError(
             f"centroid vector dim {matrix.shape[1]} != embedding dim {dim}"
         )
-    target = frozenset(
-        ArchetypeId(_as_int(i)) for i in _as_sequence(centroids.get("target", []))
-    )
-    labels_raw = _as_mapping(centroids.get("labels", {}))
-    labels = {ArchetypeId(int(k)): _as_str(v) for k, v in labels_raw.items()}
+
+    ids: list[ArchetypeId] = []
+    target: set[ArchetypeId] = set()
+    labels: dict[ArchetypeId, str] = {}
+    for key in sorted(catalog, key=int):
+        entry = _as_mapping(catalog[key])
+        aid = ArchetypeId(_as_int(entry["archetype_id"]))
+        ids.append(aid)
+        labels[aid] = _as_str(entry["label"])
+        if entry.get("is_target_archetype") is True:
+            target.add(aid)
+
     return ArchetypeSpace(
-        centroids=matrix, archetype_ids=ids, target_archetypes=target, labels=labels
+        centroids=matrix,
+        archetype_ids=tuple(ids),
+        target_archetypes=frozenset(target),
+        labels=labels,
     )
 
 
