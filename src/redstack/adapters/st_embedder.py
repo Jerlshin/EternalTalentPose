@@ -92,6 +92,10 @@ class _StModel(Protocol):
     def tokenizer(self) -> _HfTokenizer: ...
 
 
+class _FastTokenizerHandle(Protocol):
+    def to_str(self) -> str: ...
+
+
 class _HfTokenizer(Protocol):
     def __call__(
         self,
@@ -102,6 +106,8 @@ class _HfTokenizer(Protocol):
         max_length: int,
         return_tensors: str,
     ) -> dict[str, object]: ...
+    @property
+    def backend_tokenizer(self) -> _FastTokenizerHandle: ...
 
 
 class _Pooling(Protocol):
@@ -221,6 +227,16 @@ class SentenceTransformerEmbeddingAdapter:
         though :meth:`export_onnx` itself is fully implemented).
         """
         return _DEFAULT_OPSET
+
+    @property
+    def tokenizer_json(self) -> str:
+        """The fast tokenizer's ``tokenizers.Tokenizer.from_str`` JSON payload.
+
+        The online ``OnnxEmbeddingModelAdapter`` fallback encoder tokenizes
+        through this exact serialization, so it must travel as its own
+        artifact alongside ``model/encoder.onnx`` (Adapters §4).
+        """
+        return self._model.tokenizer.backend_tokenizer.to_str()
 
     def encode(
         self, texts: Sequence[str], *, batch_size: int | None = None

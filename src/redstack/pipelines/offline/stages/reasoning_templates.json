@@ -5,63 +5,63 @@
   "templates": [
     {
       "id": "strength.retrieval_ranking",
-      "polarity": "STRENGTH",
+      "polarity": "strength",
       "rank_bands": ["top", "mid"],
-      "jd_link": "SEMANTIC_FIT",
+      "jd_link": "semantic_fit",
       "fragment": "Built and shipped {system} systems over {years} years",
       "slots": [
-        {"name": "system", "evidence_kind": "CAREER_FIELD", "source_feature": "jd.retrieval_ranking"},
-        {"name": "years", "evidence_kind": "DERIVED", "source_feature": "exp.years"}
+        {"name": "system", "evidence_kind": "career_field", "source_feature": "jd.retrieval_ranking"},
+        {"name": "years", "evidence_kind": "derived", "source_feature": "exp.years"}
       ]
     },
     {
       "id": "strength.production_ml",
-      "polarity": "STRENGTH",
+      "polarity": "strength",
       "rank_bands": ["top", "mid"],
-      "jd_link": "CAREER_FIT",
+      "jd_link": "career_fit",
       "fragment": "Deployed production ML at {company}, a product company",
       "slots": [
-        {"name": "company", "evidence_kind": "CAREER_FIELD", "source_feature": "jd.product_company"}
+        {"name": "company", "evidence_kind": "career_field", "source_feature": "jd.product_company"}
       ]
     },
     {
       "id": "strength.eval_framework",
-      "polarity": "STRENGTH",
+      "polarity": "strength",
       "rank_bands": ["top", "mid"],
-      "jd_link": "SKILL_MATCH",
+      "jd_link": "skill_match",
       "fragment": "Evaluation rigor evidenced by {metric} usage",
       "slots": [
-        {"name": "metric", "evidence_kind": "SKILL", "source_feature": "jd.eval_framework"}
+        {"name": "metric", "evidence_kind": "skill", "source_feature": "jd.eval_framework"}
       ]
     },
     {
       "id": "context.experience_band",
-      "polarity": "CONTEXT",
+      "polarity": "context",
       "rank_bands": ["top", "mid", "tail"],
-      "jd_link": "EXPERIENCE_FIT",
+      "jd_link": "experience_fit",
       "fragment": "{years} years of stated experience",
       "slots": [
-        {"name": "years", "evidence_kind": "PROFILE_FIELD", "source_feature": "exp.years"}
+        {"name": "years", "evidence_kind": "profile_field", "source_feature": "exp.years"}
       ]
     },
     {
       "id": "concern.keyword_only",
-      "polarity": "CONCERN",
+      "polarity": "concern",
       "rank_bands": ["mid", "tail"],
-      "jd_link": "CREDIBILITY",
+      "jd_link": "credibility",
       "fragment": "Skill claims show limited corroboration ({stuffing_signal})",
       "slots": [
-        {"name": "stuffing_signal", "evidence_kind": "DERIVED", "source_feature": "jd.keyword_only"}
+        {"name": "stuffing_signal", "evidence_kind": "derived", "source_feature": "jd.keyword_only"}
       ]
     },
     {
       "id": "concern.consulting_only",
-      "polarity": "CONCERN",
+      "polarity": "concern",
       "rank_bands": ["mid", "tail"],
-      "jd_link": "PURE_RESEARCH_NO_PRODUCTION",
+      "jd_link": "pure_research_no_production",
       "fragment": "Career is consulting-heavy with limited product tenure",
       "slots": [
-        {"name": "consulting_density", "evidence_kind": "CAREER_FIELD", "source_feature": "jd.consulting_only"}
+        {"name": "consulting_density", "evidence_kind": "career_field", "source_feature": "jd.consulting_only"}
       ]
     }
   ]

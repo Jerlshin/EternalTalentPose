@@ -16,10 +16,8 @@ executes the full R0→R9 lifecycle via :class:`OnlinePipeline`.
 Known gap (tracked, not fixed here): ``pipelines.online.stages.r0_load`` reads
 artifact keys (e.g. ``"weights/scoring_weights.locked"``,
 ``"calibration/logistics_weights"``, ``"archetypes/centroids"``) that do not
-match the offline registry's actual manifest keys, and references a
-tokenizer artifact the offline build never produces. That mismatch lives in
-``stages.py``, not in this composition root, and needs its own pass once a
-completed offline build exists to test against.
+match the offline registry's actual manifest keys. That mismatch lives in
+``stages.py``, not in this composition root.
 """
 
 from __future__ import annotations
@@ -48,11 +46,6 @@ if TYPE_CHECKING:
     from redstack.config.schema import RedstackConfig
 
 __all__: tuple[str, ...] = ("run_online_rank",)
-
-#: Placeholder tokenizer key — no offline stage produces this artifact today
-#: (see module docstring "Known gap"); kept as a single named constant so the
-#: eventual fix has one call site to update.
-_TOKENIZER_KEY: Final[ArtifactKey] = ArtifactKey("tokenizer")
 
 
 def _sha256_file(path: Path) -> str:
@@ -121,7 +114,7 @@ def run_online_rank(
     embedding_model = OnnxEmbeddingModelAdapter(
         artifact_store,
         model_key=ArtifactKey("encoder"),
-        tokenizer_key=_TOKENIZER_KEY,
+        tokenizer_key=ArtifactKey("tokenizer"),
         model_id=manifest.embedding.model_id,
         dim=manifest.embedding.dim,
         session_options=session_options,

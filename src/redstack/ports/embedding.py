@@ -40,9 +40,13 @@ class OnnxExportCapable(Protocol):
     online onnx adapter. ``export_onnx`` writes ``encoder.onnx`` to ``dest`` at a
     pinned opset and returns the st<->onnx parity cosine on a sample (target
     >= 0.999; the adapter raises ``EmbeddingError`` if parity fails so a bad twin
-    is never accepted).
+    is never accepted). ``tokenizer_json`` serializes the same fast tokenizer the
+    onnx twin was traced against, as the online ``tokenizers.Tokenizer.from_str``
+    payload — the online onnx fallback encoder cannot tokenize without it.
     """
 
     @property
     def opset(self) -> int: ...
+    @property
+    def tokenizer_json(self) -> str: ...
     def export_onnx(self, dest: Path, *, sample_texts: Sequence[str]) -> float: ...

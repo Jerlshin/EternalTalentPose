@@ -365,6 +365,10 @@ def _v_encoder_onnx(p: Mapping[str, object]) -> str | None:
     return _require_keys(p, ("model_id", "dim"))
 
 
+def _v_tokenizer(p: Mapping[str, object]) -> str | None:
+    return _require_keys(p, ("model",))
+
+
 def _v_feature_snapshot(p: Mapping[str, object]) -> str | None:
     reason = _require_keys(p, ("columns", "row_count", "has_nan", "feature_dim"))
     if reason is not None:
@@ -716,6 +720,16 @@ _SPECS: Final[tuple[ArtifactSpec, ...]] = (
         schema_version="emb-v1.0",
         lineage=("O13",),
         validator=_v_encoder_onnx,
+        required_online=True,
+    ),
+    ArtifactSpec(
+        key="tokenizer",
+        relative_path="model/tokenizer.json",
+        kind=ArtifactKind.JSON,
+        owner_stages=("O13",),
+        schema_version="emb-v1.0",
+        lineage=("O13",),
+        validator=_v_tokenizer,
         required_online=True,
     ),
     ArtifactSpec(

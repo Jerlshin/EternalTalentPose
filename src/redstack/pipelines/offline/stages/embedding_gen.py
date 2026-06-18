@@ -337,7 +337,8 @@ class EmbeddingManifestStage(_EmbeddingStageBase):
     """O13 — export the ONNX twin (parity-verified) + write ``embedding_manifest.json``."""
 
     stage_id = "O13"
-    stage_version = "1.0"
+    #: 1.1: also emits the "tokenizer" artifact the online onnx fallback needs.
+    stage_version = "1.1"
 
     def _run(
         self,
@@ -368,6 +369,10 @@ class EmbeddingManifestStage(_EmbeddingStageBase):
                 )
             )
             onnx_tmp.unlink(missing_ok=True)
+            # The onnx fallback encoder tokenizes through this exact fast
+            # tokenizer; it must travel as its own artifact (Adapters §4).
+            tokenizer_payload = json.loads(model.tokenizer_json)
+            artifacts.append(self.emit_json(ctx, "tokenizer", tokenizer_payload))
         else:
             msg = (
                 "offline embedding model does not support ONNX export "

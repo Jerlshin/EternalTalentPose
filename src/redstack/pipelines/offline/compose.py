@@ -19,6 +19,15 @@ root can synthesize. Loading it is deferred to the moment O8 actually runs
 (:class:`_LazyLabelingStage`) so a build can make real progress through every
 stage that does not need it, and fails with a clear, specific error only when
 O8 is reached and no seed is committed at ``paths.golden_labels_path``.
+
+:func:`run_offline_build_with_locked_heuristics` is the deliberate bypass for
+when there is no committed gold-label set yet but the team has already fixed
+the scoring weights by hand: it runs a *reduced* execution graph that drops
+O8 (and the O9/O10 stages that would otherwise need its output) and substitutes
+two fixed-value stages — the given component weights for O9, uniform per-feature
+importance for O10. O11/O12 (no O8 dependency) and O15/O16 (already gold-label-
+optional in their real implementations) run unmodified for real, so O17/O18 see
+a complete, genuinely valid artifact set and produce a real ``MANIFEST.json``.
 """
 
 from __future__ import annotations
@@ -40,12 +49,18 @@ from redstack.domain.errors import ArtifactContractError
 from redstack.features.registry import FEATURE_REGISTRY
 from redstack.pipelines.offline.build_artifact_store import BuildArtifactStore
 from redstack.pipelines.offline.context import OfflinePipelineContext
+from redstack.pipelines.offline.graph import (
+    OFFLINE_EXECUTION_GRAPH,
+    OfflineExecutionGraph,
+    StageNode,
+)
 from redstack.pipelines.offline.pipeline import OfflinePipeline, OfflinePipelineReport
 from redstack.pipelines.offline.registry import (
     OFFLINE_ARTIFACT_REGISTRY,
     OfflineArtifactRegistry,
 )
 from redstack.pipelines.offline.runner import StageCallable, StageReceipt, StageResult
+from redstack.pipelines.offline.stages import OfflineStage
 from redstack.pipelines.offline.stages._labeling_seed import GoldLabelSeed
 from redstack.pipelines.offline.stages.archetype_discovery import (
     ArchetypeDiscoveryStage,
@@ -85,7 +100,10 @@ from redstack.pipelines.offline.stages.weight_search import WeightSearchStage
 if TYPE_CHECKING:
     from redstack.config.schema import RedstackConfig
 
-__all__: tuple[str, ...] = ("run_offline_build",)
+__all__: tuple[str, ...] = (
+    "run_offline_build",
+    "run_offline_build_with_locked_heuristics",
+)
 
 #: Default offline encode batch size handed to the sentence-transformers adapter.
 _ST_BATCH_SIZE: Final[int] = 32
@@ -179,6 +197,42 @@ def _build_stages(
     return {stage.stage_id: stage for stage in stages}
 
 
+def _build_context(
+    config: RedstackConfig, *, code_version: str
+) -> OfflinePipelineContext:
+    """Bind every adapter and build the immutable offline build context.
+
+    Raises:
+        ValueError: ``config.offline`` is absent (wrong run mode).
+    """
+    offline = config.offline
+    if offline is None:
+        msg = "an offline build requires a config with an 'offline' runtime block"
+        raise ValueError(msg)
+
+    candidates_path = Path(config.paths.candidates_path).resolve()
+    artifacts_root = Path(config.paths.artifacts_root).resolve()
+
+    candidate_source = JsonlCandidateSourceAdapter(candidates_path)
+    embedding_model = SentenceTransformerEmbeddingAdapter(
+        offline.st_model_id,
+        revision=offline.st_model_revision,
+        batch_size=_ST_BATCH_SIZE,
+    )
+    entropy = OfflineEntropy(seed=offline.seed, as_of=offline.as_of.date())
+    artifact_store = BuildArtifactStore(artifacts_root, OFFLINE_ARTIFACT_REGISTRY)
+
+    return OfflinePipelineContext.build(
+        config=config,
+        candidate_source=candidate_source,
+        embedding_model=embedding_model,
+        artifact_store=artifact_store,
+        entropy=entropy,
+        feature_registry=FEATURE_REGISTRY,
+        code_version=code_version,
+    )
+
+
 def run_offline_build(
     config: RedstackConfig,
     *,
@@ -201,36 +255,158 @@ def run_offline_build(
         ValueError: ``config.offline`` is absent (wrong run mode).
         GoldLabelSeedMissingError: O8 is reached with no committed gold labels.
     """
-    offline = config.offline
-    if offline is None:
-        msg = "run_offline_build requires a config with an 'offline' runtime block"
-        raise ValueError(msg)
-
-    candidates_path = Path(config.paths.candidates_path).resolve()
-    artifacts_root = Path(config.paths.artifacts_root).resolve()
+    ctx = _build_context(config, code_version=code_version)
     golden_labels_path = Path(config.paths.golden_labels_path).resolve()
-
-    candidate_source = JsonlCandidateSourceAdapter(candidates_path)
-    embedding_model = SentenceTransformerEmbeddingAdapter(
-        offline.st_model_id,
-        revision=offline.st_model_revision,
-        batch_size=_ST_BATCH_SIZE,
-    )
-    entropy = OfflineEntropy(seed=offline.seed, as_of=offline.as_of.date())
-    artifact_store = BuildArtifactStore(artifacts_root, OFFLINE_ARTIFACT_REGISTRY)
-
-    ctx = OfflinePipelineContext.build(
-        config=config,
-        candidate_source=candidate_source,
-        embedding_model=embedding_model,
-        artifact_store=artifact_store,
-        entropy=entropy,
-        feature_registry=FEATURE_REGISTRY,
-        code_version=code_version,
-    )
-
     stages = _build_stages(
         configs_root=configs_root, golden_labels_path=golden_labels_path
     )
     pipeline = OfflinePipeline(stages=stages)
+    return pipeline.execute(ctx, force=force)
+
+
+# --------------------------------------------------------------------------- #
+# Locked-heuristics bypass: no gold labels, fixed expert-authored weights.    #
+# --------------------------------------------------------------------------- #
+@final
+class _FixedScoringWeightsStage(OfflineStage):
+    """O9 substitute — package given component weights, no calibration search."""
+
+    stage_id = "O9"
+    stage_version = "locked-1.0"
+
+    def __init__(
+        self,
+        weights: Mapping[str, float],
+        neutral_prior: float,
+        registry: OfflineArtifactRegistry = OFFLINE_ARTIFACT_REGISTRY,
+    ) -> None:
+        super().__init__(registry)
+        self._weights = dict(weights)
+        self._neutral_prior = neutral_prior
+
+    def _run(
+        self,
+        ctx: OfflinePipelineContext,
+        upstream: Mapping[str, StageReceipt],
+    ) -> StageResult:
+        payload: dict[str, object] = {
+            "layout_version": ctx.layout_version,
+            "weights": dict(sorted(self._weights.items())),
+            "neutral_prior": self._neutral_prior,
+            "calibrated_by": "locked-heuristics (no gold-label search)",
+        }
+        artifact = self.emit_yaml(ctx, "scoring_weights", payload)
+        metrics: dict[str, object] = {
+            "component_count": len(self._weights),
+            "neutral_prior": self._neutral_prior,
+        }
+        return StageResult(artifacts=(artifact,), metrics=metrics)
+
+
+@final
+class _UniformFeatureImportanceStage(OfflineStage):
+    """O10 substitute — flat per-feature importance, no permutation search."""
+
+    stage_id = "O10"
+    stage_version = "locked-1.0"
+
+    def _run(
+        self,
+        ctx: OfflinePipelineContext,
+        upstream: Mapping[str, StageReceipt],
+    ) -> StageResult:
+        importances = {str(d.feature_id): 1.0 for d in ctx.feature_registry.definitions}
+        payload: dict[str, object] = {
+            "importances": importances,
+            "calibrated_by": "locked-heuristics (uniform, no permutation search)",
+        }
+        artifact = self.emit_json(ctx, "feature_importance", payload)
+        metrics: dict[str, object] = {"features_scored": len(importances)}
+        return StageResult(artifacts=(artifact,), metrics=metrics)
+
+
+def _locked_heuristics_graph() -> OfflineExecutionGraph:
+    """The full Part 11 DAG with O8 dropped and its dependents' edges pruned.
+
+    O9/O16/O17 are the only nodes whose ``depends_on`` names "O8"; every other
+    edge is untouched, so O11/O12 (already O8-independent) and O15/O16 (already
+    gold-label-optional in their real implementations) run exactly as designed.
+    """
+    nodes: list[StageNode] = []
+    for node in OFFLINE_EXECUTION_GRAPH.nodes:
+        if node.stage_id == "O8":
+            continue
+        if node.stage_id == "O9":
+            nodes.append(StageNode("O9", (), critical=node.critical))
+            continue
+        if node.stage_id in ("O16", "O17"):
+            pruned = tuple(dep for dep in node.depends_on if dep != "O8")
+            nodes.append(StageNode(node.stage_id, pruned, critical=node.critical))
+            continue
+        nodes.append(node)
+    return OfflineExecutionGraph(nodes=tuple(nodes))
+
+
+def run_offline_build_with_locked_heuristics(
+    config: RedstackConfig,
+    *,
+    configs_root: Path,
+    code_version: str,
+    component_weights: Mapping[str, float],
+    neutral_prior: float,
+    force: tuple[str, ...] | None = None,
+) -> OfflinePipelineReport:
+    """Run the build on a reduced graph that drops O8 and its O9/O10 dependents.
+
+    Substitutes :class:`_FixedScoringWeightsStage` /
+    :class:`_UniformFeatureImportanceStage` for O9/O10 so O11/O12/O15/O16/O17/O18
+    see a complete, real artifact set and O17 produces a genuine
+    ``MANIFEST.json`` — without any committed gold labels.
+
+    Args:
+        config: The fully-composed, validated offline ``RedstackConfig``.
+        configs_root: Path to the ``configs/`` directory (authoring seeds).
+        code_version: The build's code provenance, recorded into the report.
+        component_weights: One weight per ``domain.enums.ScoreComponent`` value.
+        neutral_prior: The online ``ScoringPolicy.neutral_prior`` fallback.
+        force: Stage ids to recompute regardless of checkpoint freshness.
+
+    Returns:
+        The terminal :class:`OfflinePipelineReport`.
+
+    Raises:
+        ValueError: ``config.offline`` is absent (wrong run mode).
+    """
+    ctx = _build_context(config, code_version=code_version)
+    lexicon_seed = load_lexicon_seed(configs_root)
+    jd_anchors = load_jd_anchors(configs_root)
+    eligibility_rules = load_eligibility_rules(configs_root)
+
+    stages: tuple[StageCallable, ...] = (
+        CensusStage(),
+        NormalizationStage(),
+        ValidationStage(),
+        HoneypotDiscoveryStage(),
+        LexiconDiscoveryStage(seed=lexicon_seed),
+        VocabExpansionStage(),
+        JdConceptStage(anchors=jd_anchors, eligibility=eligibility_rules),
+        ArchetypeDiscoveryStage(),
+        _FixedScoringWeightsStage(component_weights, neutral_prior),
+        _UniformFeatureImportanceStage(),
+        BehavioralCalibrationStage(),
+        RiskCalibrationStage(),
+        CandidateEmbeddingStage(),
+        AnchorEmbeddingStage(),
+        CareerEmbeddingStage(),
+        EmbeddingManifestStage(),
+        FeatureSnapshotStage(),
+        RankingCalibrationStage(),
+        ReasoningTemplateStage(),
+        PackagingStage(),
+        ReproducibilityStage(),
+    )
+    pipeline = OfflinePipeline(
+        stages={stage.stage_id: stage for stage in stages},
+        graph=_locked_heuristics_graph(),
+    )
     return pipeline.execute(ctx, force=force)

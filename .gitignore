@@ -152,10 +152,11 @@ run_report.json
 .ipynb_checkpoints/
 
 # ==========================================================
-# Claude / AI Tooling
+# Optional Industry Artifacts (change if you are using this)
 # ==========================================================
 .claude/
 .claude-cache/
+CLAUDE.md
 
 # ==========================================================
 # Misc
