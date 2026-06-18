@@ -586,13 +586,15 @@ def fold_semantic(
     *,
     as_of: date,
     semantic: Mapping[str, Similarity],
-) -> None:
+) -> dict[str, FeatureCell]:
     """Recompute the semantic-dependent cells of ``row``/``confidence`` in place (R3).
 
     Re-derives the full cell set with the now-resolved ``semantic`` similarity
     map and overwrites only the competency ``.semantic``/``.competency`` cells
     and the ``jd.*`` latents (the only cells whose value depends on
-    ``semantic``); every other index is untouched.
+    ``semantic``); every other index is untouched. Returns the full cell map
+    it just built so the caller (R3) doesn't have to re-run ``build_cells`` a
+    second time to get the per-candidate cell map it also needs.
     """
     full_cells = build_cells(raw, as_of=as_of, semantic=semantic)
     conf_sum: dict[str, float] = {}
@@ -612,3 +614,4 @@ def fold_semantic(
     for group, total in conf_sum.items():
         column = groups.index(group)
         confidence[column] = np.float32(total / conf_count[group])
+    return full_cells

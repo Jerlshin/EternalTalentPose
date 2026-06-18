@@ -101,7 +101,6 @@ from redstack.engines.validation import ValidationEngine
 from redstack.features.extraction import (
     build_behavioral_profile,
     build_career_profile,
-    build_cells,
     build_credibility_profile,
     build_logistics_profile,
     extract_row,
@@ -556,7 +555,6 @@ class FeaturedSet:
     cqv: npt.NDArray[np.float32]
     confidence: npt.NDArray[np.float32]
     representations: tuple[CandidateRepresentation, ...]
-    cells: tuple[Mapping[str, FeatureCell], ...]
 
 
 def r2_features(
@@ -572,14 +570,16 @@ def r2_features(
     cqv = np.zeros((n, registry.dim), dtype=np.float32)
     confidence = np.zeros((n, len(registry.groups)), dtype=np.float32)
     reps: list[CandidateRepresentation] = []
-    cells_list: list[Mapping[str, FeatureCell]] = []
 
     for i, cand in enumerate(ingested):
-        cell_map = build_cells(cand.raw, as_of=ctx.as_of, semantic={})
+        # ``extract_row`` builds the placeholder (semantic={}) cell map itself
+        # internally — R3's ``fold_semantic`` is what needs the *resolved*
+        # cell map, and it builds + returns that one. Building a placeholder
+        # cell map here too would just be the same ``build_cells`` call run
+        # twice with identical arguments, discarded either way.
         row, conf_row = extract_row(cand.raw, registry, as_of=ctx.as_of)
         cqv[i] = row
         confidence[i] = conf_row
-        cells_list.append(cell_map)
         reps.append(
             cand.representation.with_features(
                 career=build_career_profile(cand.raw, as_of=ctx.as_of),
@@ -593,7 +593,6 @@ def r2_features(
         cqv=cqv,
         confidence=confidence,
         representations=tuple(reps),
-        cells=tuple(cells_list),
     )
 
 
@@ -648,12 +647,13 @@ def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
         }
         row = cqv[i]
         conf_row = confidence[i]
-        fold_semantic(
+        # ``fold_semantic`` already builds the resolved cell map internally to
+        # fold it into the row/confidence arrays — reuse that return instead
+        # of calling ``build_cells`` a second time with the same arguments.
+        full_cells = fold_semantic(
             row, conf_row, cand.raw, registry, as_of=ctx.as_of, semantic=similarity_map
         )
-        cells_list.append(
-            build_cells(cand.raw, as_of=ctx.as_of, semantic=similarity_map)
-        )
+        cells_list.append(full_cells)
         reps.append(
             featured.representations[i].with_semantic(
                 semantic=semantic, archetype=archetype

@@ -28,6 +28,7 @@ networking — the online package cannot pull a budget-busting dependency.
 
 from __future__ import annotations
 
+import gc
 import resource
 import time
 from collections.abc import Mapping
@@ -229,64 +230,91 @@ class OnlinePipeline:
 
         clock = _StageClock()
 
-        # R0 — load + verify all artifacts; bind ports; build the context whole.
-        started = time.perf_counter()
-        ctx = self._r0(input_file_sha256)
-        clock.record("R0", started)
+        # The R0..R9 representation set briefly holds tens of millions of
+        # small, acyclic, immutable objects (one FeatureCell + EvidenceRef
+        # per feature per candidate, at full candidate-pool scale). None of
+        # them ever form a reference cycle, so the generational collector's
+        # cycle scans buy nothing here but cost real wall-time once the live
+        # object count gets large — refcounting alone still reclaims every
+        # one of them the instant a stage's superseded generation is
+        # dropped (see the `del` calls below). Disabled only for this run's
+        # duration and restored in `finally` so it never leaks into any other
+        # work sharing this process (e.g. a test runner invoking several
+        # pipelines). Pure timing/CPU effect — does not change output values,
+        # so determinism is unaffected.
+        gc_was_enabled = gc.isenabled()
+        gc.disable()
+        try:
+            # R0 — load + verify all artifacts; bind ports; build the context whole.
+            started = time.perf_counter()
+            ctx = self._r0(input_file_sha256)
+            clock.record("R0", started)
 
-        # R1 — stream + validate candidates (lazy at the port; bulk path here).
-        started = time.perf_counter()
-        ingested = stages.r1_ingest(ctx)
-        clock.record("R1", started)
-        if not ingested:
-            raise ArtifactContractError("R1 produced zero candidates (empty input)")
+            # R1 — stream + validate candidates (lazy at the port; bulk path here).
+            started = time.perf_counter()
+            ingested = stages.r1_ingest(ctx)
+            clock.record("R1", started)
+            if not ingested:
+                raise ArtifactContractError("R1 produced zero candidates (empty input)")
 
-        # R2 — bulk structural feature extraction into the (N, D) CQV.
-        started = time.perf_counter()
-        featured = stages.r2_features(ctx, ingested)
-        clock.record("R2", started)
+            # R2 — bulk structural feature extraction into the (N, D) CQV.
+            started = time.perf_counter()
+            featured = stages.r2_features(ctx, ingested)
+            clock.record("R2", started)
+            # `ingested` is fully superseded by `featured` (same candidates,
+            # same IngestedCandidate objects, plus the new feature slices) —
+            # drop the reference now rather than letting the orchestrator
+            # hold every stage's full 100k-candidate generation alive
+            # simultaneously through to R9 (the ≤16 GB online RAM ceiling;
+            # CLAUDE.md §1).
+            del ingested
 
-        # R3 — semantic hydration by lookup (+ onnx fallback for misses).
-        started = time.perf_counter()
-        situated = stages.r3_semantic(ctx, featured)
-        clock.record("R3", started)
+            # R3 — semantic hydration by lookup (+ onnx fallback for misses).
+            started = time.perf_counter()
+            situated = stages.r3_semantic(ctx, featured)
+            clock.record("R3", started)
+            del featured
 
-        # R4 — integrity + eligibility gates → floor mask (verdicts are data).
-        started = time.perf_counter()
-        gated = stages.r4_gates(ctx, situated)
-        clock.record("R4", started)
+            # R4 — integrity + eligibility gates → floor mask (verdicts are data).
+            started = time.perf_counter()
+            gated = stages.r4_gates(ctx, situated)
+            clock.record("R4", started)
+            del situated
 
-        # R5 — scoring (locked weights, gates, bounded multipliers; no calibration).
-        started = time.perf_counter()
-        scored = stages.r5_score(ctx, gated)
-        clock.record("R5", started)
+            # R5 — scoring (locked weights, gates, bounded multipliers; no calibration).
+            started = time.perf_counter()
+            scored = stages.r5_score(ctx, gated)
+            clock.record("R5", started)
 
-        # R6 — ranking (raw scores, floor-partitioned, top-100, invariants enforced).
-        started = time.perf_counter()
-        ranking = stages.r6_rank(ctx, scored)
-        clock.record("R6", started)
+            # R6 — ranking (raw scores, floor-partitioned, top-100, invariants).
+            started = time.perf_counter()
+            ranking = stages.r6_rank(ctx, scored)
+            clock.record("R6", started)
 
-        # R7 — reasoning for the top-100 (evidence-bound, no reorder).
-        started = time.perf_counter()
-        reasoned = stages.r7_reason(ctx, ranking, gated)
-        clock.record("R7", started)
+            # R7 — reasoning for the top-100 (evidence-bound, no reorder).
+            started = time.perf_counter()
+            reasoned = stages.r7_reason(ctx, ranking, gated)
+            clock.record("R7", started)
 
-        # R8 — validate (structural + Stage-4) then write the CSV atomically.
-        started = time.perf_counter()
-        receipt = stages.r8_submit(ctx, reasoned)
-        clock.record("R8", started)
+            # R8 — validate (structural + Stage-4) then write the CSV atomically.
+            started = time.perf_counter()
+            receipt = stages.r8_submit(ctx, reasoned)
+            clock.record("R8", started)
 
-        # R9 — run report (reproducible + audit + timings + budget).
-        started = time.perf_counter()
-        report_outcome = stages.r9_report(
-            ctx,
-            ranking=reasoned,
-            scored=scored,
-            gated=gated,
-            receipt=receipt,
-            stage_timings_ms=dict(clock.timings_ms),
-        )
-        clock.record("R9", started)
+            # R9 — run report (reproducible + audit + timings + budget).
+            started = time.perf_counter()
+            report_outcome = stages.r9_report(
+                ctx,
+                ranking=reasoned,
+                scored=scored,
+                gated=gated,
+                receipt=receipt,
+                stage_timings_ms=dict(clock.timings_ms),
+            )
+            clock.record("R9", started)
+        finally:
+            if gc_was_enabled:
+                gc.enable()
 
         used_seconds = clock.total_seconds()
         within_budget = used_seconds <= self._config.budget_limit_seconds
