@@ -944,16 +944,35 @@ def r5_score(ctx: OnlineRunContext, gated: GatedSet) -> ScoredSet:
     return ScoredSet(scored=tuple(scored), base=gated)
 
 
+_SKILL_MATCH_TOP_K: Final[int] = 3
+
+
 def _skill_match_value(cells: Mapping[str, FeatureCell]) -> float:
-    """Mean of the nine ``{group}.competency`` cells (Scoring's SKILL_MATCH raw).
+    """Mean of the candidate's top-``_SKILL_MATCH_TOP_K`` (of nine)
+    ``{group}.competency`` cells (Scoring's SKILL_MATCH raw).
 
     Shared by ``_score_components`` (the scored component) and ``r4_gates``
     (the eligibility gate input) so both read the identical aggregate.
+
+    A flat mean over all nine retr/rank/recsys/ir/nlp/llm/mle/mlops/eval
+    groups requires breadth no real specialist has: a full-pool audit of
+    ``feature_snapshot.parquet`` found 98.5% of candidates have a nonzero
+    competency cell in at most *one* of the nine groups, so the flat mean
+    collapsed to ~0 for nearly everyone (max across the entire 100k pool was
+    0.19) -- which made the eligibility gate's 0.05 floor hard-block 99.6% of
+    the pool. Top-``_SKILL_MATCH_TOP_K`` rewards genuine corroborated depth in
+    a candidate's strongest 2-3 areas -- matching the JD's "we don't care
+    which retrieval/ranking tech, we care that you've operated it in
+    production" framing -- without requiring unrealistic breadth across all
+    nine specialties at once.
     """
-    found = [cells[fid] for fid in _SKILL_MATCH_IDS if fid in cells]
-    if not found:
+    values = sorted(
+        (cells[fid].value for fid in _SKILL_MATCH_IDS if fid in cells), reverse=True
+    )
+    if not values:
         return 0.0
-    return clamp_unit(math.fsum(c.value for c in found) / len(found))
+    top = values[:_SKILL_MATCH_TOP_K]
+    return clamp_unit(math.fsum(top) / len(top))
 
 
 def _agg(cells: Mapping[str, FeatureCell], ids: Sequence[str]) -> ComponentRaw:

@@ -104,12 +104,12 @@ class EligibilityEngine(BaseModel):
     ) -> EligibilityReport:
         """Evaluate every gate; partition into hard blocks and soft penalties.
 
-        ``skill_match`` is the mean of the nine retr/rank/recsys/ir/nlp/llm/
-        mle/mlops/eval ``.competency`` cells (the same aggregate Scoring's
-        ``SKILL_MATCH`` component reads) — the one component diagnostic
-        evidence showed reliably tracks ML/AI domain relevance. Defaults to
-        ``1.0`` (never blocks) so existing call sites that don't pass it keep
-        their prior behavior.
+        ``skill_match`` is the mean of the candidate's top-3 (of nine)
+        retr/rank/recsys/ir/nlp/llm/mle/mlops/eval ``.competency`` cells (the
+        same aggregate Scoring's ``SKILL_MATCH`` component reads) — the one
+        component diagnostic evidence showed reliably tracks ML/AI domain
+        relevance. Defaults to ``1.0`` (never blocks) so existing call sites
+        that don't pass it keep their prior behavior.
         """
         candidates: list[EligibilityFinding | None] = [
             self._pure_research_no_production(career, semantic),
@@ -280,33 +280,36 @@ class EligibilityEngine(BaseModel):
         semantic: SemanticProfile,
         skill_match: float,
     ) -> EligibilityFinding | None:
-        """Gate on demonstrated relevant-skill credibility OR skill_match.
+        """Gate on demonstrated relevant ML/AI skill credibility (``skill_match``).
 
-        Originally required ``negative_fit`` to also clear a threshold (i.e.
-        the candidate had to resemble a *specific* adjacent archetype —
-        vision/speech/robotics). Diagnostic evidence across 27 real candidates
-        showed ``negative_fit`` clustering at 0.21-0.36 for both clearly
-        relevant (ML/Applied-Science/RecSys, ``relevant_skill_credibility``
-        0.80-0.94) and clearly irrelevant (HR Manager, Civil Engineer,
-        Accountant, ..., 0.11-0.50) candidates alike — it carries no domain
-        signal here, so AND-ing it in only suppressed the gate.
+        Two earlier signals were tried and dropped here, in order:
 
-        ``relevant_skill_credibility`` alone (fraction of *all* claimed skills
-        that are corroborated) still let through a second failure mode: a
-        candidate whose few listed skills are all non-ML but well-corroborated
-        (e.g. a Marketing Manager with credibly-endorsed marketing skills)
-        scores high on it despite zero ML/AI overlap. ``skill_match`` (mean of
-        the nine ML-specific competency cells) catches that case directly —
-        every sampled non-ML title scored at or near 0.0 there, regardless of
-        how well-corroborated their (non-ML) skills were. Both bars must clear
-        to pass — failing *either* is sufficient grounds to block.
+        1. ``negative_fit`` (cosine fit against the JD's negative anchors) —
+           required to also clear a threshold, i.e. the candidate had to
+           resemble a *specific* adjacent archetype (vision/speech/robotics).
+           Diagnostic evidence across 27 real candidates showed it clustering
+           at 0.21-0.36 for both clearly relevant and clearly irrelevant
+           titles alike — no anchor in ``configs/anchors/jd_anchors.yaml``
+           models the vision/speech/robotics domain at all, so it carries no
+           signal for *this* gate and AND-ing it in only suppressed firing.
+
+        2. ``relevant_skill_credibility`` (fraction of *all* claimed skills
+           that are corroborated, regardless of domain) — ANDed with
+           ``skill_match`` to catch a candidate whose few listed skills are
+           all non-ML but well-corroborated. In practice this is a generic
+           credibility signal with no ML/AI domain content of its own, and a
+           full-pool audit (100k candidates) showed it alone clears only
+           2.5% of the pool — independently restrictive enough that ANDing
+           it with ``skill_match`` (itself previously miscalibrated, see
+           ``_skill_match_value``) compounded into a 99.6% hard-block rate.
+           Dropped; ``skill_match`` alone — now top-3-of-nine rather than a
+           flat mean — already incorporates the ``nlp``/``ir`` competency
+           groups directly and is the one signal diagnostic evidence found to
+           reliably track ML/AI domain relevance (every sampled non-ML title
+           scored at or near 0.0 there, regardless of how well-corroborated
+           their non-ML skills were).
         """
-        rel = float(credibility.relevant_skill_credibility)
-        neg = float(semantic.negative_fit)
-        if (
-            rel >= self.rules.adjacent_domain_min_relevant_credibility
-            and skill_match >= self.rules.adjacent_domain_min_skill_match
-        ):
+        if skill_match >= self.rules.adjacent_domain_min_skill_match:
             return None
         return self._finding(
             EligibilityCode.PRIMARY_CV_SPEECH_ROBOTICS_NO_NLP,
@@ -315,10 +318,12 @@ class EligibilityEngine(BaseModel):
                 make_evidence(
                     EvidenceKind.DERIVED,
                     "credibility.relevant_skill_credibility",
-                    rel,
+                    float(credibility.relevant_skill_credibility),
                 ),
                 make_evidence(
-                    EvidenceKind.DERIVED, "semantic.negative_fit", neg
+                    EvidenceKind.DERIVED,
+                    "semantic.negative_fit",
+                    float(semantic.negative_fit),
                 ),
                 make_evidence(
                     EvidenceKind.DERIVED, "derived.skill_match", skill_match

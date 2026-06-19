@@ -89,9 +89,46 @@ _DAYS_PER_MONTH: Final[float] = 30.4375
 _SEMANTIC_DEPENDENT_GROUPS: Final[frozenset[str]] = frozenset(
     {"retr", "rank", "recsys", "ir", "nlp", "llm", "mle", "mlops", "eval", "jd"}
 )
+# Dataset audit (data/raw/candidates.jsonl, full 100k pool) found the actual
+# `industry` vocabulary is far richer than this whitelist's original five
+# tokens -- "technology" and "product" never even occur verbatim, while
+# genuine product/tech-native industries like "fintech", "e-commerce",
+# "ai/ml", "edtech", "conversational ai" were silently falling through to
+# "not a production company", inflating PURE_RESEARCH_NO_PRODUCTION (49.8%
+# of the pool hard-blocked, including AI-native-startup employees) and
+# corrupting career.track / pvs.product_density downstream. Expanded to the
+# full set of real product-company industry tags observed in the pool.
 _PRODUCT_INDUSTRIES: Final[frozenset[str]] = frozenset(
-    {"software", "product", "saas", "internet", "technology"}
+    {
+        "software",
+        "product",
+        "saas",
+        "internet",
+        "technology",
+        "fintech",
+        "e-commerce",
+        "edtech",
+        "ai/ml",
+        "adtech",
+        "healthtech",
+        "healthtech ai",
+        "conversational ai",
+        "voice ai",
+        "ai services",
+        "insurance tech",
+        "gaming",
+        "consumer electronics",
+        "media",
+        "food delivery",
+        "transportation",
+    }
 )
+# Same audit: "hcl", "mindtree", "tech mahindra", "mphasis" are major Indian
+# IT-services firms present at the same ~2.8-2.9k-occurrence scale as the
+# JD's named examples (capgemini/accenture/cognizant) but were missing from
+# this list, so CONSULTING_FIRMS_ONLY_CAREER silently passed candidates whose
+# entire career was at one of them. The JD's list is explicitly "TCS,
+# Infosys, Wipro, Accenture, Cognizant, Capgemini, etc." -- not exhaustive.
 _CONSULTING_FIRMS: Final[frozenset[str]] = frozenset(
     {
         "tcs",
@@ -101,6 +138,10 @@ _CONSULTING_FIRMS: Final[frozenset[str]] = frozenset(
         "accenture",
         "cognizant",
         "capgemini",
+        "hcl",
+        "mindtree",
+        "tech mahindra",
+        "mphasis",
     }
 )
 _FOUNDER_TITLE_TOKENS: Final[tuple[str, ...]] = ("founder", "co-founder", "cofounder")
@@ -111,20 +152,46 @@ _SMALL_COMPANY_SIZES: Final[frozenset[CompanySize]] = frozenset(
 
 # --------------------------------------------------------------------------- #
 # A minimal, internally-coherent competency lexicon (no O4/O5 artifact yet).  #
+#
+# Full-pool audit (30k-candidate sample of data/raw/candidates.jsonl career
+# descriptions, tokenized the same way ``in_career`` tokenizes them) found
+# two distinct token-quality bugs:
+#
+# 1. Several tokens were authored as smashed-together compound words
+#    ("vectorsearch", "languagemodel", "mlpipeline", "cicd", "abtesting")
+#    that can never match real prose -- the tokenizer splits on spaces/
+#    hyphens/slashes, so "vector search"/"CI/CD"/"A-B testing" tokenize to
+#    their separate words, never the joined string. Dead weight, not a
+#    false-positive risk, but it silently starved those groups' in_career
+#    signal down to their few remaining working tokens.
+# 2. Several tokens are common English/DevOps words with massive base rates
+#    in this dataset's generated prose, unrelated to genuine domain
+#    relevance: "evaluation" (7734 occurrences / 30k-candidate sample),
+#    "search" (7418), "deployment" (3285), "monitoring" (3015),
+#    "kubernetes" (3003). The dataset's keyword-stuffer/dabbler trap
+#    candidates have job descriptions seeded with exactly this kind of
+#    generic vocabulary (often alongside an inserted AI-buzzword sentence in
+#    an otherwise non-ML role), so these tokens let ``in_career`` -- meant to
+#    be the one signal anchored to genuine hands-on evidence -- get
+#    satisfied by a Cloud/DevOps/Sales/QA description that has nothing to do
+#    with the JD's ML/AI ask. Replaced with low-base-rate, low-ambiguity
+#    terms (specific tool names, metric acronyms) confirmed present in the
+#    same sample at rates consistent with genuine specialist usage rather
+#    than generic-language noise.
 # --------------------------------------------------------------------------- #
 _LEXICON_TOKENS: Final[Mapping[str, frozenset[str]]] = MappingProxyType(
     {
-        "retr": frozenset({"retrieval", "search", "indexing", "elasticsearch", "solr"}),
+        "retr": frozenset({"retrieval", "indexing", "elasticsearch", "solr"}),
         "rank": frozenset({"ranking", "ranker", "relevance", "reranking"}),
         "recsys": frozenset(
             {"recommendation", "recommender", "recsys", "personalization"}
         ),
-        "ir": frozenset({"embeddings", "vectorsearch", "ann", "faiss", "retrieval"}),
-        "nlp": frozenset({"nlp", "tokenization", "transformer", "languagemodel"}),
+        "ir": frozenset({"embeddings", "ann", "faiss", "retrieval"}),
+        "nlp": frozenset({"nlp", "tokenization", "transformer"}),
         "llm": frozenset({"llm", "gpt", "langchain", "openai", "prompt"}),
-        "mle": frozenset({"pytorch", "tensorflow", "mlpipeline", "scikit"}),
-        "mlops": frozenset({"mlops", "deployment", "monitoring", "kubernetes", "cicd"}),
-        "eval": frozenset({"evaluation", "benchmarking", "metrics", "abtesting"}),
+        "mle": frozenset({"pytorch", "tensorflow", "scikit"}),
+        "mlops": frozenset({"mlops", "mlflow", "kubeflow"}),
+        "eval": frozenset({"benchmarking", "ndcg", "mrr"}),
     }
 )
 

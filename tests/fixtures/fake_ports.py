@@ -558,7 +558,38 @@ class CapturingSubmissionSink:
                     reasoning,
                 )
             )
-        return rows
+        return self._stabilize_emitted_ties(rows)
+
+    @staticmethod
+    def _stabilize_emitted_ties(
+        rows: list[tuple[str, str, str, str]]
+    ) -> list[tuple[str, str, str, str]]:
+        """Re-sort runs of equal *emitted* score by ``candidate_id`` ascending.
+
+        Mirrors ``CsvSubmissionSinkAdapter._stabilize_emitted_ties`` exactly --
+        rounding to ``score_decimals`` can collapse two distinct full-precision
+        scores the ``RankingEngine`` already ordered correctly into the same
+        displayed value, and the spec's tie-break rule is defined on the
+        displayed score.
+        """
+        n = len(rows)
+        start = 0
+        out = list(rows)
+        while start < n:
+            end = start
+            while end + 1 < n and out[end + 1][2] == out[start][2]:
+                end += 1
+            if end > start:
+                group = sorted(out[start : end + 1], key=lambda row: row[0])
+                for offset, (cid, _rank, score, reasoning) in enumerate(group):
+                    out[start + offset] = (
+                        cid,
+                        str(start + offset + 1),
+                        score,
+                        reasoning,
+                    )
+            start = end + 1
+        return out
 
     def _reassert_invariants(
         self, ranking: Ranking, rows: list[tuple[str, str, str, str]]

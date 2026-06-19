@@ -68,8 +68,26 @@ _GROUPS: Final[tuple[str, ...]] = (
 )
 
 # Competency fusion weights (convex) and stuffing-penalty strength.
-_W_TRUST: Final[float] = 0.45
-_W_IN_CAREER: Final[float] = 0.30
+#
+# Full-pool audit (data/raw/candidates.jsonl, all 100k) found a concrete
+# trap-candidate archetype the original 0.45/0.30/0.25 split let through at
+# scale: a non-ML title (Cloud/DevOps/QA/Full-stack Engineer) whose actual
+# job-description text has zero overlap with the concept's lexicon tokens
+# (``in_career`` == 0) but who lists a trendy AI skill with inflated
+# endorsements/duration (``trust`` high) and whose profile *summary* mentions
+# the same buzzwords in hedged, self-disclosed-hobbyist language ("I've been
+# keeping up with AI/ML at a self-learner level ... haven't done it in a
+# professional capacity yet") that the full-resume embedding still reads as
+# topically similar (``semantic`` high). With trust+semantic carrying 70% of
+# the fused weight, this pattern alone made up 62/100 of one post-fix top-100
+# ranking. ``in_career`` is the one source anchored to job-description text
+# rather than self-reported metadata or hedge-blind cosine similarity --
+# exactly the JD's own instruction ("if their career history shows they
+# built X, they're a fit; a candidate with all the keywords but the wrong
+# title is not"). Rebalanced so it dominates rather than trailing both
+# gameable sources combined.
+_W_TRUST: Final[float] = 0.25
+_W_IN_CAREER: Final[float] = 0.50
 _W_SEMANTIC: Final[float] = 0.25
 _W_STUFFING: Final[float] = 0.5
 _CLAIM_SATURATION: Final[float] = 4.0
