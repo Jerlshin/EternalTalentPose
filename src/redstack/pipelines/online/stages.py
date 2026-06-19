@@ -1,43 +1,3 @@
-"""The R0…R9 online stage callables — pure, deterministic, copy-on-write.
-
-Each stage is a free function the orchestrator (``pipeline.py``) threads in
-order; the representation set flows forward immutably. Ports are touched
-**only** at R0/R1/R3/R8/R9 (artifact load, ingest, semantic lookup, submit,
-report); R2/R4/R5/R6/R7 are pure engine work over the columnar CQV and the
-domain aggregates.
-
-Determinism contract (Online Part 2 / Part 14): no wall clock — recency uses
-``ctx.as_of`` only; no online RNG; float32 throughout; every merge/tie ordered
-by ascending ``candidate_id``.
-
-**Simplification note (accepted scope, see the integration test docstring for
-the full list).** Every candidate's ``RawCandidate`` is inlined in its
-``Identity.provenance`` (not just the top-100's), and each candidate's
-per-feature ``FeatureCell`` map is retained alongside the bulk ``(N, D)``
-matrix (not dropped after the bulk fold) — both deviate from the spec's
-"rich objects for survivors only" memory optimization, traded for simplicity
-on a test-scale candidate pool. Engines are otherwise the real, frozen
-``engines/*.py`` implementations: nothing here re-derives a gate or score an
-engine already owns.
-
-**Artifact shapes this pipeline expects from ``ArtifactStorePort`` (JSON
-unless noted; the compiled-artifact contract this online run was built
-against):
-
-* ``weights/scoring_weights.locked`` — ``{schema_version, weights: {component:
-  float}, neutral_prior}``.
-* ``calibration/integrity_thresholds`` — the ``IntegrityThresholds`` fields.
-* ``gates/eligibility_rules`` — the ``EligibilityRuleSet`` fields.
-* ``calibration/behavioral_weights`` — the ``BehavioralPolicy`` fields.
-* ``calibration/logistics_weights`` — the ``LogisticsPolicy`` fields.
-* ``anchors/jd_anchors`` — ``{positive: [{id, vector}], negative: [...]}``.
-* ``archetypes/centroids`` — ``{ids, vectors, target, labels}``.
-
-``features.registry.FEATURE_REGISTRY`` is code-pinned (built at import time),
-not loaded from the artifact store — matching how the real registry is
-already constructed in this codebase.
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -865,7 +825,10 @@ def r4_gates(ctx: OnlineRunContext, situated: SituatedSet) -> GatedSet:
                 semantic=semantic,
                 logistics=logistics,
                 jd=_JD_SPEC,
-                skill_match=_skill_match_value(situated.cells[i]),
+                skill_match=_skill_match_value(
+                    situated.cells[i],
+                    breadth_exponent=_SKILL_MATCH_GATE_BREADTH_EXPONENT,
+                ),
             )
         floor[i] = integrity_report.is_honeypot or not eligibility_report.is_eligible
         reps.append(
@@ -945,14 +908,47 @@ def r5_score(ctx: OnlineRunContext, gated: GatedSet) -> ScoredSet:
 
 
 _SKILL_MATCH_TOP_K: Final[int] = 3
+# Floor below which a top-K competency value is treated as dataset noise
+# rather than a genuine corroborated area -- see ``_skill_match_value``.
+_SKILL_MATCH_BREADTH_FLOOR: Final[float] = 0.02
+# Breadth-fraction exponent for the *eligibility gate* call only (the score
+# component keeps the linear default below). The gate answers a binary
+# plausibility question ("any genuine domain relevance at all?") where a
+# *two*-of-three-corroborated profile -- one real spike plus one secondary,
+# usually-weaker hit riding the same single injected sentence/self-reported
+# skill -- should not pass: a fabricated "Mechanical Engineer" and "Graphic
+# Designer" profile in a full-pool rerun, both carrying an "MLOps"-family
+# skill plus the dataset's one reused AI-buzzword sentence, landed at
+# 0.0505-0.0509 against the 0.05 floor under linear breadth. Squaring leaves
+# fully-corroborated (3-of-3) candidates exactly as before (1.0**2 == 1.0)
+# while sharply discounting partial corroboration (2-of-3: 0.667 -> 0.44;
+# 1-of-3: 0.33 -> 0.11) for the gate decision specifically.
+#
+# The score component must NOT use this exponent: squaring there punished
+# candidates who were never eligibility-risks to begin with -- e.g. an "AI
+# Research Engineer" with nlp=0.477 (a strong, clearly-corroborated signal)
+# but a legitimately-zero third competency slot saw their SKILL_MATCH
+# component crushed from 0.196 to 0.087 and fell out of the Top 100, purely
+# for being a narrow specialist rather than for any plausibility concern.
+# Linear breadth already fixed the gate's worst leaks (the literal QA/Civil/
+# HR-Manager-titled cases); only the gate's last-mile edge cases need the
+# stricter exponent.
+_SKILL_MATCH_GATE_BREADTH_EXPONENT: Final[float] = 2.0
 
 
-def _skill_match_value(cells: Mapping[str, FeatureCell]) -> float:
-    """Mean of the candidate's top-``_SKILL_MATCH_TOP_K`` (of nine)
-    ``{group}.competency`` cells (Scoring's SKILL_MATCH raw).
+def _skill_match_value(
+    cells: Mapping[str, FeatureCell], *, breadth_exponent: float = 1.0
+) -> float:
+    """Breadth-weighted mean of the candidate's top-``_SKILL_MATCH_TOP_K``
+    (of nine) ``{group}.competency`` cells (Scoring's SKILL_MATCH raw).
 
-    Shared by ``_score_components`` (the scored component) and ``r4_gates``
-    (the eligibility gate input) so both read the identical aggregate.
+    Shared by ``_score_components`` (the scored component, default linear
+    breadth) and ``r4_gates`` (the eligibility gate input, which passes
+    ``_SKILL_MATCH_GATE_BREADTH_EXPONENT``) -- both read the identical
+    underlying top-K selection and noise floor, diverging only in how
+    sharply partial breadth is discounted, since the two callers ask
+    different questions (see ``_SKILL_MATCH_GATE_BREADTH_EXPONENT``'s
+    comment).
 
     A flat mean over all nine retr/rank/recsys/ir/nlp/llm/mle/mlops/eval
     groups requires breadth no real specialist has: a full-pool audit of
@@ -965,6 +961,25 @@ def _skill_match_value(cells: Mapping[str, FeatureCell]) -> float:
     which retrieval/ranking tech, we care that you've operated it in
     production" framing -- without requiring unrealistic breadth across all
     nine specialties at once.
+
+    Plain top-K averaging still has a gap the JD calls out by name: "a
+    candidate who has all the AI keywords listed as skills but whose title
+    is 'Marketing Manager' is not a fit." A spot audit of out-of-domain
+    titles surfacing in the Top 100 (QA Engineer, Civil Engineer, HR
+    Manager, ...) found each one's entire ``skill_match`` traced to a
+    *single* one of the nine groups -- one self-reported buzzword skill
+    (e.g. a bare "Embeddings"/"MLOps" entry with no role ever describing
+    that work) or one injected AI-buzzword sentence riding inside an
+    otherwise unrelated role description, with the other top-K slots at or
+    near zero. Dividing that lone spike by ``_SKILL_MATCH_TOP_K`` dilutes it,
+    but a single ~0.15-0.22 spike still clears the eligibility gate's 0.05
+    floor on dilution alone. Genuinely domain-relevant titles never show
+    this shape: their top-K slots are consistently *all* populated (real
+    job-description text naturally touches several adjacent competency
+    groups via shared vocabulary -- "embeddings" alone corroborates both
+    ``ir`` and ``retr``), so weighting the mean by how many of the top-K
+    slots clear a small noise floor leaves them untouched while collapsing
+    the single-spike/partial-breadth pattern below the gate.
     """
     values = sorted(
         (cells[fid].value for fid in _SKILL_MATCH_IDS if fid in cells), reverse=True
@@ -972,7 +987,10 @@ def _skill_match_value(cells: Mapping[str, FeatureCell]) -> float:
     if not values:
         return 0.0
     top = values[:_SKILL_MATCH_TOP_K]
-    return clamp_unit(math.fsum(top) / len(top))
+    mean = math.fsum(top) / len(top)
+    corroborated = sum(1 for v in top if v > _SKILL_MATCH_BREADTH_FLOOR)
+    breadth = corroborated / len(top)
+    return clamp_unit(mean * breadth**breadth_exponent)
 
 
 def _agg(cells: Mapping[str, FeatureCell], ids: Sequence[str]) -> ComponentRaw:

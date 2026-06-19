@@ -1,11 +1,4 @@
-"""``SemanticProfile`` slice — dense fit vs JD anchors (R3).
 
-Owner layer: domain.
-Allowed imports: ids, pydantic.
-
-References (never inlines) the candidate vector via ``VectorRef``; the 384-d
-array lives in the mmap'd store behind a port.
-"""
 
 from __future__ import annotations
 

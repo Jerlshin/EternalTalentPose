@@ -1,11 +1,3 @@
-"""Domain package init — resolves deferred provenance forward references.
-
-``ProvenanceHandle.inline`` is typed as ``RawCandidate`` but ``provenance`` must
-not import ``source`` at module load (purity: ids/enums/datetime only). The
-concrete ``RawCandidate`` is bound here, at package-import time, by rebuilding the
-deferred model once ``source`` is importable. This is the single, intended place
-the forward reference is resolved (canonical provenance design).
-"""
 
 from __future__ import annotations
 

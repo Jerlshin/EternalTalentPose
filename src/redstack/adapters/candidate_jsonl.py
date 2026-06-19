@@ -1,21 +1,4 @@
-"""``JsonlCandidateSourceAdapter`` — implements ``CandidateSourcePort`` (Adapters §1).
 
-Owner layer: adapters (infrastructure — impure IO).
-Allowed imports: stdlib ``io``/``gzip``/``json``/``pathlib``/``typing``; ``ports``.
-Forbidden: ``engines``, ``pipelines``, any ML/network runtime.
-
-Streams ``.jsonl`` / ``.jsonl.gz`` with constant per-record memory, preserving
-file order exactly. The adapter performs UTF-8 (strict) + JSON structural decode
-only; schema validation (``candidate_schema.json`` → ``RawCandidate``) lives
-downstream in ``features.parsing``. A per-line decode failure is *data*
-(``SourceMalformed``); an open/decompress/low-level IO failure *raises*
-``CandidateSourceError``.
-
-Determinism contract: identical file ⇒ identical record sequence, including
-identical ``SourceMalformed`` placement; ``source_index`` is the enumeration
-order over emitted records (blank/whitespace-only lines are skipped and consume
-no index); ``line_no`` is the physical 1-based line number.
-"""
 
 from __future__ import annotations
 

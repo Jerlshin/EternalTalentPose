@@ -1,27 +1,4 @@
-"""``ReasoningEngine`` — evidence-grounded explanation (``engines/reasoning.py``).
 
-Owner layer: engines. Allowed imports: ``domain``. Forbidden: ``adapters``,
-``pipelines``, ``observability``, sibling engines, ports, clock, online RNG, and
-**any LLM / network** (Stage-4 reasoning is 100% local, deterministic, non-
-hallucinatory).
-
-Logical→physical (Repo §9): the ``CandidateReasoningEngine``. For each ranked
-candidate it assembles ``ReasoningClause``s strictly from structural evidence that
-already exists in the ``ScoreBreakdown`` (per-component ``EvidenceRef``s) and the
-``EligibilityReport`` soft penalties — every clause therefore cites ≥1 resolvable
-``EvidenceRef`` (the no-hallucination guarantee is mechanical at construction).
-
-Designed against the six Stage-4 checks (Domain §J):
-1. specific facts — clauses carry the component/finding's real evidence;
-2. JD connection — ≥1 clause carries a non-null ``jd_link`` (``ScoreComponent`` /
-   ``EligibilityCode``);
-3. honest concerns — a ``CONCERN`` clause is emitted whenever a soft penalty exists;
-4. rank consistency — tone follows ``rank_band`` (``top`` net-positive, ``tail``
-   measured); ``rendered`` ≤ 2 sentences;
-5/6. determinism without templating — ``rendered`` is a pure function of the
-   *ordered clause set*; variation arises from *which* components/penalties are
-   present, never from randomness or name-insertion.
-"""
 
 from __future__ import annotations
 

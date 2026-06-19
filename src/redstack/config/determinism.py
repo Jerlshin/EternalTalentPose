@@ -1,19 +1,3 @@
-"""The single home for determinism policy (Repository Layout §11, Architecture §8).
-
-Determinism is *configuration*, owned in exactly one file and asserted at
-startup. This module pins BLAS/OpenMP threads, constructs the seeded NumPy
-generator, and builds the CPU-only ONNX Runtime ``SessionOptions``. No
-``datetime.now`` and no online RNG live anywhere reachable from the online
-pipeline; the clock is the injected ``as_of`` and ties resolve by ascending
-``candidate_id``.
-
-**Thread-pin ordering contract.** BLAS/OpenMP read their thread caps from the
-environment *at library import time*. :func:`apply_determinism` / :func:`pin_determinism`
-must therefore be called by the CLI/composition root **before** any NumPy/ONNX-importing
-module is imported. To preserve that window, this module imports NumPy and ONNX Runtime
-only lazily (inside functions), so importing :mod:`redstack.config.determinism`
-itself never pulls a math runtime into the process.
-"""
 
 from __future__ import annotations
 

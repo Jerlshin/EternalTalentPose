@@ -1,17 +1,4 @@
-"""``SubmissionSinkPort`` — write a ``Ranking`` to validator-compliant CSV (§5).
 
-Owner layer: ports.
-Allowed imports: stdlib typing, ``domain.ranking`` (type-only),
-``domain.errors``, ``_types``.
-
-Serializes a fully-constructed ``Ranking`` byte-stably: exact header, 100 rows,
-RFC-4180 quoting for ``reasoning``, deterministic ``score`` precision, ``\\n``
-endings, atomic write, and a receipt with the output sha256. The sink never
-ranks, re-orders, or builds reasoning. ``Ranking`` is imported under
-``TYPE_CHECKING`` only — the port has no runtime dependency on the domain
-ranking implementation, and the annotation is a forward reference resolved
-statically.
-"""
 
 from __future__ import annotations
 

@@ -1,33 +1,4 @@
-"""O14 — Candidate Representation Construction (the uncalibrated feature snapshot).
 
-Owner stage: O14 (Offline Pipeline Part 2/§O14). Build the canonical
-``(N, D)`` feature-value matrix + ``(N, num_groups)`` group-confidence matrix by
-running the pure feature extractors over the validated pool, aligned to the
-frozen ``FeatureLayout`` carried on the context's ``FeatureRegistry``. This is
-the calibration substrate O8/O9/O10 train on and the online correctness oracle
-O18 diffs against — so it must be the *exact* layout the online path computes.
-
-This Cluster-A build is **uncalibrated**: it materializes the structural feature
-rows (the extractor's deterministic output) with neutral folded values, before
-any weight/threshold calibration exists. Calibration stages consume this matrix;
-they do not change its shape.
-
-Outputs:
-
-* ``feature_snapshot.parquet`` — columnar ``id`` + ``f0..f{D-1}`` values +
-  ``c_<group>`` confidences. Validated by ``_v_feature_snapshot`` (no NaN,
-  positive ``feature_dim``).
-* ``feature_manifest.json`` — ``layout_version`` + the ordered feature list +
-  group map (Feature Layer Part 6 ``FeatureManifest``). Validated by
-  ``_v_feature_manifest`` and required online; its ``layout_version`` must agree
-  with ``scoring_weights`` and ``FeatureLayout`` (Part 10 layout-bearing rule).
-
-Memory discipline (Domain §Q / Feature Layer Part 7): the matrices are the *one*
-sanctioned bulk allocation — a single ``(N, D)`` float32 array (≈ N·D·4 bytes;
-26 MB at N=100K, D=64) filled **row-by-row from the stream**, never via a Python
-list of per-candidate objects. The candidate source is consumed lazily; only the
-preallocated arrays + the id index grow with N, and those are the deliverable.
-"""
 
 from __future__ import annotations
 

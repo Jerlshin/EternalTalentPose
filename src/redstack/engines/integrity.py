@@ -1,26 +1,4 @@
-"""``IntegrityEngine`` — honeypot detection + risk aggregation (``engines/integrity.py``).
 
-Owner layer: engines. Allowed imports: ``domain``, ``ports`` (none needed here),
-``features``, ``config.schema``. Forbidden: ``adapters``, ``pipelines``,
-``observability``, sibling engines, ``datetime.now``, online RNG.
-
-Logical→physical (Repo §9): this module is the physical home of both the
-``CandidateConsistencyEngine`` (detection half) and the ``CandidateRiskEngine``
-(aggregation half). It runs the seven deterministic contradiction rules of the
-frozen ``IntegrityFlag`` vocabulary over a ``CareerProfile`` + ``RawCandidate``,
-aggregates the fired rules into a calibrated ``honeypot_score``, and emits the
-final ``IntegrityReport``.
-
-Decision rule (Engine §9 / Online R4 / Feature Part 5 / Testing §127):
-
-    is_honeypot = (count(HARD findings) >= 2) OR (honeypot_score >= threshold)
-
-Inverted salary is **not** an integrity flag (Domain §G.2); it is logistics
-sanity, handled in ``logistics.py``. The engine is 100% pure and deterministic:
-findings are sorted by code, the honeypot threshold and per-flag weights/severity
-arrive as injected calibration (``IntegrityThresholds`` from ``config.schema``,
-sourced from ``integrity_thresholds.json`` by the pipeline at R0).
-"""
 
 from __future__ import annotations
 

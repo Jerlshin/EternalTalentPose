@@ -1,30 +1,4 @@
-"""Behavioral port fakes (Testing Strategy §6/§16).
 
-Owner: tests/fixtures (shared, versioned ground truth).
-Allowed imports: stdlib, numpy, ``redstack.domain``, ``redstack.ports``.
-
-Per §6 ("Port Contract Testing"), every fake here is a *behavioral* in-memory
-implementation of its port — not a ``unittest.mock`` — so the shared contract
-suite in ``tests/contract/`` can run it through the exact same assertions the
-real adapter faces. A fake intentionally re-implements adapter-equivalent
-logic from scratch (rather than delegating to the real adapter) so that a
-divergence between the two is something the contract suite can actually
-catch.
-
-One fake per port (§6 table):
-
-================================  ===========================
-Port                              Fake
-================================  ===========================
-``CandidateSourcePort``           ``ListCandidateSource``
-``ArtifactStorePort``             ``InMemoryArtifactStore``
-``EmbeddingModelPort``            ``StubEmbeddingModel``
-``SemanticVectorStorePort``       ``InMemoryVectorStore``
-``SubmissionSinkPort``            ``CapturingSubmissionSink``
-``RunReportSinkPort``             ``CapturingRunReportSink``
-``DeterministicEntropyPort``      ``FixedEntropy``
-================================  ===========================
-"""
 
 from __future__ import annotations
 

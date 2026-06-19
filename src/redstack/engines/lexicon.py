@@ -1,22 +1,4 @@
-"""``LexiconEngine`` — compiled-lexicon symbolic matching (``engines/lexicon.py``).
 
-Owner layer: engines. Allowed imports: ``domain``, ``features``, ``config.schema``.
-Forbidden: ``adapters``, ``pipelines``, ``observability``, sibling engines, clock,
-online RNG, network.
-
-Logical→physical (Repo §9): the ``LexiconEngine`` supplies *symbolic* (term/phrase)
-corroboration so competency claims are scored as **trust-weighted evidence
-aggregates** rather than keyword presence. This is one half of the anti
-keyword-stuffing defence: a skill asserted at EXPERT level but never *mentioned*
-in any free-text career description earns near-zero corroboration here, which the
-downstream credibility/competency fusion uses to collapse the stuffer's score.
-
-Purity: matching is over already-normalized tokens/text (the Normalization engine
-produces NFC-folded, whitespace-collapsed, lexicon-canonical text). The compiled
-lexicon (``concept -> {terms, phrases}``) arrives as injected artifact data
-(``CompiledLexicon`` from ``config.schema``, sourced from
-``artifacts/lexicon/lexicon.compiled.json`` at R0). No IO; deterministic.
-"""
 
 from __future__ import annotations
 

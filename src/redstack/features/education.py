@@ -1,25 +1,3 @@
-"""Education feature extraction — ``edu.*`` (``features/education.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain`` + stdlib + numpy.
-No ports, IO, ML, clock, or RNG — graduation-plausibility uses the injected
-``as_of`` year, never a wall clock.
-
-Group 5 (Feature Layer Part 1): tier / field-relevance / timeline-sanity, low JD
-weight, structured ⇒ high confidence. Emits three ``UnitScore`` cells:
-
-* ``edu.tier_score`` — best institution tier mapped to ``[0, 1]``.
-* ``edu.field_relevance`` — best field-of-study relevance to the JD's ML / CS /
-  IR stack.
-* ``edu.timeline_valid`` — ``1.0`` when every record's years are coherent and
-  plausible; ``0.0`` on an impossible timeline. This **cross-links** the
-  honeypot layer (``hp.education_career_anomaly`` /
-  ``EDUCATION_TIMELINE_IMPOSSIBLE``) but never raises: an impossible timeline is
-  *data* the Integrity Engine consumes, not an exception.
-
-Aggregation is best-of across records (a candidate is credited for their
-strongest qualification), with a structural confidence that drops only when the
-profile carries no education at all.
-"""
 
 from __future__ import annotations
 

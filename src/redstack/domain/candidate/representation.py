@@ -1,15 +1,4 @@
-"""``CandidateRepresentation`` — the aggregate root threaded R1->R7.
 
-Owner layer: domain.
-Allowed imports: all domain siblings, pydantic.
-
-State model: optional slices + a monotonic ``BuildStage`` discriminant. Slices
-attach copy-on-write via ``with_*`` methods that reject regressions and
-overwrites; ``require_*`` accessors raise ``RepresentationStageError`` if a
-slice is read before population. The set of populated slices must always match
-``stage`` exactly (validated at construction), so an illegal partial state is
-unrepresentable.
-"""
 
 from __future__ import annotations
 

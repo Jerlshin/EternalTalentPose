@@ -1,29 +1,4 @@
-"""O10 — Feature Importance Analysis (permutation importance).
 
-Owner stage: O10 (Offline Pipeline Part 2/§O10). Quantify each feature's
-contribution to the composite under the locked O9 weights, so Reasoning (O16) can
-pick which features to cite and pruning can find dead columns. Method:
-**permutation importance + ablation NDCG deltas** (Part 10) — permute a feature
-column across the labeled candidates and measure the drop in the composite; a
-feature whose shuffling hurts the ranking is important.
-
-Algorithm (deps O9, O14):
-
-1. Load the locked ``scoring_weights`` + ``feature_manifest`` (layout + group map)
-   + O8 ``gold_labels``, and read the O14 ``feature_snapshot`` for the labeled set.
-2. Compute the baseline composite under the locked weights.
-3. For each feature column: **seeded permutation** of that column's values across
-   the labeled candidates (``OfflineEntropy.numpy_generator("feature_importance")``),
-   recompute the component aggregation + composite, and record
-   ``importance = baseline − permuted`` (averaged over a few seeded repeats for
-   stability on the tiny gold set).
-
-Output: ``feature_importance.json`` — ``{importances: {feature_id: score}, ...}``
-(``_v_feature_importance``: non-empty mapping; features ⊆ layout).
-
-Determinism: permutations are drawn from the labeled entropy substream; repeats
-are fixed; importances are rounded — byte-stable for a given seed + inputs.
-"""
 
 from __future__ import annotations
 

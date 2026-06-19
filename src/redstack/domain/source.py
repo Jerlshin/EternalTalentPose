@@ -1,14 +1,3 @@
-"""Lossless, validated mirror of ``candidate_schema.json`` (``domain/source.py``).
-
-Owner layer: domain.
-Allowed imports: ids, enums, errors, pydantic.
-
-The canonical source for every ``EvidenceRef``. Validation is *tolerant of
-semantic contradictions but strict on types*: inverted salary bands,
-``is_current`` with an ``end_date``, expert-at-zero-months are preserved
-faithfully so the Integrity Engine can detect them downstream. Only true
-type/shape violations raise ``SchemaError``.
-"""
 
 from __future__ import annotations
 

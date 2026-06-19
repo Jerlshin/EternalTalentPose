@@ -1,13 +1,4 @@
-"""``BehavioralProfile`` slice — normalized 23-signal families (R2).
 
-Owner layer: domain.
-Allowed imports: ids, enums, source (RawSignals), pydantic.
-
-Each derived family is bounded in [0, 1] and paired with a
-``SignalAvailability`` so a sentinel-driven UNKNOWN is never conflated with a
-genuine low value. The final behavioral *multiplier* is produced by the
-engine, not stored here.
-"""
 
 from __future__ import annotations
 

@@ -1,34 +1,3 @@
-"""O16 — Reasoning Template Construction.
-
-Owner stage: O16 (Offline Pipeline Part 2 / §O16; Feature Layer Part 8). Build the
-**evidence-slot** reasoning templates that the online ``CandidateReasoningEngine``
-assembles clauses from — deterministically, with **no online LLM** (Stage-4
-"no hallucination" + "no templated name-insertion" become mechanical: every slot
-binds to an ``EvidenceKind`` and a source feature, so a clause can only be
-rendered from a feature that carries real ``EvidenceRef``s).
-
-Inputs (deps O8 gold reasonings, O10 feature importance):
-
-* The committed default template catalog (``reasoning_templates.json`` sibling) —
-  the human-authored evidence-slot patterns per polarity / rank-band.
-* O8's ``gold_labels.json`` — the reference human reasonings, mined for *which*
-  features reviewers actually cited (so templates without empirical support are
-  flagged and importance-ranked).
-* O10's ``feature_importance.json`` — to order/prioritize templates by the
-  contribution of the feature each slot draws from.
-
-Output: ``reasoning_templates.json`` (``_v_reasoning_templates``: non-empty
-``templates``, every slot declares an ``evidence_kind``). Each template carries
-its polarity, eligible rank-bands, a JD link, the clause fragment, and its
-evidence slots; the stage validates every slot's ``evidence_kind`` against the
-domain ``EvidenceKind`` vocabulary and every polarity against ``ReasoningPolarity``.
-
-Determinism: templates are authored data refined by deterministic gold-frequency
-+ importance ordering; emitted sorted by template id. No RNG, no network, no LLM.
-The build *fails* (``ArtifactContractError``) if any slot lacks an evidence kind
-or names an unknown kind/polarity — the Stage-4 guarantee is enforced at the
-artifact boundary, not hoped for at runtime.
-"""
 
 from __future__ import annotations
 

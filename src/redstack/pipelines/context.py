@@ -1,23 +1,3 @@
-"""Shared composition-root carrier for both pipelines.
-
-Owner layer: pipelines (application / composition root).
-Allowed imports: ``domain``, ``ports``, ``config.schema``, stdlib (Repository
-Layout §12, §16). This module declares the *base* ``RunContext`` — the
-immutable carrier handed to stages — that the online and offline composition
-roots specialize. It instantiates no adapters itself; the concrete pipelines
-bind adapters to ports and pass them in.
-
-The base records the reproducibility provenance every run report needs
-(``code_version``, ``config_hash``, ``seed``, ``as_of``) so that the
-``reproducible`` block (Ports §13) is byte-stable across rebuilds. Wall-clock
-identity (``run_id``, ``started_at``) is *audit* data and explicitly lives off
-this object — it must never enter a reproducibility hash.
-
-This is a pure dataclass carrier: frozen, slotted, no IO, no clock reads, no
-unseeded RNG. Determinism is configuration owned in ``config.determinism`` and
-asserted by the composition root before a context is built; by the time a
-``RunContext`` exists the thread pins and seeds are already fixed.
-"""
 
 from __future__ import annotations
 

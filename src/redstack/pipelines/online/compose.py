@@ -1,24 +1,3 @@
-"""Online composition root — binds adapters to ports and runs R0-R9.
-
-Owner layer: pipelines (online composition root).
-Allowed imports: ``domain``, ``ports``, ``engines``, ``adapters`` (onnx/parquet/
-csv/json/entropy/jsonl only — never ``st_embedder``), ``config``,
-``observability``, this package (Repository Layout §12). Mirrors
-``pipelines.offline.compose``'s charter — the CLI's ``rank`` verb hands off
-here because ``cli`` may never import ``adapters`` directly (§8b).
-
-:func:`run_online_rank` is the single entrypoint: it reads the manifest to
-learn the embedding contract, constructs every online adapter (artifact
-store, vector store, onnx fallback encoder, candidate source, submission +
-report sinks, RNG-disabled entropy), builds the :class:`OnlineRunConfig`, and
-executes the full R0→R9 lifecycle via :class:`OnlinePipeline`.
-
-Known gap (tracked, not fixed here): ``pipelines.online.stages.r0_load`` reads
-artifact keys (e.g. ``"weights/scoring_weights.locked"``,
-``"calibration/logistics_weights"``, ``"archetypes/centroids"``) that do not
-match the offline registry's actual manifest keys. That mismatch lives in
-``stages.py``, not in this composition root.
-"""
 
 from __future__ import annotations
 

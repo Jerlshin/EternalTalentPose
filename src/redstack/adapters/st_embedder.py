@@ -1,26 +1,3 @@
-"""``SentenceTransformerEmbeddingAdapter`` — implements ``EmbeddingModelPort`` (Adapters §4).
-
-Owner layer: adapters (infrastructure — impure compute). **OFFLINE ONLY.**
-Allowed imports: stdlib typing/os/importlib; numpy; ``domain.errors``; ``ports``.
-Heavy runtimes (``sentence_transformers``, ``torch``) are imported lazily inside
-methods via ``importlib`` so merely importing this module never pulls a
-budget-busting dependency into the process.
-Forbidden: ``engines``, ``pipelines`` — and, by the online-containment contract,
-this module must never be imported by ``pipelines.online`` (import-linter forbids
-``pipelines.online → adapters.st_embedder`` / ``→ sentence_transformers``).
-
-Defence in depth: importing this module **raises** ``RuntimeError`` when an
-"online" execution marker is set in the environment, and construction forces the
-HuggingFace offline environment (``HF_HUB_OFFLINE`` / ``TRANSFORMERS_OFFLINE``)
-before any model load — there is no authoring-time network on the build host
-beyond the pinned, cached model revision.
-
-The offline embedding generator (O13): produces candidate/anchor/concept vectors
-via a pinned-revision sentence-transformers model with fixed pooling + L2
-normalization (``dim``/``model_id`` exposed), and exports the ONNX twin
-(``model/encoder.onnx``) used by the online fallback, verifying st↔onnx cosine
-parity (≥ 0.999) before the artifact is accepted.
-"""
 
 from __future__ import annotations
 

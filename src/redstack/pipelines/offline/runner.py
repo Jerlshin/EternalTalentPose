@@ -1,39 +1,4 @@
-"""``OfflinePipelineRunner`` — execute the plan with resume + checkpointing.
 
-Owner layer: pipelines (offline composition root helper).
-Allowed imports: ``domain``, ``ports``, ``config.schema``, this package's
-``context``/``graph``/``registry``, stdlib (Repository Layout §12). The runner
-orchestrates; it delegates all artifact IO to the ``ArtifactStorePort`` bound on
-the context and writes its own checkpoint/receipt sidecars through stdlib
-``pathlib`` under the runner-internal scratch roots (never the manifested tree).
-
-Implements Offline Pipeline **Part 1** (``OfflinePipelineRunner``) and **Part 11**
-(failure recovery / resume):
-
-* **Resume.** ``run()`` iterates the graph's deterministic topo order; a stage
-  whose recomputed staleness key matches its persisted checkpoint is *skipped*
-  (Part 1 lifecycle: ``for stage in topo_order: if stale(stage): run+checkpoint
-  else skip``). A re-invoked build does minimal work.
-* **Staleness.** A stage is stale iff its key —
-  ``hash(input_artifact_hashes + stage_version + config_slice)`` (Part 11) —
-  differs from the persisted one, **or** any upstream stage re-ran this build
-  (lineage-driven transitive invalidation), **or** no checkpoint exists.
-* **Checkpointing.** After a stage runs and every produced artifact passes the
-  :class:`OfflineArtifactRegistry` validator, the runner persists a
-  :class:`StageReceipt` (timings, metrics, staleness key, produced-artifact
-  sha256s) so the next invocation can resume.
-* **Failure recovery.** A stage that raises has its partial output *quarantined*
-  (moved out of the manifested tree) and its downstream closure marked stale;
-  the run then aborts (critical stage) or continues with the stage flagged
-  (non-critical, ``continue_on_error``). Verdicts (a validator rejection) raise
-  ``ArtifactContractError``; only this rare hard-fail path uses exceptions.
-
-The runner is *pure given its ports + injected clock*: wall-clock timings live
-in the **audit** region of a receipt and are excluded from the staleness key and
-from any reproducibility hash (Ports §13). The monotonic clock used for timing is
-injected so tests are deterministic; nothing here reads the OS wall clock for
-logic.
-"""
 
 from __future__ import annotations
 

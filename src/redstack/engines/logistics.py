@@ -1,22 +1,3 @@
-"""``LogisticsEngine`` — logistics fit → bounded multiplier (``engines/logistics.py``).
-
-Owner layer: engines. Allowed imports: ``domain``, ``features``, ``config.schema``.
-Forbidden: ``adapters``, ``pipelines``, ``observability``, sibling engines, clock,
-online RNG.
-
-Logical→physical (Repo §9): the ``LogisticsEngine`` consumes the
-``LogisticsProfile`` slice (location/notice/relocation/work-mode/salary, already
-banded by ``features.geography`` against the JD hub set
-Pune/Noida/Hyderabad/Mumbai/Delhi-NCR) and composes a single bounded
-``Multiplier`` on base relevance. Like behavioral, logistics **modulates** fit;
-it never creates relevance.
-
-Salary inversion is a *soft* sanity flag (common in the pool, Domain §G.2/§G.8):
-it never floors and never hard-gates here; it applies only a small bounded
-dampen. Banding decisions (``LocationFit``, ``NoticeFit``) are deterministic and
-made upstream; this engine maps each band to a calibrated factor from
-``LogisticsPolicy`` (``config.schema``) and folds in ``work_mode_fit``.
-"""
 
 from __future__ import annotations
 

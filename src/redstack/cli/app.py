@@ -1,13 +1,4 @@
-"""The Typer application object; wires the three verbs (build/rank/validate).
 
-Owner layer: cli.
-Allowed imports: typer, pipelines, config, observability.
-
-Global options (``--config``/``--profile``) live on each verb rather than a
-shared app-level callback, matching the Makefile's literal per-command
-invocations (``redstack build --config ...``, ``redstack rank --input ...
---output ...``, ``redstack validate --submission ...``).
-"""
 
 from __future__ import annotations
 

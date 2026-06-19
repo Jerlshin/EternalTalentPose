@@ -1,23 +1,3 @@
-"""Feature cell model + the read-only ``FeatureView`` accessor (``features/view.py``).
-
-Owner layer: features. Allowed imports: ``domain``, stdlib, numpy.
-
-This module defines two things the rest of the layer builds on:
-
-* ``FeatureCell`` — the ``(value, confidence, evidence)`` triple every extractor
-  emits (Feature Layer doc, "Feature cell model"). ``value`` is a finite float
-  (bounds are enforced per-index at CQV assembly, not here); ``confidence`` is a
-  ``UnitScore``; ``evidence`` is non-empty so the Stage-4 "a clause may only cite
-  a feature that has evidence" guarantee is mechanical at construction time.
-* ``FeatureView`` — the **only** surface the engines use to read a candidate's
-  cells (Part 9). It exposes ``get(feature_id) -> FeatureCell``,
-  ``group_confidence(group) -> UnitScore`` and ``importance(feature_id) -> float``,
-  read-only and deterministic, keyed by the ``"<group>.<name>"`` feature id.
-
-A handful of pure, deterministic numeric helpers (clamping, bounded log-scale,
-recency decay, inverse-bounded) live here too, shared by every extractor so the
-normalization rules stay identical across modules. No IO, no clock, no RNG.
-"""
 
 from __future__ import annotations
 

@@ -1,32 +1,4 @@
-"""``OfflineExecutionGraph`` — the O0–O18 dependency DAG + topo plan.
 
-Owner layer: pipelines (offline). Frozen, versioned code constant.
-Allowed imports: stdlib only (this module is pure graph algebra over stage ids;
-it touches no domain types, no ports, no IO).
-
-Encodes Offline Pipeline **Part 11** (Execution Graph): the fixed dependency
-topology over the nineteen stages O0–O18 (O13 split into O13a/O13b/O13c), the
-parallelization branches, and a **deterministic** topological order with ties
-broken by stage id (Part 1, ``OfflineExecutionGraph`` reproducibility:
-"deterministic topo order (ties by stage id)").
-
-The graph is the single source of truth for:
-
-* **Plan order** — :meth:`topo_order` is the sequence the runner executes.
-* **Cycle detection** — a malformed edge set is a config error caught at
-  ``plan()`` (Part 1 failure modes); construction raises rather than deadlock.
-* **Staleness closure** — when an upstream stage is stale, every stage in its
-  transitive *downstream* closure is stale too (Part 11 "cache invalidation:
-  lineage-driven … recomputes the transitive closure only").
-* **Parallelizable layers** — :meth:`parallel_layers` groups stages with no
-  inter-dependency so the runner may schedule independent branches concurrently
-  while keeping merges deterministic (id order, seeded).
-
-Stage ids are plain strings (``"O0"`` … ``"O18"``, with ``"O13a"``/``"O13b"``/
-``"O13c"``) so this module stays free of any heavier dependency; the runner maps
-ids to callables. Ordering ties use a natural sort over the ``O<n><suffix>``
-shape so ``"O2" < "O13a" < "O13b"`` (numeric, not lexicographic).
-"""
 
 from __future__ import annotations
 

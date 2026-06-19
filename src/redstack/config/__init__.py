@@ -1,10 +1,3 @@
-"""REDSTACK configuration layer.
-
-Re-exports the pure schema (importable anywhere) and the IO-bearing loader /
-determinism policy (importable only by ``pipelines`` and ``cli``). Importing
-this package does not import any math runtime; thread pins remain effective when
-:func:`apply_determinism` is called before NumPy/ONNX import.
-"""
 
 from __future__ import annotations
 

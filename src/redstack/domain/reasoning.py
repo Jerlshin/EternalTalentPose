@@ -1,15 +1,4 @@
-"""Evidence-grounded reasoning models (``domain/reasoning.py``, §J).
 
-Owner layer: domain.
-Allowed imports: ids, enums, provenance, pydantic.
-
-Designed against the six Stage-4 checks. The anti-hallucination guarantee is
-mechanical: a ``ReasoningClause`` cannot be constructed without at least one
-``EvidenceRef`` (``evidence`` has ``min_length=1``). ``rendered`` is a pure,
-deterministic function of the ordered clause set — no randomness, no
-name-insertion templating — so two candidates render identically iff their
-clause sets are identical, and differ whenever their evidence differs.
-"""
 
 from __future__ import annotations
 

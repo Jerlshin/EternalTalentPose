@@ -1,34 +1,4 @@
-"""Offline composition root — binds adapters to ports and wires O0-O18.
 
-Owner layer: pipelines (offline composition root).
-Allowed imports: ``domain``, ``ports``, ``engines``, ``adapters``, ``config``,
-``observability``, ``features``, this package (Repository Layout §12). Mirrors
-``pipeline.py``'s own "one of the two places adapters are bound to ports"
-charter — this module is where the CLI's ``build`` verb hands off; the CLI
-itself may not import ``adapters`` directly (Repository Layout §8b).
-
-:func:`run_offline_build` is the single entrypoint: it loads the authoring
-seeds, constructs every adapter, builds the immutable
-:class:`OfflinePipelineContext`, wires the O0-O18 stage callables (Offline
-Pipeline Part 2), and executes the full ``plan → run → finalize`` lifecycle.
-
-O8 (:class:`~redstack.pipelines.offline.stages.labeling.LabelingStage`) needs a
-committed, human-curated :class:`GoldLabelSeed` (Offline Pipeline Part 7) —
-real review tags from the labeling workspace, not something this composition
-root can synthesize. Loading it is deferred to the moment O8 actually runs
-(:class:`_LazyLabelingStage`) so a build can make real progress through every
-stage that does not need it, and fails with a clear, specific error only when
-O8 is reached and no seed is committed at ``paths.golden_labels_path``.
-
-:func:`run_offline_build_with_locked_heuristics` is the deliberate bypass for
-when there is no committed gold-label set yet but the team has already fixed
-the scoring weights by hand: it runs a *reduced* execution graph that drops
-O8 (and the O9/O10 stages that would otherwise need its output) and substitutes
-two fixed-value stages — the given component weights for O9, uniform per-feature
-importance for O10. O11/O12 (no O8 dependency) and O15/O16 (already gold-label-
-optional in their real implementations) run unmodified for real, so O17/O18 see
-a complete, genuinely valid artifact set and produce a real ``MANIFEST.json``.
-"""
 
 from __future__ import annotations
 

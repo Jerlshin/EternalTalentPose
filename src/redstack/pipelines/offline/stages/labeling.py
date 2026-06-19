@@ -1,37 +1,4 @@
-"""O8 — Candidate Labeling Workspace (stratification + leakage-free split).
 
-Owner stage: O8 (Offline Pipeline Part 7). The human-in-the-loop review is an
-offline tool whose committed tags arrive as a ``GoldLabelSeed`` (injected at
-construction). O8 performs the deterministic machine-side work: the
-**active-learning stratification** and the **seeded, leakage-free** train/val
-split that O9/O15 calibrate on (Part 7 outputs ``GoldLabelDataset`` +
-``CalibrationDataset``).
-
-Algorithm (deps O7, O14):
-
-1. Materialize the ``GoldLabelDataset`` from the committed tags: candidate_id →
-   tier (honeypots forced to 0), reasoning, reviewer, cited features (the O16
-   seed), and the stratification keys the workspace recorded.
-2. **Stratify** by ``(archetype_id, honeypot_suspect, borderline)`` — the
-   active-learning cells that put the most decision-relevant candidates (near the
-   top-100 cut, near eligibility boundaries) in their own strata.
-3. **Split per stratum, seeded** (``OfflineEntropy.numpy_generator("calibration_split")``):
-   a fixed validation fraction of *each* stratum goes to val, the rest to train,
-   so every cell is represented in both blocks and the split is reproducible.
-   The split is over candidate ids — each id lands in exactly one block, so the
-   ``_v_calibration_split`` disjointness (no leakage) holds by construction.
-
-Outputs (delegated to the bound store):
-
-* ``gold_labels.json`` — ``{labels: {id: {tier, reasoning, reviewer, archetype_id,
-  cited_features, behavioral_composite?}}}``; ``_v_gold_labels`` (tiers ∈ 0..4).
-* ``calibration_split.json`` — ``{train_ids, val_ids, strata}``;
-  ``_v_calibration_split`` (disjoint train/val).
-
-Determinism (Part 7): tags are human facts (fixed); the split is seeded and the
-per-stratum shuffle uses the entropy port's labeled substream, so identical seed
-⇒ identical split. Ids within each block are emitted sorted for byte-stability.
-"""
 
 from __future__ import annotations
 

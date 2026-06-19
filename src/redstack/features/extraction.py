@@ -1,35 +1,3 @@
-"""Online R2 feature-extraction orchestrator (``features/extraction.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain``, ``features.*``,
-stdlib, numpy. No ports, adapters, engines, pipelines, IO, ML runtime, clock,
-or RNG.
-
-Composes every per-group extractor already implemented under ``features/``
-(``career``, ``education``, ``geography``, ``skills``, ``signals``,
-``honeypot``, ``latents``) into one ``(D,)`` CQV row + ``(G,)`` group-confidence
-row, aligned to ``features.layout.FEATURE_LAYOUT`` / ``GROUP_ORDER``. Also
-builds the four structural slices (``CareerProfile``, ``CredibilityProfile``,
-``LogisticsProfile``, ``BehavioralProfile``) the gate/scoring engines consume —
-there is no other builder for these in the codebase, so they are derived here,
-directly from ``RawCandidate``.
-
-**Honest scope note.** Fourteen of the 145 features have no dedicated
-extractor module anywhere in the codebase: ``id`` (1), ``exp`` (3), ``sen`` (2),
-``co`` (2), ``lead`` (2), ``startup`` (2), ``found`` (2). Rather than fabricate
-a sophisticated extractor module for each, :func:`_simple_groups` derives them
-with small, direct, evidence-backed heuristics (several reusing an
-already-computed ``career.*``/``pvs.*`` cell as a proxy) -- correct in type and
-honest in logic, simplified relative to the full Feature-Layer sophistication
-the other 131 features carry.
-
-**Two-pass semantic split** (Online Pipeline Part 5/6): :func:`extract_row` is
-the R2 call -- it has no resolved anchor similarities yet, so every
-``<competency>.semantic``, ``<competency>.competency``, and ``jd.*`` cell is
-computed from an empty similarity map (a neutral, low-confidence placeholder).
-:func:`fold_semantic` is the R3 call once anchor similarities are resolved; it
-recomputes exactly those placeholder cells in place.
-"""
-
 from __future__ import annotations
 
 import math

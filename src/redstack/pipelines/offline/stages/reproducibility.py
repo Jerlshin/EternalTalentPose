@@ -1,37 +1,4 @@
-"""O18 — Reproducibility Validation (the certification gate).
 
-Owner stage: O18 (Offline Pipeline Part 2/§O18; Testing Strategy §8/§19). The
-release blocker: prove the packaged artifact set is online-consumable and the
-build is deterministic. Four checks, all of which must pass or the artifact
-``all_passed`` is False and the registry validator rejects the report (and thus
-the build):
-
-1. **Manifest reload via ``ArtifactStorePort``** — load + self-verify
-   ``MANIFEST.json`` through the *online consumer* port (``verify_all``): manifest
-   self-hash valid, every referenced artifact's sha256 matches, required keys
-   present, cross-artifact coherence holds. This is the offline build proving the
-   online R0 contract before any online test runs.
-2. **Online-vs-offline feature parity** — recompute features for a deterministic
-   sample of candidates the way the online path will (the same pure extractor over
-   the same composed docs) and diff against ``feature_snapshot.parquet``. If they
-   diverge, the locked weights are calibrated against features that no longer
-   exist and the ranking is silently wrong (Testing §8). Diff must be within ε.
-3. **Deterministic dry-run ranking on the golden set** — fold the snapshot CQV
-   with the locked ``scoring_weights``, sort by ``(−final_score, candidate_id)``,
-   assign ranks ``1..N``, and assert the six ``Ranking`` invariants hold (count,
-   unique-rank, monotonicity, tie-break totality). Mirrors the online R5→R6 path.
-4. **Re-run determinism** — recompute the sha256 of the deterministic artifacts
-   recorded in the manifest and confirm they match (a re-invoked deterministic
-   stage produces byte-identical output; embedding artifacts are ε-stable and so
-   are checked for presence + dim, not bitwise).
-
-Output: ``reproducibility_report.json`` — ``{checks: [...], all_passed: bool}``
-(``_v_reproducibility_report``: requires ``all_passed`` is True). Any failed
-check is recorded with the offending detail and forces ``all_passed=False``.
-
-Determinism: the sample is taken in stream order; the dry-run is a fixed matvec +
-stable sort; no RNG, no clock.
-"""
 
 from __future__ import annotations
 

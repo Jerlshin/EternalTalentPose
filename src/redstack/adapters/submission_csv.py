@@ -1,25 +1,3 @@
-"""``CsvSubmissionSinkAdapter`` — implements ``SubmissionSinkPort`` (Adapters §6).
-
-Owner layer: adapters (infrastructure — impure IO).
-Allowed imports: stdlib ``csv``/``io``/``hashlib``/``os``/``tempfile``/``pathlib``;
-``domain.ranking``; ``ports``.
-Forbidden: ``engines``, ``pipelines``, any ML/network runtime, business logic.
-
-Serializes a fully-constructed, already-invariant-checked ``Ranking`` to a
-validator-compliant, byte-stable CSV and returns a ``SubmissionReceipt``. The
-adapter does not rank, re-order, or build reasoning — it writes the content of
-the ``Ranking`` it is given.
-
-Output contract: header ``candidate_id,rank,score,reasoning``; exactly
-``ranking.size`` data rows in rank order; ``score`` at a fixed decimal
-precision; RFC-4180 minimal quoting; UTF-8 (no BOM); ``\\n`` line endings; no
-trailing whitespace. Before writing, the sink re-asserts non-increasing-by-rank
-and id-ascending tie-break *at the emitted precision* (rounding may create ties,
-permitted only if id order within ties holds) and raises
-``SubmissionContractError`` rather than emit a rejectable file. The write is
-atomic (temp file in the target directory → fsync → ``os.replace``), so a crash
-never leaves a partial submission.
-"""
 
 from __future__ import annotations
 

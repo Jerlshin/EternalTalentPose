@@ -1,13 +1,4 @@
-"""``EligibilityReport`` slice — JD hard disqualifier / soft penalty verdict (R4).
 
-Owner layer: domain.
-Allowed imports: ids, enums, provenance, pydantic.
-
-Verdicts are data, not exceptions. ``hard_blocks``/``soft_penalties`` are stored
-pre-sorted by code for determinism; each finding cites at least one
-``EvidenceRef``. ``is_eligible == (len(hard_blocks) == 0)`` is the load-bearing
-contract: soft penalties never set ``is_eligible = False``.
-"""
 
 from __future__ import annotations
 

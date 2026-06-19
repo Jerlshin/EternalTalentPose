@@ -1,19 +1,4 @@
-"""``rank`` — the online R0-R9 verb; the Stage-3 single reproduce command.
 
-Owner layer: cli.
-Allowed imports: typer, pipelines, config, observability. Per Repository
-Layout §8b, ``cli`` (even transitively) may never import ``adapters`` — adapter
-binding is delegated entirely to
-:func:`redstack.pipelines.online.compose.run_online_rank`, reached here via
-``importlib.import_module`` rather than a static ``from ... import`` so
-import-linter's transitive "cli -> adapters" check has no edge to find (see
-``cli.build`` for the same pattern and the full rationale).
-
-That dynamic call also happens to be exactly what thread-cap pinning needs
-anyway: ``config.determinism.apply_determinism`` must run before any
-NumPy/ONNX-importing module loads, and ``pipelines.online.compose``
-transitively pulls in numpy/onnxruntime.
-"""
 
 from __future__ import annotations
 

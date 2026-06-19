@@ -1,33 +1,4 @@
-"""O13 — Embedding Generation (O13a candidates, O13b anchors, O13c careers, O13 manifest+onnx).
 
-Owner stages: O13a / O13b / O13c / O13 (Offline Pipeline Part 9; Adapters §4).
-Produce all dense vectors + the ONNX twin + the embedding manifest — the
-compute-dominant offline stage. The text→vector work goes through the offline
-``EmbeddingModelPort`` (the sentence-transformers adapter); the ONNX export +
-st↔onnx parity is the adapter's responsibility (Adapters §4), reached via the
-optional ``OnnxExportCapable`` capability so the frozen port stays unchanged.
-
-Sub-stage map (graph nodes are distinct so the runner schedules/caches each):
-
-* **O13a** (deps O1) — stream the pool, compose each candidate's embedding
-  document via the pinned O1 recipe, batch-encode through the port, write
-  ``candidate_vectors.parquet`` (id→row, unit-norm, unique ids, mmap-ready).
-* **O13b** (deps O6) — encode the O6 positive+negative anchor texts, write
-  ``anchor_vectors.npy`` ((a, dim), row order == sorted anchor id; keys ⊆
-  jd_concepts so §8 coherence holds).
-* **O13c** (deps O1, optional/non-critical) — per-role career-history vectors,
-  ``career_vectors.parquet`` (finer R3 matching). Non-critical: a failure is
-  flagged, the build continues (graph marks O13c non-critical).
-* **O13** (deps O13a/b/c) — export ``model/encoder.onnx`` (parity-verified) and
-  write ``embedding_manifest.json`` (model_id, dim, **recipe** byte-matching O1,
-  pooling) — the manifest the online fallback and §8 coherence bind to.
-
-Determinism (Part 9): within-runtime bitwise; the doc-composition recipe is
-pinned (``normalization.EMBEDDING_DOC_RECIPE``) so the online onnx fallback lands
-in the same space; vectors are float32, contiguous, L2-normalized; row/key order
-is deterministic. Encoding streams the pool with bounded batch buffers (O(batch)
-memory, never the whole 100K decoded set held at once).
-"""
 
 from __future__ import annotations
 

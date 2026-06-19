@@ -1,33 +1,4 @@
-"""O9 — Weight Calibration (regularized listwise search).
 
-Owner stage: O9 (Offline Pipeline Part 8). Calibrate the per-``ScoreComponent``
-``ScoringWeights`` to maximize the challenge composite on the gold calibration
-split, cross-validated, with Tier-A floors + ridge regularization against the
-tiny-gold-set overfitting risk. The output is **linear weights** the frozen
-``CandidateScoringEngine`` binds to (``base_relevance = Σ component.weighted``),
-with a strict ``layout_version`` pin (must match ``FeatureLayout`` +
-``feature_manifest``; online raises ``ArtifactContractError`` on mismatch).
-
-Composite (Part 8): ``0.50·NDCG@10 + 0.30·NDCG@50 + 0.15·MAP + 0.05·P@10`` —
-maximized over candidate orderings induced by ``Σ_c component_value_c · weight_c``.
-
-Algorithm (deps O8, O14):
-
-1. Load the O14 ``feature_snapshot`` (the *exact* CQV the online path computes) +
-   ``feature_manifest`` (for ``layout_version`` + the group→``ScoreComponent`` map)
-   + O8 ``gold_labels`` + ``calibration_split``.
-2. Aggregate the ``(N,D)`` feature matrix into a ``(M,7)`` per-component matrix for
-   the labeled candidates (component value = mean of its mapped feature columns).
-3. **Seeded random/coordinate search** (``OfflineEntropy.numpy_generator("weight_search")``)
-   over the 7 component weights on the simplex, scoring each candidate weight
-   vector by the **cross-validated** composite on the train fold and validating on
-   the held-out fold; ridge penalty + **Tier-A floors** regularize.
-4. Lock the best weights; emit the weights YAML (layout-pinned) + the report
-   (cv NDCG, weight stability across folds, ablation deltas).
-
-Determinism (Part 8): the search is seeded; summation order is fixed; the locked
-weights are byte-stable for a given seed + inputs. No network.
-"""
 
 from __future__ import annotations
 

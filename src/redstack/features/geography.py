@@ -1,20 +1,3 @@
-"""Logistics feature extraction — ``geo.* / reloc.* / notice.* / sal.*``
-(``features/geography.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain`` + stdlib + numpy.
-No ports, IO, ML, clock, or RNG.
-
-Realizes groups 2 (Geography), 24 (Salary), 25 (Relocation), 26 (Notice) of the
-Feature Layer over a pre-derived ``LogisticsProfile`` (whose ``LocationFit`` /
-``NoticeFit`` enums the ``LogisticsEngine`` already computed against the JD hub
-set) plus the ``RawCandidate`` for evidence minting. The JD hub set and an
-optional JD salary target are injected by the pipeline.
-
-Polarity discipline (Feature Layer): ``geo.outside_india_no_sponsor`` and
-``notice.over_30`` are **negative** features — value ``1.0`` means the
-*undesirable* condition holds. Salary inversion is a **soft sanity** flag
-(``sal.is_inverted``), never a honeypot.
-"""
 
 from __future__ import annotations
 

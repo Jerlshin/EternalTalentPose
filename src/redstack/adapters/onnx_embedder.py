@@ -1,26 +1,4 @@
-"""``OnnxEmbeddingModelAdapter`` — implements ``EmbeddingModelPort`` (Adapters §3).
 
-Owner layer: adapters (infrastructure — impure compute).
-Allowed imports: stdlib typing/importlib; ``onnxruntime``; numpy; ``domain.errors``;
-``ports``.
-Forbidden: ``engines``, ``pipelines``, the network, any model download.
-
-The online *fallback* encoder: turns composed documents into normalized dense
-vectors via ONNX Runtime, CPU-only, deterministic, no network. Invoked only for
-``CandidateId``s missing from the vector store. The onnx graph is the exported
-twin of the offline base model (same ``model_id``/``dim``); it emits token
-embeddings (``last_hidden_state``) and this adapter applies the fixed pooling and
-L2 normalization, or accepts an already-pooled 2-D output and only normalizes.
-
-Determinism: the injected ``SessionOptions`` pin intra-/inter-op threads and
-sequential execution (built once by ``config.determinism`` in the composition
-root); the only execution provider registered is ``CPUExecutionProvider``.
-Pooling/normalization are fixed, float32, no sampling — bitwise-deterministic
-within this runtime; cross-runtime vs the offline sentence-transformers vectors
-is cosine-within-ε by contract (Ports §9). The model and tokenizer are local,
-hash-verified artifacts reached through the injected ``ArtifactStorePort`` — no
-network is ever touched.
-"""
 
 from __future__ import annotations
 

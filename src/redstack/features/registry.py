@@ -1,20 +1,3 @@
-"""The populated ``FeatureRegistry`` — single source of feature truth
-(``features/registry.py``).
-
-Owner layer: features (pure). Allowed imports: ``features.layout``, ``domain``,
-stdlib. No ports, adapters, engines, pipelines, IO, ML, clock, or RNG.
-
-Realizes Feature Layer Part 6: every ``FeatureDefinition`` (id, group, index,
-source slice, ``FeatureSchema`` dtype/bounds/nullability, dependencies,
-extractor ref, ``FeatureVersion``, tier A–D, polarity, ``FeatureMetadata`` doc /
-expected distribution / owner). The registry rejects unknown ids, exposes the
-id↔index binding via ``features.layout.FEATURE_LAYOUT``, and emits a
-``FeatureManifest`` carrying a deterministic ``registry_hash`` that Scoring and
-the offline O8 weight search check against their ``layout_version``.
-
-Tier (Part 10 priority matrix) and polarity (Part 1–5 annotations) are encoded
-as priors the O8 weight search consumes; they are *metadata*, not weights.
-"""
 
 from __future__ import annotations
 

@@ -1,20 +1,4 @@
-"""Deterministic configuration composition (Repository Layout §11).
 
-This module performs the only IO in the config layer: reading YAML files. The
-merge itself is **pure** — a deterministic, order-fixed deep-merge of
-``base.yaml -> runtime/<mode>.yaml -> profiles/<profile>.yaml`` — followed by a
-single ``validate-or-die`` into the typed :class:`RedstackConfig`. Untyped
-config never escapes this module; callers always receive a frozen Pydantic VO.
-
-Import boundary: this module reads files and so may be imported **only** by
-``pipelines`` and ``cli``; ``engines``/``features``/``domain`` see only the pure
-:mod:`redstack.config.schema`.
-
-The behaviour/authoring seeds (``weights``/``lexicon``/``anchors``/``gates``/
-``integrity``) are loaded individually by the offline pipeline stages; the
-loaders for them live here too so that all file-reading config IO has a single
-home.
-"""
 
 from __future__ import annotations
 

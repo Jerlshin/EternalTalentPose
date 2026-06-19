@@ -1,33 +1,3 @@
-"""O5 — Semantic Vocabulary Expansion.
-
-Owner stage: O5 (Offline Pipeline Part 5). Expand each concept's lexicon with
-embedding-nearest terms — the synonym coverage a keyword-stuffer would not
-anticipate — gated by a deterministic similarity threshold standing in for the
-human review gate (Part 5: "nearest-neighbour expansion with manual review gate";
-committed vocab is static + reviewed). Catches meaning a stuffer's exact-string
-choice misses, raising Tier-5 recall.
-
-Algorithm (Part 5, deps O4 + O13a):
-
-1. Read O4's ``concepts.json`` (``ConceptDictionary``) from the artifact store.
-2. Embed each concept's existing vocab + a shared candidate-term pool via the
-   offline ``EmbeddingModelPort`` (``st``); vectors are L2-normalized so cosine
-   reduces to a dot product.
-3. For each concept, compute the concept centroid (mean of its vocab vectors)
-   and admit candidate terms whose cosine ≥ :data:`_EXPANSION_THRESHOLD` (the
-   deterministic review gate), capped per concept to bound drift.
-4. Re-emit ``concepts.json`` with the expanded vocab + a refreshed ``anchor_text``
-   and ``expanded: true``.
-
-Determinism (Part 5): embedding is within-runtime deterministic; the threshold +
-ordering are fixed; expansion is reproducible. No RNG. The candidate-term pool is
-the union of all concept vocabularies + phrases (bounded by lexicon size, never
-the 100K pool — this stage reads the *lexicon*, not the candidate stream).
-
-The expanded dictionary keeps every concept's ``anchor_text`` non-empty
-(``_v_concepts`` invariant) and never drops a pre-existing vocab term — expansion
-only adds, so O6 anchors authored over it remain valid.
-"""
 
 from __future__ import annotations
 

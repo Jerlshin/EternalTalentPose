@@ -1,27 +1,4 @@
-"""O2 — Candidate Validation.
 
-Owner stage: O2 (Offline Pipeline Part 2; Engine Layer §1 CandidateIngestionEngine,
-offline mode). Validate each normalized record against the candidate schema by
-parsing it into a ``RawCandidate`` via ``features.parsing`` — **structural, not
-semantic**: type/shape violations are rejected, but semantic contradictions
-(inverted salary, ``is_current`` with an ``end_date``, expert-at-zero-months) are
-*preserved faithfully* so the O3 honeypot detectors can find them (Domain §F).
-
-Output: ``validation_report.json`` — accept/reject counts and a bounded reject
-log (``line_no`` + reason per rejection). Validated by the registry's
-``_v_validation_report`` (required ``accepted`` / ``rejected`` / ``reject_log``).
-
-Failure policy: a structurally-malformed *source line* (``SourceMalformed``) and a
-``SchemaError`` from parsing are routed through the configured
-``MalformedRecordPolicy`` — ``ABORT`` raises ``SchemaError`` immediately (the
-default full-run policy: exactly 100K well-formed rows are expected); ``SKIP``
-records the rejection as data and continues. Either way the reject *rate* is
-checked against a bound and a breach raises (registry "reject rate within bound").
-
-Streaming: one pass over ``CandidateSourcePort.stream()``; only counts and a
-*capped* reject log are retained (O(1) memory in N — the log is bounded, never
-the accepted set).
-"""
 
 from __future__ import annotations
 

@@ -1,14 +1,3 @@
-"""``DeterministicEntropyPort`` — the single RNG + ``as_of`` seam (§7).
-
-Owner layer: ports.
-Allowed imports: stdlib typing/datetime, ``domain.errors``, ``_types``, numpy.
-
-The only place pseudo-randomness and the injected reference date enter the
-system, so domain/engines never touch a global RNG or the wall clock. Online
-ranking has no legitimate randomness (ties are id-based); offline stages
-(KMeans init, weight search, sampling) need seeded, reproducible streams. The
-online variant permits ``as_of`` only and raises on any RNG call.
-"""
 
 from __future__ import annotations
 

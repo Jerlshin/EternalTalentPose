@@ -1,25 +1,3 @@
-"""The frozen, ordered CQV feature layout (``features/layout.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain.candidate.quality``,
-``domain.ids``, stdlib. No ports, adapters, engines, pipelines, IO, ML, clock,
-or RNG.
-
-This module is the **single source of feature order**. It enumerates every
-feature id of the frozen taxonomy (Feature Layer Parts 1–5, the ``jd.*``
-latents of Part 2, and the ``career.*`` family of Part 3), assigns each a
-contiguous ``FeatureIndex``, and pins the ``layout_version``. The populated
-``FeatureRegistry`` (``features/registry.py``) attaches per-feature metadata and
-binds to this same ``layout_version``; ``CandidateQualityVector`` (R5) and the
-offline O8 weight search both validate against ``FEATURE_LAYOUT``.
-
-The bulk path stores feature *values* in an ``(N, D)`` matrix aligned to
-``FEATURE_LAYOUT`` and *confidence* at **group granularity** ``(N, num_groups)``
-aligned to ``GROUP_ORDER`` — both orders are frozen here.
-
-A layout/order change is a **major** ``layout_version`` bump (Feature Layer
-Part 6 / §19); a value-only extractor edit is a per-feature minor bump tracked
-in the registry.
-"""
 
 from __future__ import annotations
 

@@ -1,14 +1,3 @@
-"""Provenance types — the anti-hallucination mechanism as types.
-
-Owner layer: domain.
-Allowed imports: ids, enums, stdlib datetime, pydantic.
-
-``EvidenceRef`` is a typed pointer into real candidate data; a
-``ReasoningClause`` cannot be constructed without at least one. The concrete
-``RawCandidate`` referenced by ``ProvenanceHandle.inline`` is resolved at
-package-import time (``domain/__init__.py``) to keep this module free of any
-runtime dependency on ``source`` (purity contract: ids, enums, datetime only).
-"""
 
 from __future__ import annotations
 

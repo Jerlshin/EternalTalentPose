@@ -1,24 +1,3 @@
-"""Raw mapping -> ``RawCandidate`` ingestion, plus the feature-layer's
-foundational value types (``features/parsing.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain`` + stdlib + numpy.
-This module imports no ports, adapters, engines, pipelines; performs no IO,
-no ML, no clock, no RNG.
-
-Realizes ``CandidateIngestionEngine`` / O2-Validation (Repository §8): the dict
--> ``RawCandidate`` boundary (``validate``) and the canonical minting site for
-every ``EvidenceRef`` (``mint_evidence``). Because it is the first extractor in
-the feature build order and the documented owner of evidence provenance, it also
-hosts the two value types every other extractor depends on:
-
-* ``FeatureId`` — the ``"<group>.<name>"`` key (e.g. ``geo.hub_match``).
-* ``FeatureCell`` — the ``(value, confidence, evidence)`` triple every feature
-  emits (Feature Layer "feature cell model").
-
-The ``Any`` boundary is confined to ``RawCandidate.from_mapping`` (the schema
-mirror's sole narrowing point); nothing in this module surfaces an un-narrowed
-``Any`` to callers.
-"""
 
 from __future__ import annotations
 

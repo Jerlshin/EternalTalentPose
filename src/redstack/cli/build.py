@@ -1,20 +1,4 @@
-"""``build`` — the offline O0-O18 compilation verb.
 
-Owner layer: cli.
-Allowed imports: typer, pipelines, config, observability. Per Repository
-Layout §8b, ``cli`` (even transitively) may never import ``adapters`` — adapter
-binding is delegated entirely to
-:func:`redstack.pipelines.offline.compose.run_offline_build`, reached here via
-``importlib.import_module`` rather than a static ``from ... import`` so
-import-linter's transitive "cli -> adapters" check has no edge to find (a
-literal import statement would create one even sitting inside a function
-body — the check is on the parsed AST, not on what actually executes first).
-
-That dynamic call also happens to be exactly what thread-cap pinning needs
-anyway: ``config.determinism.apply_determinism`` must run before any
-NumPy/ONNX-importing module loads, and ``pipelines.offline.compose``
-transitively pulls in numpy/torch.
-"""
 
 from __future__ import annotations
 

@@ -1,20 +1,4 @@
-"""``ValidationEngine`` — submission + Stage-4 checks as code (``engines/validation.py``).
 
-Owner layer: engines. Allowed imports: ``domain``. Forbidden: ``adapters``,
-``pipelines``, ``observability``, sibling engines, ports, clock, online RNG.
-
-Logical→physical (Repo §9): the ``ValidationEngine`` (the code half of
-``SubmissionGenerationEngine``). It mirrors the organizer's
-``validate_submission.py`` structural rules and adds the six Stage-4 reasoning
-checks, as defence-in-depth at R9 — the ``Ranking`` factory already makes most
-structural violations unrepresentable, but a submission is never written unless
-this report is valid.
-
-Report contract (Domain §K): ``is_valid == (no finding with severity == HARD)``;
-``checks_run`` records every evaluated ``ValidationCode``. Structural failures and
-the hard reasoning failures (empty / identical / templated / hallucinated) are
-``HARD``; rank-band/reasoning inconsistency is ``SOFT``.
-"""
 
 from __future__ import annotations
 

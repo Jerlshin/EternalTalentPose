@@ -1,26 +1,4 @@
-"""``BuildArtifactStore`` — read-back of in-progress build artifacts (Offline §10/§12).
 
-Owner layer: pipelines (offline composition root helper).
-Allowed imports: ``domain``, ``ports``, this package's ``registry``, stdlib.
-
-Several mid-build stages read an artifact a prior stage in the *same* run
-already wrote (e.g. O9 reads "dataset_profile" from O0, O6 reads "concepts"
-from O4) via ``ctx.artifact_store.load_text(key)``. The online-facing
-``FilesystemArtifactStoreAdapter`` (Adapters §2) cannot serve this: it
-self-verifies a signed ``MANIFEST.json`` at construction, and that manifest is
-only written by O17 at the very end of the build.
-
-``BuildArtifactStore`` is the build-time counterpart bound to ``ctx`` for the
-whole run: it resolves a key straight through the
-:class:`~redstack.pipelines.offline.registry.OfflineArtifactRegistry` to a
-path under ``artifacts_root`` and reads whatever is on disk *right now* — no
-manifest, no pre-recorded hash to check against, because the registry's
-write-time validator (``OfflineStage.emit_*``) and the runner's
-validate-before-checkpoint pass already guard everything this store reads.
-Reading a key whose owning stage has not run yet (or which simply does not
-exist) is a build-order programming error, surfaced as
-``ArtifactContractError``.
-"""
 
 from __future__ import annotations
 

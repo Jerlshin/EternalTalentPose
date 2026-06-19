@@ -1,24 +1,3 @@
-"""Competency-trust extractor (``features/skills.py``).
-
-Owner layer: features. Allowed imports: ``domain``, ``features.view``, stdlib.
-
-Implements taxonomy 8–16 (the JD's "absolutely need" stack) as **evidence
-aggregates**, not keyword flags, plus the consistency group (``cons.*``). Per
-competency group ``g`` it emits five cells:
-
-* ``g.claimed``    — raw keyword presence (near-zero scoring weight by design),
-* ``g.trust``      — endorsement × duration × assessment coherence (noisy-OR),
-* ``g.in_career``  — the concept's tokens actually appear in role descriptions,
-* ``g.semantic``   — the resolved anchor similarity for the concept,
-* ``g.competency`` — the fused output, **capped at the corroboration mean** so a
-  stuffer who lists every keyword with zero corroboration scores ≈ 0.
-
-The cap also discharges the ``*.competency ≤ mean(trust, in_career, semantic)``
-cross-feature contract (``features.store``) by construction. Semantic similarity
-values arrive already resolved from the engine that owns the vector store; this
-layer never calls a port. The competency lexicon (concept → tokens + anchor id)
-is the resolved O5 artifact, passed in — never loaded here.
-"""
 
 from __future__ import annotations
 

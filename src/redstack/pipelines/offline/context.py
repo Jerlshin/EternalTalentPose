@@ -1,24 +1,4 @@
-"""``OfflinePipelineContext`` — the resolved environment for one offline build.
 
-Owner layer: pipelines (offline composition root).
-Allowed imports: ``domain``, ``ports``, ``config.schema``, ``features``,
-stdlib (Repository Layout §12). Adapters are *instantiated* by the offline
-``pipeline.py`` composition root and arrive here already bound to their ports;
-this carrier never constructs them.
-
-Per the Offline Pipeline spec (Part 1, ``OfflinePipelineContext``): the context
-is built once by the offline composition root and is immutable thereafter. It
-carries the config, the bound ports (``CandidateSource``, ``EmbeddingModel`` —
-the sentence-transformers backend offline, ``ArtifactStore``, ``OfflineEntropy``),
-``seed``, ``as_of``, output roots, and the ``FeatureRegistry``/``FeatureLayout``
-constant. It records ``config_hash``, ``seed``, ``as_of``, ``code_version`` for
-the report. It owns no IO — it is purely a carrier handed to stage callables.
-
-The roots model the hard directory line (Repository Layout §0): ``data_root``
-and a read-only ``configs`` view are *inputs*; ``artifacts_root`` is the single
-write target; ``quarantine_root`` and ``checkpoints_root`` are runner-internal
-scratch under the artifacts tree, never manifested.
-"""
 
 from __future__ import annotations
 

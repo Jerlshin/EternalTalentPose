@@ -1,23 +1,3 @@
-"""``SemanticEngine`` — R3 retrieval / archetype assignment (``engines/semantic.py``).
-
-Owner layer: engines. The **only** port-dependent engine: pure *given* its injected
-``SemanticVectorStorePort`` (lookup) and ``EmbeddingModelPort`` (encode fallback).
-Allowed imports: ``domain``, ``ports``, ``features``, ``config.schema``, numpy.
-Forbidden: ``adapters``, ``pipelines``, ``observability``, sibling engines, network,
-clock, online RNG.
-
-Logical→physical (Repo §9): the ``CandidateRetrievalEngine``. Lookup-first
-(``view_all``/``get_many`` over the mmap'd store), encode-fallback only on store
-misses (``EmbeddingModelPort.encode`` — the onnx adapter is offline-capable; no
-network online). All similarity/archetype math is **vectorized numpy** (matmul +
-argmin), float32, fixed reduction order, ties resolved by ``AnchorId`` /
-``ArchetypeId`` ascending — so output is thread-count-invariant.
-
-Outputs ``SemanticProfile`` (anchor similarities, positive/negative fit,
-``net_semantic_fit``, ``vector_ref``) and ``ArchetypeAssignment`` per candidate.
-The bulk path (``compute``) returns columnar arrays the pipeline folds into the
-``(N, D)`` CQV; per-candidate domain objects materialize for survivors/top-K only.
-"""
 
 from __future__ import annotations
 

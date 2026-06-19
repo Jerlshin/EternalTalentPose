@@ -1,30 +1,3 @@
-"""The R0…R9 online orchestrator — the literal Stage-3 reproduce spine.
-
-The composition root for the online run: it binds every adapter to its port,
-loads + verifies the artifact set, and sequences the ten pure R-stages strictly
-R0→R9, threading the growing ``CandidateRepresentation`` set forward
-copy-on-write. Ports are touched only at R0/R1/R3/R8/R9; R2/R4/R5/R6/R7 are pure
-engine work (the property that keeps the ≤150 s budget predictable).
-
-Architectural contract (Architecture §2/§5/§6; Online Part 1/§14/§17):
-* **Composition root.** This is the *only* place adapters meet ports; the
-  orchestrator imports ``stages`` + the port Protocols, never an adapter.
-* **Determinism asserted at startup.** ``config.determinism.pin_determinism`` is
-  invoked once, before any numeric work or onnx session init, so BLAS/OMP threads
-  are pinned and the output is **thread-count-invariant**. No wall clock in logic
-  (recency uses ``as_of``); no online RNG (``OnlineEntropy`` raises on
-  ``numpy_generator``); ties resolve by ascending ``candidate_id``.
-* **Fail-fast, never partial.** Any integrity/coherence failure raises; the
-  context is built whole by R0 or not at all; ``submission.csv``/``run_report.json``
-  are written atomically only at R8/R9, so a crash before R8 leaves no partial,
-  rejectable file.
-* **Budget guard.** Per-stage wall-ms + ``within_budget`` + ``peak_rss_mb`` are
-  recorded and carried to R9.
-
-Online containment (import-linter-enforced elsewhere): nothing here or in
-``stages`` imports ``sentence_transformers``/``sklearn``/``adapters.st_embedder``/
-networking — the online package cannot pull a budget-busting dependency.
-"""
 
 from __future__ import annotations
 

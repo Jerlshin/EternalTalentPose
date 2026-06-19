@@ -1,20 +1,4 @@
-"""``validate`` — structural checks over a finished ``submission.csv``.
 
-Owner layer: cli.
-Allowed imports: engines.validation, config.
-
-``engines.validation.ValidationEngine`` validates a live, in-process domain
-``Ranking`` whose ``RankedCandidate.scored`` carries the real ``ScoredCandidate``
-breakdown produced during R0-R9 (Online Part 1) — it is not meant to
-reconstruct that rich object from 4 flat CSV columns after the fact.
-Reconstructing a placeholder ``ScoredCandidate``/``CandidateReasoning`` purely
-to satisfy that type would exercise only the checks already re-derivable
-straight from the CSV (row count, rank sequence, id pattern, score ordering
-+ tie-break, non-blank reasoning) while adding fabricated evidence/breakdown
-data that means nothing. So this verb mirrors those same structural rules
-(the organizer's ``validate_submission.py``, per the Makefile) directly over
-the parsed rows instead.
-"""
 
 from __future__ import annotations
 

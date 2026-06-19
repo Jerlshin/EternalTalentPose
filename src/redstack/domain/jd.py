@@ -1,12 +1,3 @@
-"""``JobDescriptionSpec`` value object — parsed once, frozen, shared read-only.
-
-Owner layer: domain.
-Allowed imports: ids, enums, pydantic.
-
-Holds the JD's parsed requirements, disqualifiers, and anchors-as-intent. One
-instance per run, shared by reference across all candidates (no per-candidate
-copy).
-"""
 
 from __future__ import annotations
 

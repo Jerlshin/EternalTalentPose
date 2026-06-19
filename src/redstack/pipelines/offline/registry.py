@@ -1,38 +1,3 @@
-"""``OfflineArtifactRegistry`` — the typed catalog of *expected* artifacts.
-
-Owner layer: pipelines (offline). Frozen, versioned code constant.
-Allowed imports: ``domain``, ``ports``, ``config.schema``, stdlib (Repository
-Layout §12). No IO, no ML, no adapters.
-
-This is the authoritative encoding of Offline Pipeline **Part 10** (Artifact
-Registry): every artifact's key, on-disk kind, producing stage(s), schema
-version, lineage (upstream stages it depends on), and a *validator* — a pure
-predicate the runner applies to a produced artifact's parsed payload before it
-is hashed into ``MANIFEST.json`` (Part 1, ``OfflineArtifactRegistry``;
-Offline-testing §8 "validated against the registry before manifesting").
-
-Design rules honoured here:
-
-* **Verdicts vs failures (Ports §inherited):** a *failed* validation is an
-  invariant breach and is reported as a structured :class:`ValidationOutcome`
-  carrying the offending key and reason; the runner raises
-  ``ArtifactContractError`` from it (the rare hard-fail path). The registry
-  itself never performs IO and never raises during construction beyond its own
-  internal-consistency self-check.
-* **Versioning rule (Part 10):** value-changing edit ⇒ minor; layout/order/dim
-  change ⇒ major. ``layout_version`` is shared across
-  ``FeatureLayout``/``feature_manifest``/``scoring_weights`` and must agree
-  (online raises ``ArtifactContractError`` otherwise) — the registry pins the
-  three layout-bearing keys so the runner can enforce agreement at O14/O9/O17.
-* **Required-for-online subset (Output Contract Part 12 / Ports §8):** the keys
-  the online ``ArtifactStorePort`` must find present at R0 are flagged
-  ``required_online`` so O17 packaging can assert a complete set.
-
-The registry is queried by the runner (validate-before-manifest) and by O17
-(required-key + cross-coherence checks). It is *data*, deterministic, and
-covered by its own construction-time self-consistency assertion so a typo in the
-catalog is a build break, not a silent gap.
-"""
 
 from __future__ import annotations
 

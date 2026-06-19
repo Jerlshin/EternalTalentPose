@@ -1,11 +1,4 @@
-"""Shared pytest configuration and fixture registration.
 
-Sprint 0 bootstrap: establishes deterministic test execution (thread pins
-applied before any numpy/onnxruntime import) and the profile selection hook.
-Concrete fixtures (the canonical fakes, sample_candidates, honeypot
-exemplars, golden labels) land in tests/fixtures/ as the contract suites
-are implemented — none are defined yet.
-"""
 from __future__ import annotations
 
 import os

@@ -1,12 +1,4 @@
-"""Domain error hierarchy for invariant / programming failures.
 
-Owner layer: domain.
-Allowed imports: stdlib.
-
-Business verdicts ("honeypot", "ineligible") are *data* (Report objects) and
-are never raised. Only invariant or schema violations raise; constructing an
-object that would break an invariant fails immediately.
-"""
 
 from __future__ import annotations
 

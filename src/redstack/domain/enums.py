@@ -1,12 +1,3 @@
-"""Closed vocabularies as enums; serialize by value, never by name.
-
-Owner layer: domain.
-Allowed imports: stdlib enum.
-
-Ordered enums expose an explicit ``ordinal`` and total ordering so ``<``/``>``
-is part of the contract rather than an accident of definition order. Members
-never compare across distinct enum types.
-"""
 
 from __future__ import annotations
 

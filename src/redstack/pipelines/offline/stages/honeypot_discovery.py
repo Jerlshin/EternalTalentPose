@@ -1,41 +1,4 @@
-"""O3 — Honeypot Discovery.
 
-Owner stage: O3 (Offline Pipeline Part 4; Feature Layer Part 5; Engine Layer §3
-``CandidateConsistencyEngine`` in *calibrate* mode). Discover the ~80 categorical
-honeypots planted in the pool, codify the detectors, and calibrate the per-detector
-cut points + composite ``honeypot_threshold`` — all relative to the O0 observed
-distributions, never hard-coded, so the gate is defensible at Stage 5.
-
-The hard-gate policy (Part 4 / Part 5): ``is_honeypot = (≥2 HARD impossibilities)
-OR (composite ≥ threshold)``. Lone soft anomalies only dampen — false positives
-drop real candidates and cost NDCG, so recall is maximized while real-candidate
-loss is bounded. ``hp.salary_anomaly`` is SOFT only (inversion is common in the
-pool) and never hard-gates.
-
-Algorithm (deps O0, O2):
-
-1. Read O0's ``dataset_profile.json`` to set tolerance bands (impossible vs merely
-   unusual) from the observed distribution.
-2. Stream the validated pool; run the structural detectors over each candidate
-   (timeline, skill-time, overlap, title-seniority, education-career,
-   experience-inflation, keyword-stuffing, …). Each fired detector mints
-   ``EvidenceRef``s pointing at the exact raw fields (the no-hallucination chain).
-3. Classify each fired detector HARD (categorically impossible) or SOFT (unusual).
-4. Aggregate per candidate; a suspect is one with ≥2 HARD or composite ≥ threshold.
-
-Outputs (all delegated to the bound store via the base emit helpers):
-
-* ``integrity_rules.json`` — the codified ``IntegrityRuleSet`` (every code ∈
-  ``IntegrityFlag``); ``_v_integrity_rules`` (non-empty ``rules``).
-* ``honeypot_catalog.json`` — ``HoneypotCatalog``: exemplars (suspect records +
-  evidence) + suspect_ids; ``_v_honeypot_catalog`` (``exemplars`` + ``suspect_ids``).
-* ``integrity_thresholds.json`` — per-detector cut points + the composite
-  ``honeypot_threshold`` (O3 writes the *initial* calibration; O12 finalizes risk
-  weights into the same artifact). ``_v_integrity_thresholds``.
-
-Determinism: detectors are pure; findings + rules + suspect ids are sorted; the
-threshold is derived deterministically from the observed suspect distribution.
-"""
 
 from __future__ import annotations
 

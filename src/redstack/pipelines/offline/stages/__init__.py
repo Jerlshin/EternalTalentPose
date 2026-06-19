@@ -1,34 +1,3 @@
-"""Offline compute stages (O0–O18) + the common typed stage base.
-
-Owner layer: pipelines (offline). Each module here is one stage; this package
-``__init__`` owns the shared :class:`OfflineStage` base every stage inherits, so
-the "no loose dicts" rule (Sprint-2 bound) is structural: a stage cannot enter
-the :class:`OfflinePipelineRunner` plan without conforming to the typed
-``StageCallable`` contract this base implements.
-
-``OfflineStage`` provides:
-
-* the ``stage_id`` / ``stage_version`` properties the runner's staleness key
-  reads (Offline Pipeline Part 11);
-* the ``__call__(ctx, upstream) -> StageResult`` entrypoint the runner invokes,
-  delegating to the subclass's typed :meth:`OfflineStage._run`;
-* deterministic artifact emission helpers (:meth:`OfflineStage.emit_json`,
-  :meth:`OfflineStage.emit_array`) that write under ``ctx.artifacts_root`` via
-  an atomic temp+rename, compute the streaming sha256 that lands in
-  ``MANIFEST.json``, and return the registry-validatable :class:`ArtifactPayload`
-  the runner checks before manifesting.
-
-Stages never construct loose dicts as their public surface: inputs arrive on the
-immutable :class:`OfflinePipelineContext`, outputs leave as registered
-:class:`ArtifactPayload`s keyed against the :data:`OFFLINE_ARTIFACT_REGISTRY`.
-The base centralizes determinism (sorted-key canonical JSON, fixed float
-formatting, ``\\n`` newlines, no trailing whitespace) so artifact bytes — and
-therefore their sha256 — are byte-stable across rebuilds.
-
-All artifact paths are resolved through the registry spec, never hand-built, and
-are containment-checked against ``artifacts_root`` so a malformed relative path
-cannot escape the build tree (defence-in-depth; the adapters enforce this too).
-"""
 
 from __future__ import annotations
 

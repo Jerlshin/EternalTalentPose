@@ -1,26 +1,3 @@
-"""``FilesystemArtifactStoreAdapter`` — implements ``ArtifactStorePort`` (Adapters §2).
-
-Owner layer: adapters (infrastructure — impure IO).
-Allowed imports: stdlib ``pathlib``/``hashlib``/``json``/``io``/``threading``;
-numpy; ``domain.errors``; ``ports``.
-Forbidden: ``engines``, ``pipelines``, any ML/network runtime, ``pickle``.
-
-The fail-fast integrity gate between the offline build and the online run. Reads
-and self-verifies ``MANIFEST.json`` at construction; every loader resolves a key
-to a path strictly contained within the artifact root, verifies the artifact's
-sha256 against the manifest entry (streaming for ``locate``/``verify_all``,
-read-once for the small typed loaders), and only then materializes. Integrity or
-contract violations raise — there is no degraded mode.
-
-Manifest self-hash contract (mirrors the offline packager, Ports §8): the
-``manifest_sha256`` is recomputed over the canonical JSON serialization of the
-on-disk manifest object with the ``manifest_sha256`` and ``created_at`` keys
-removed (``created_at`` is audit-only), using sorted keys and compact
-separators, UTF-8 encoded.
-
-Safe deserialization only: ``numpy.load(allow_pickle=False)``, stdlib ``json``,
-UTF-8 strict text. No ``pickle``; no arbitrary code execution from any artifact.
-"""
 
 from __future__ import annotations
 

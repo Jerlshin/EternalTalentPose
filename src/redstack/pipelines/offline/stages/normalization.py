@@ -1,30 +1,4 @@
-"""O1 — Candidate Normalization (+ the pinned embedding-document recipe).
 
-Owner stage: O1 (Offline Pipeline Part 2; Engine Layer §2
-CandidateNormalizationEngine, realized in ``features/normalize.py``). Deterministic
-canonicalization of free text, dates, skill tokens, and company names *before*
-feature extraction, plus the **composed embedding document** whose exact field
-concatenation order is the bitwise-deterministic substrate for downstream ONNX
-embedding lookup-fallback matching (O13 recipe; online R3 must match byte-for-byte).
-
-Two outputs:
-
-* ``canonical_maps.json`` — the token / company / skill canonical maps, built by
-  streaming the pool once (O(1) per record). Validated by the registry's
-  ``_v_canonical_maps`` (maps total, no empty canonical values).
-* The pinned **recipe** (:data:`EMBEDDING_DOC_RECIPE` + :func:`compose_embedding_document`)
-  — not itself an O1 artifact, but the frozen contract O13 records into
-  ``embedding_manifest.json`` and the online normalization reproduces exactly.
-
-Determinism law (Engine Layer §2): the document-composition order is fixed and
-the normalization rules are pure (NFC, lowercase, whitespace-collapse). Embedding
-determinism depends on identical composition offline and online — so the recipe
-lives in code as a versioned constant, never an ad-hoc concatenation.
-
-Streaming: the canonical-map build consumes ``CandidateSourcePort.stream()``
-lazily and accumulates only the *distinct* surface→canonical entries (bounded by
-vocabulary size, not by N), never the 100K records themselves.
-"""
 
 from __future__ import annotations
 

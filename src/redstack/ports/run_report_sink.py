@@ -1,15 +1,4 @@
-"""``RunReportSinkPort`` — persist the audit + reproducibility report (§6).
 
-Owner layer: ports.
-Allowed imports: stdlib typing, ``domain.errors``, ``_types``.
-
-Serializes a ``RunReport`` (the port-owned structural Protocol in ``_types``)
-to deterministic JSON. The sink does not compute metrics or gate the run. The
-report's ``reproducible`` block serializes deterministically; the ``audit``
-block (wall-clock, run_id) is excluded from any reproducibility hash.
-``observability`` builds an object conforming to the ``RunReport`` Protocol, so
-``ports`` never imports ``observability``.
-"""
 
 from __future__ import annotations
 

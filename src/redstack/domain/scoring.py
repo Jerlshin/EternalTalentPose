@@ -1,20 +1,3 @@
-"""Score breakdown + scored candidate (``domain/scoring.py``, §H).
-
-Owner layer: domain.
-Allowed imports: ids, enums, errors, provenance, pydantic, stdlib math.
-
-The scoring contract rendered as construction-time invariants:
-
-1. ``base_relevance == Σ component.weighted`` (summed in ``ScoreComponent``
-   order for determinism, within float tolerance).
-2. Gating: if either gate fails ⇒ ``final_score == SCORE_FLOOR``.
-3. ``final_score`` is a deterministic, finite, ``>= SCORE_FLOOR`` value (the
-   engine's policy function of base relevance, the two bounded multipliers, and
-   ``archetype_adjustment``).
-4. Multipliers lie within ``[MULTIPLIER_MIN, MULTIPLIER_MAX]`` — they modulate
-   relevance, they never create it.
-5. ``tiebreak_key == candidate_id`` (validator-mandated secondary order).
-"""
 
 from __future__ import annotations
 

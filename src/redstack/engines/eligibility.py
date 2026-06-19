@@ -1,23 +1,4 @@
-"""``EligibilityEngine`` — JD hard disqualifiers + soft penalties (``engines/eligibility.py``).
 
-Owner layer: engines. Allowed imports: ``domain``, ``features``, ``config.schema``.
-Forbidden: ``adapters``, ``pipelines``, ``observability``, sibling engines, clock,
-online RNG.
-
-Logical→physical (Repo §9): physical home of the ``CandidateFitEngine`` eligibility
-half. Evaluates the JD's explicit "do-NOT-want" list as authored predicate data
-(``EligibilityRuleSet`` from ``configs/gates/eligibility_rules.yaml``, surfaced via
-``config.schema``) against the structural + semantic representation slices, and
-emits the ``EligibilityReport``.
-
-Contract (Domain §G.3):
-
-    is_eligible == (len(hard_blocks) == 0)
-
-Soft penalties never set ``is_eligible = False``; they feed Scoring as bounded
-down-weights and Reasoning as honest concerns. Every finding carries >=1
-``EvidenceRef`` and the report's tuples are sorted by code (determinism).
-"""
 
 from __future__ import annotations
 

@@ -1,36 +1,4 @@
-"""O15 — Ranking Calibration.
 
-Owner stage: O15 (Offline Pipeline Part 2/§O15; Engine Layer §10/§11). Set the
-score normalization / **monotone, order-preserving** presentation curve and
-*verify tie-break safety* against ``validate_submission.py`` semantics before the
-artifact is accepted. The online ``CandidateScoringEngine`` applies this curve as
-its final "calibration/normalization to a stable scale (monotonic; preserves
-order)" step (§10); because it is monotone, it cannot reorder candidates, so the
-``CandidateRankingEngine`` sort ``(−final_score, candidate_id)`` and the six
-``Ranking`` invariants are preserved.
-
-Algorithm (deps O9, O10, O11, O12):
-
-1. Read the presentation policy from ``config.scoring`` / ``ScorePresentationConfig``
-   (transform kind, decimals, floor sentinel). The default ``identity`` transform
-   is the safest order-preserving choice; any configured transform must be
-   monotone non-decreasing or the build fails.
-2. Build the calibration curve as ordered ``(input, output)`` knots over the
-   score range and **prove monotonicity** (outputs non-decreasing in inputs).
-3. **Tie-break verification** (mirrors ``validate_submission.py``): on a synthetic
-   battery including exact ties, near-ties at the configured decimal rounding, and
-   a strictly-ordered sweep, confirm that applying the curve + the
-   ``(−score, id)`` total order yields unique ranks ``1..N`` with ties broken by
-   ``candidate_id`` ascending — i.e. the curve never collapses a strict order into
-   a tie that the id tie-break cannot resolve.
-
-Output: ``ranking_calibration.json`` — ``{curve, monotone, tie_break_ok, ...}``
-(``_v_ranking_calibration``: ``monotone`` and ``tie_break_ok`` must both be True,
-else the registry validator rejects the artifact and the build fails).
-
-Determinism: the curve is a fixed function of the policy; the verification battery
-is fixed; no RNG, no clock.
-"""
 
 from __future__ import annotations
 

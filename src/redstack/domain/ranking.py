@@ -1,14 +1,4 @@
-"""Ordered, invariant-checked ranking (``domain/ranking.py``, §I).
 
-Owner layer: domain.
-Allowed imports: ids, errors, scoring, reasoning, pydantic, stdlib re.
-
-This is where ``validate_submission.py``'s rules become
-unrepresentable-if-violated: a ``Ranking`` cannot be constructed unless all six
-hold. Construction sorts by ``(-final_score, candidate_id)``, takes the top
-``size``, assigns ranks ``1..size``, then the model validator re-asserts every
-rule. Reasoning is attached later (R7) copy-on-write via ``with_reasoning``.
-"""
 
 from __future__ import annotations
 

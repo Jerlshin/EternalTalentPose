@@ -1,36 +1,4 @@
-"""O6 — JD Concept Extraction (anchor authoring + eligibility packaging).
 
-Owner stage: O6 (Offline Pipeline Part 2; Feature Layer Part 2). Author the JD's
-positive/negative ``jd.*`` anchors as concept texts and package the JD's hard
-disqualifiers + soft penalties — the two authored artifacts the online Fit/Risk
-path consumes. Deps O5 (the expanded concept dictionary the anchors draw their
-vocabulary from).
-
-Inputs (authoring seeds injected at construction, not on the runtime context):
-
-* ``JdAnchorsConfig`` — the human-authored positive/negative ``jd.*`` anchor
-  intents (id, polarity, text), re-authored per JD.
-* ``EligibilityRulesConfig`` — the JD hard blocks + soft penalties as declarative
-  rules keyed by an eligibility code.
-
-Plus O5's ``concepts.json`` (read from the artifact store) so each anchor's text
-can be enriched with the discovered concept vocabulary it relates to (the dense
-counterpart to the lexical match — Feature Layer Part 2).
-
-Outputs (validated against the registry):
-
-* ``jd_concepts.json`` — ``{anchors: [{id, polarity, text, concept?, vocab?}, …]}``
-  (``_v_jd_concepts``: non-empty, each anchor positive/negative). O13b embeds
-  these into ``anchor_vectors.npy``; the anchor set must be ⊆ jd_concepts (Ports
-  §8 coherence) — so this is the authoritative anchor key set.
-* ``gates/eligibility_rules.yaml`` — ``{hard_blocks: [...], soft_penalties: [...]}``
-  (``_v_eligibility_rules``). Every code is cross-checked against the domain
-  ``EligibilityCode`` vocabulary here at the artifact boundary (Repo Layout §5):
-  an unknown code raises ``ArtifactContractError`` (registry/contract fail path).
-
-Determinism: anchors and rules are authored data, emitted in sorted-by-id /
-sorted-by-code order; the concept enrichment is a deterministic lookup. No RNG.
-"""
 
 from __future__ import annotations
 

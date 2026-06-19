@@ -1,16 +1,3 @@
-"""Stage timing + hard budget guard: per-stage wall-ms, within_budget, peak_rss_mb.
-
-Owner layer: observability.
-Allowed imports: stdlib, resource.
-
-``StageTimer`` measures one stage's wall-clock duration with the monotonic
-``time.perf_counter`` clock (not ``datetime.now`` — duration measurement is
-not a wall-clock dependency in the sense Repository Layout §1 forbids).
-``BudgetGuard`` samples the process's peak resident set size via the POSIX
-``resource`` module and raises as soon as either the wall-time or RSS ceiling
-is crossed, so a runaway online stage fails fast against the <=16GB ceiling
-instead of degrading the ranking silently.
-"""
 
 from __future__ import annotations
 

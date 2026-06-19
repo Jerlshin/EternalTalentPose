@@ -1,24 +1,3 @@
-"""Honeypot / impossibility detector extractor (``features/honeypot.py``).
-
-Owner layer: features. Allowed imports: ``domain``, ``features.view``, stdlib.
-
-Implements Part 5: the twelve ``hp.*`` cells (eleven detectors + ``hp.composite``)
-and the ``risk.*`` group. Every detector is **pure deterministic logic over the
-candidate representation** — no external data, no calibration constant baked in
-(thresholds are an O3 artifact applied by the Risk engine; here we emit a graded
-severity that *scales with how categorically impossible* the evidence is).
-
-Design rules from the spec, enforced mechanically:
-
-* **Recall-protective.** A single soft anomaly only dampens; the hard gate
-  (``≥2 corroborating impossibilities``) is the Risk engine's decision, not ours.
-* **Salary inversion is soft, never a honeypot** — capped low, by the spec.
-* ``hp.composite ≥ max(detector)`` always holds (it is built as ``max`` lifted
-  upward by a bounded count term), discharging the ``hp.composite`` GE_MAX
-  cross-feature contract in ``features.store`` by construction.
-* Every emitted cell carries the offending field(s) as evidence, so the Stage-4
-  trace can point at the exact impossible pair.
-"""
 
 from __future__ import annotations
 

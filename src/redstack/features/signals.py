@@ -1,20 +1,3 @@
-"""Behavioral signal extractor (``features/signals.py``).
-
-Owner layer: features. Allowed imports: ``domain``, ``features.view``, stdlib.
-
-Implements Part 4 (23 ``redrob_signals`` → 15 ``bhv.*`` composites) plus the
-recruiter-availability / engagement / responsiveness / open-source primitive
-groups (taxonomy 17, 21–23). Single-ownership routing (Engine §7) is honored:
-this module reads signals 3–8, 10, 16–23 and the OSS description cues; signals
-9, 11 belong to Credibility and 12–15 to Logistics and are read elsewhere.
-
-**Sentinel discipline is an invariant, not a nicety.** ``github_activity_score
-== -1``, ``offer_acceptance_rate == -1`` and ``skill_assessment_scores == {}``
-mean *UNKNOWN*, never 0: an unknown family lowers ``bhv.behavioral_confidence``
-rather than the score itself, so an engineer who simply never linked GitHub is
-not mis-ranked against one with a genuinely bad signal. Recency is computed only
-against the injected ``as_of`` — no wall clock.
-"""
 
 from __future__ import annotations
 

@@ -1,23 +1,3 @@
-"""Deterministic canonicalization + composed embedding document
-(``features/normalize.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain`` + ``config.schema``
-+ stdlib + numpy. No ports, IO, ML, clock, or RNG.
-
-Realizes ``CandidateNormalizationEngine`` (Engine §2): lowercase / strip /
-collapse whitespace, Unicode **NFC**, lexicon canonical skill-token mapping,
-company / industry canonicalization, and the **composed embedding document**
-whose field order is pinned by the ``embedding_manifest`` recipe. The recipe and
-canonical maps arrive already-resolved (the pipeline sources them from
-artifacts); this layer never reads them from disk.
-
-The composed document is the single determinism-critical output: offline (O13a)
-and online (R3 fallback) MUST compose byte-identical text for the same input, so
-composition is a pure function of ``(RawCandidate, CanonicalMaps, recipe)`` with
-a fixed field order and fixed separator. Unknown skill tokens map to themselves
-(never dropped); unparseable inputs that survived schema validation raise
-``SchemaError`` defensively.
-"""
 
 from __future__ import annotations
 

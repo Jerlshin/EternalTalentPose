@@ -1,18 +1,4 @@
-"""Gold-label review seed DTOs — the offline workspace output O8 consumes.
 
-The labeling workspace (Offline Pipeline Part 7) is an offline tool (notebook /
-Streamlit), not part of the pipeline code. Its committed human review tags arrive
-into O8 as this frozen seed (loaded by the composition root from
-``paths.golden_labels_path``), exactly as the lexicon/anchor authoring seeds reach
-O4/O6. O8 then performs the deterministic, machine-side work: active-learning
-stratification and the seeded, leakage-free train/val split.
-
-A ``ReviewTag`` is one reviewer's committed judgement for one candidate: the
-fit-tier (``RelevanceTier`` 0–4; honeypots → 0), the human reference reasoning
-(seeds O16), the reviewer id + timestamp (audit), and the stratification keys the
-workspace recorded (archetype, honeypot-suspect, borderline). These are *human
-facts* — fixed once committed (Part 7 determinism).
-"""
 
 from __future__ import annotations
 

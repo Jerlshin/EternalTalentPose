@@ -1,36 +1,4 @@
-"""``OfflinePipeline`` — the O0–O18 orchestrator (composition spine).
 
-Owner layer: pipelines (offline composition root).
-Allowed imports: ``domain``, ``ports``, ``engines``, ``adapters``, ``config``,
-``observability``, ``features``, this package (Repository Layout §12). This is
-one of the two places adapters are bound to ports; the bound ports arrive on the
-:class:`OfflinePipelineContext`, and this orchestrator sequences the injected
-stage callables over them. It owns **no IO itself** (Offline Pipeline Part 1,
-``OfflinePipeline``: "own no IO itself (delegates to ports/adapters); pure
-orchestration over injected stage callables").
-
-Lifecycle (Part 1):
-
-* ``plan()`` — topo-sort the DAG (delegated to :class:`OfflineExecutionGraph`)
-  and resolve which stages are stale (delegated to the runner's checkpoint
-  comparison). Returns the ordered stage ids that will execute.
-* ``run()`` — execute stale stages in dependency order via
-  :class:`OfflinePipelineRunner` (resume + checkpoint + quarantine), returning
-  per-stage :class:`StageReceipt`s.
-* ``finalize()`` — package (assert the required-online artifact set is complete
-  against the registry; the actual ``MANIFEST.json`` self-hash + per-artifact
-  sha256 + cross-coherence is the work of O17/O18 stages, which this orchestrator
-  merely sequences and then validates the *completeness* of) and build the
-  :class:`OfflinePipelineReport`.
-
-Failure modes (Part 1): stage failure ⇒ fail-fast with quarantined partial
-output (runner); DAG cycle ⇒ caught at graph construction / ``plan()``; missing
-input ⇒ raises. Verdicts are data; only invariant/contract breaches raise.
-
-The orchestrator is deterministic: the DAG and stage versions are fixed, the
-topo order is stable (ties by stage id), and the report's reproducible block is
-byte-stable across rebuilds (wall-clock timings live in the audit region).
-"""
 
 from __future__ import annotations
 

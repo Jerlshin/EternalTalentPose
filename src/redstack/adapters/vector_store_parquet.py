@@ -1,27 +1,4 @@
-"""``ParquetSemanticVectorStoreAdapter`` — implements ``SemanticVectorStorePort`` (Adapters §5).
 
-Owner layer: adapters (infrastructure — impure IO).
-Allowed imports: stdlib typing; ``pyarrow``/numpy; ``domain.ids``; ``ports``.
-Forbidden: ``engines``, ``pipelines``, business logic.
-
-O(1) retrieval of precomputed candidate vectors by ``CandidateId`` plus a
-full-matrix view for the columnar scoring path — the reason R3 is "lookup,"
-not "encode." The artifact (``embeddings/candidate_vectors.parquet``, schema
-``id, v0..v{dim-1}``; unit-norm, id-unique) is reached through the injected
-``ArtifactStorePort.locate(...)`` (hash-verified) — never by importing the
-artifact-store adapter — preserving the port seam between adapters.
-
-On-disk contract read here: a parquet file with a string id column and one
-``float32`` column per vector dimension (``v0, v1, ..., v{dim-1}`` — the
-layout :meth:`~redstack.pipelines.offline.stages.OfflineStage.emit_vector_parquet`
-writes), not a single ``fixed_size_list`` column. The file is opened
-memory-mapped; the per-dimension columns are stacked into a ``(N, dim)``
-numpy array. The id column loads fully into an in-memory ``CandidateId ->
-row`` index. Vectors are already L2-normalized offline; the adapter never
-re-normalizes. A missing candidate is reported as ``None`` / ``missing``
-(triggers the encode fallback); structural corruption or a dimensionality
-mismatch raises ``VectorStoreError``.
-"""
 
 from __future__ import annotations
 

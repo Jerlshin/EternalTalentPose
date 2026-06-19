@@ -1,29 +1,4 @@
-"""``ScoringEngine`` — weighted aggregation + gating + multipliers (``engines/scoring.py``).
 
-Owner layer: engines. Allowed imports: ``domain``, ``features``, ``config.schema``.
-Forbidden: ``adapters``, ``pipelines``, ``observability``, sibling engines, clock,
-online RNG.
-
-Logical→physical (Repo §9): the ``CandidateScoringEngine``. It owns the *combination
-math*, not feature definition: given the per-``ScoreComponent`` raw values
-(projected from the folded CQV upstream, each carrying its ``EvidenceRef`` set),
-the locked ``ScoringWeights``, the two gate verdicts, the two bounded multipliers,
-the bounded archetype adjustment, and the engine-internal confidence, it produces
-the ``ScoredCandidate`` + full ``ScoreBreakdown``.
-
-Score lifecycle (Domain §H / Online R5 / Score Lifecycle §20):
-
-    base_relevance = Σ_component (raw · weight)            # fixed ScoreComponent order
-    gate: honeypot OR ineligible ⇒ final_score = FLOOR     # no multipliers applied
-    else: combined = base · behavioral · logistics + archetype_adjustment
-          final_score = shrink(combined, confidence)        # toward neutral prior
-
-Invariants enforced here (and re-asserted by the domain VOs at construction):
-``weighted == raw·weight``; ``base == Σ weighted``; floored ⇒ ``final == FLOOR``;
-multipliers within their declared bounds; ``tiebreak_key == candidate_id``. No
-calibration curve is applied (presentation affine lives in the CSV adapter); the
-ranking sorts on these raw ``Score``s. float32 reduction, no NaN, no RNG.
-"""
 
 from __future__ import annotations
 

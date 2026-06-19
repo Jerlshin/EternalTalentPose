@@ -1,34 +1,4 @@
-"""Comprehensive R0->R9 online pipeline integration test (Testing Strategy §9).
 
-Exercises the real :class:`OnlinePipeline` end-to-end through the behavioral
-fakes in ``tests/fixtures/fake_ports.py`` — no mocks, real engines
-(``IntegrityEngine``, ``EligibilityEngine``, ``BehavioralEngine``,
-``LogisticsEngine``, ``ScoringEngine``, ``SemanticEngine``, ``RankingEngine``,
-``ReasoningEngine``, ``ValidationEngine``) wired through the real
-``pipelines/online/{pipeline,stages}.py`` composition root.
-
-**Accepted simplifications relative to full spec fidelity** (explicit per the
-project's "correct types, simplified derivations" scope decision):
-
-* Feature extraction (``features/extraction.py``) reuses the codebase's real,
-  sophisticated extractors (``career``, ``education``, ``geography``,
-  ``skills``, ``signals``, ``honeypot``, ``latents``) for 131 of 145 features;
-  the remaining 14 (``id``, ``exp``, ``sen``, ``co``, ``lead``, ``startup``,
-  ``found``) have no dedicated extractor module anywhere in the codebase and
-  are derived with small, honest, evidence-backed heuristics instead.
-* Every candidate's ``RawCandidate`` is inlined (not just the top-100's), and
-  each candidate's per-feature ``FeatureCell`` map is retained alongside the
-  bulk ``(N, D)`` matrix — both trade the spec's "rich objects for survivors
-  only" memory optimization for simplicity at this test's candidate-pool
-  scale.
-* There is no real O4/O5 competency lexicon or O6 JD-authored anchor/archetype
-  artifact; this test authors small, internally-coherent stand-ins (see
-  ``_build_artifact_store``) that satisfy the same ``ArtifactStorePort``
-  contract the real compiled artifacts would.
-
-None of this touches engine *logic* — every gate, score, rank, and reasoning
-decision below is the real, frozen ``engines/*.py`` implementation.
-"""
 
 from __future__ import annotations
 

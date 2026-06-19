@@ -1,19 +1,4 @@
-"""``JsonRunReportSinkAdapter`` — implements ``RunReportSinkPort`` (Adapters §7).
 
-Owner layer: adapters (infrastructure — impure IO).
-Allowed imports: stdlib ``json``/``io``/``hashlib``/``os``/``tempfile``/``pathlib``;
-``ports``.
-Forbidden: ``engines``, ``pipelines``, business logic, metric computation.
-
-Persists a ``RunReport`` (the port-owned structural Protocol) as deterministic
-JSON: sorted keys, fixed float formatting, the ``reproducible`` and ``audit``
-regions explicitly separated. The ``reproducible`` block is byte-stable across
-runs with identical inputs; the ``audit`` block (wall-clock, ``run_id``) is
-serialized but excluded from the determinism contract. A
-``report_schema_version`` travels with the report. The write is atomic (temp
-file in the target directory → fsync → ``os.replace``); the receipt carries the
-sha256 over the exact bytes written.
-"""
 
 from __future__ import annotations
 

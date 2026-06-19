@@ -1,11 +1,3 @@
-"""``CredibilityProfile`` slice — anti keyword-stuffing trust layer (R2).
-
-Owner layer: domain.
-Allowed imports: ids, enums, provenance, pydantic.
-
-Skill trust combines endorsement weight x duration evidence x assessment
-coherence; assessment scores are routed here (single-ownership).
-"""
 
 from __future__ import annotations
 

@@ -1,13 +1,4 @@
-"""``ArtifactStorePort`` — load and integrity-verify build artifacts (§3).
 
-Owner layer: ports.
-Allowed imports: stdlib typing, ``domain.errors``, ``_types``, numpy typing.
-
-The contract backbone between the offline build and the online run. Every
-loader verifies the artifact's sha256 against the manifest before returning;
-integrity or contract violations raise (fail-fast, no degraded mode). The
-adapter — not this port — touches the filesystem and mmaps locators.
-"""
 
 from __future__ import annotations
 

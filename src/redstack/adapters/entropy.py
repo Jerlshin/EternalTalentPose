@@ -1,26 +1,4 @@
-"""``OfflineEntropy`` / ``OnlineEntropy`` — implement ``DeterministicEntropyPort`` (Adapters §8).
 
-Owner layer: adapters (infrastructure).
-Allowed imports: stdlib ``hashlib``/``datetime``; numpy; ``ports``.
-Forbidden: ``engines``, ``pipelines``, the wall clock (``datetime.now``), business logic.
-
-The single seam for the injected ``as_of`` date and (offline only) seeded
-randomness, so domain/engines never touch a global RNG or the wall clock. Two
-variants are constructed by the respective composition roots and are immutable
-after construction:
-
-* :class:`OfflineEntropy` — full RNG: ``derive`` mixes ``(seed, label)`` into a
-  stable sub-seed via sha256, and ``numpy_generator`` builds an independent
-  PCG64 ``Generator`` per label (labeled substreams for O7 KMeans / O9 weight
-  search). ``as_of`` returns the fixed configured date.
-* :class:`OnlineEntropy` — RNG-disabled: ``derive`` and ``numpy_generator`` raise
-  ``EntropyDisabledError``; only ``seed`` and ``as_of`` are served. Online ties
-  resolve by ascending ``candidate_id``, never randomness.
-
-Sub-seed derivation is a deterministic sha256 over ``"{seed}:{label}"`` (not
-Python's salted ``hash``), so identical ``(seed, label)`` yields identical
-streams across runs, processes, and hosts.
-"""
 
 from __future__ import annotations
 

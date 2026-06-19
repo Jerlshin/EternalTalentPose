@@ -1,36 +1,4 @@
-"""O12 — Risk Calibration.
 
-Owner stage: O12 (Offline Pipeline Part 4/Part 8; Feature Layer Part 5/§Risk;
-Engine Layer §9 ``CandidateRiskEngine`` inputs). Finalize the honeypot composite
-threshold and the **confidence-shrink** parameters that ``CandidateRiskEngine``
-uses to modulate ``final_score`` (shrink toward prior when confidence is low),
-trading honeypot **recall** against false-positive loss — false positives drop
-real candidates and cost NDCG, so the calibration is recall-first within a
-bounded real-candidate-loss budget (Part 5).
-
-Algorithm (deps O3, O14):
-
-1. Read O3's ``integrity_thresholds.json`` (per-detector prevalence + initial
-   composite threshold + hard-gate count) and ``honeypot_catalog.json`` (the
-   discovered suspect cohort).
-2. Read the O14 ``feature_snapshot`` metadata (row count) to express the
-   real-candidate-loss budget as a fraction of the pool.
-3. Choose the final composite ``honeypot_threshold`` that preserves the hard-gate
-   (≥2 HARD) recall while keeping composite-gated suspects within the loss budget;
-   set per-detector risk weights (HARD detectors weigh more) and the
-   confidence-shrink params (how hard low confidence pulls toward the prior).
-
-Outputs (delegated to the bound store):
-
-* ``risk_weights.json`` — ``{weights: {detector→weight}, confidence_shrink: {...}}``
-  (``_v_risk_weights``: requires ``weights`` + ``confidence_shrink``).
-* ``integrity_thresholds.json`` — **finalized**: the O3 per-detector block carried
-  forward + the recalibrated composite ``honeypot_threshold`` + the risk weights
-  merged in (Part 10: this artifact is co-owned O3,O12). ``_v_integrity_thresholds``.
-
-Determinism: a pure function of the O3 artifacts + the snapshot row count; no RNG,
-no clock. Weights + thresholds are rounded deterministically.
-"""
 
 from __future__ import annotations
 

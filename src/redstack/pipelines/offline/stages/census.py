@@ -1,25 +1,3 @@
-"""O0 — Dataset Census.
-
-Owner stage: O0 (Offline Pipeline Part 3). Profile the pool before anything
-else: every downstream threshold (honeypot, behavioral, risk) is set *relative
-to the observed distribution*, never hard-coded, so the census makes calibration
-data-driven and defensible at Stage 5.
-
-Algorithm (Part 2 / Part 3): a single streaming pass over
-``CandidateSourcePort.stream()`` with **O(1)-per-record** aggregation —
-frequency counters for categorical coverage and streaming **P² quantile
-estimators** for the numeric distributions. No bulk materialization of the
-100K JSONL: the iterator is consumed lazily, one ``SourceRecord`` at a time.
-
-Output: ``dataset_profile.json`` — top-level counts (N, per-field coverage),
-the distribution catalog (years-of-experience quantiles, skills/positions
-cardinalities), and a malformed tally. Validated by the registry's
-``_v_dataset_profile`` (positive ``candidate_count`` + required sections).
-
-Determinism: counters and the P² estimator are order-deterministic given a fixed
-input order (the source preserves file order); identical input ⇒ identical
-profile bytes. No clock, no RNG.
-"""
 
 from __future__ import annotations
 

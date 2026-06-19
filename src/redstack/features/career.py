@@ -1,29 +1,3 @@
-"""Career intelligence extraction — ``career.*`` + Group 7 ``pvs.*``
-(``features/career.py``).
-
-Owner layer: features (pure). Allowed imports: ``domain``, ``features.view``,
-stdlib. No ports, adapters, engines, pipelines, IO, ML runtime, RNG, and **no
-wall clock** — every tenure / hop-rate / recency derivation scales against the
-injected ``as_of`` date (Feature Layer Part 3).
-
-Implements the 14-metric career matrix (Part 3) and the Group 7
-product-vs-service densities (Part 1 §7). Two disciplines run throughout:
-
-* **Tenure- and recency-weighting.** Aggregates weight each position by its
-  duration (longer roles dominate) and, where the matrix demands "recent",
-  additionally by an exponential recency decay against ``as_of`` (a half-life of
-  ``STALE_HALF_LIFE_DAYS``). A role that ended years ago counts for less than a
-  current one.
-* **Description-dominance.** A title is an *uncorroborated claim*; the
-  free-text ``description`` is the *evidence*. Seniority used for progression,
-  promotion and inflation is the description-corroborated level, and an
-  unsupported senior title raises ``career.title_inflation`` rather than
-  inflating progression.
-
-Every emitted ``FeatureCell`` carries ≥1 ``EvidenceRef`` whose ``path`` is a
-real ``RawCandidate`` field (resolvable for Stage-4 provenance); aggregate
-metrics cite the specific position that dominated the score.
-"""
 
 from __future__ import annotations
 

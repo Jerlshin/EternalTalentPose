@@ -1,26 +1,3 @@
-"""JD latent-family extractor (``features/latents.py``).
-
-Owner layer: features. Allowed imports: ``domain``, ``features.view``, stdlib.
-
-Implements Part 2: the twelve ``jd.*`` latent concepts, each modeled as a
-``value + confidence`` built from already-computed upstream cells (competency,
-career, product-vs-services, behavioral). Because every latent is a reduction
-over other feature cells, this extractor runs last in the extraction DAG and
-takes the assembled ``{feature_id: FeatureCell}`` map as input.
-
-Two spec rules are enforced:
-
-* **Anti-stuffing core.** ``jd.keyword_only = clamp(mean(claimed) −
-  mean(trust·in_career·semantic))`` — large when a profile lists AI skills with
-  no corroboration; it is the negative latent that subtracts from the positives.
-* **Sparse profiles are not confidently labeled.** A latent with little
-  supporting evidence regresses toward a neutral prior (0.0) weighted by its
-  evidence coverage, and emits a coverage-driven confidence the Fit/Risk engines
-  read alongside the value.
-
-Evidence is the set of constituent feature ids (``EvidenceKind.DERIVED``), so
-the ``feature → feature → raw`` lineage chain stays walkable end to end.
-"""
 
 from __future__ import annotations
 

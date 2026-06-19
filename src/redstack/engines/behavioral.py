@@ -1,25 +1,3 @@
-"""``BehavioralEngine`` — behavioral families → bounded multiplier (``engines/behavioral.py``).
-
-Owner layer: engines. Allowed imports: ``domain``, ``ports`` (``as_of`` only),
-``features``, ``config.schema``. Forbidden: ``adapters``, ``pipelines``,
-``observability``, sibling engines, ``datetime.now``, online RNG.
-
-Logical→physical (Repo §9): the ``BehavioralEngine`` consumes the
-``BehavioralProfile`` slice (built by ``features.signals`` with sentinel→UNKNOWN
-discipline) and composes its bounded family scores into a single bounded
-``Multiplier`` on base relevance. Behavioral signals **modulate** fit, they never
-create it (Architecture invariant): a perfect-on-paper candidate who is inactive
-with a low response rate is down-weighted, not promoted.
-
-UNKNOWN discipline: a family flagged ``SignalAvailability.UNKNOWN`` (sentinel
-``-1`` / ``{}`` upstream) is *excluded* from the weighted combination and its
-weight is redistributed — never folded in as ``0``, which would wrongly punish a
-candidate who simply did not link an account. The multiplier bounds
-``[m_min, m_max]`` and family weights live in ``BehavioralPolicy``
-(``config.schema``, from ``behavioral_weights.json``); ``as_of`` is injected for
-any policy that re-derives recency, but the profile already carries
-``as_of``-relative availability.
-"""
 
 from __future__ import annotations
 

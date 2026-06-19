@@ -1,38 +1,4 @@
-"""O4 — Lexicon Discovery.
 
-Owner stage: O4 (Offline Pipeline Part 5). Automatically discover concept
-terminology from candidate descriptions so the competency features depend on
-*meaning*, not the candidate's exact keyword choice — the anti-stuffing /
-Tier-5-recall lever. Concepts mined: the JD's "absolutely need" families
-(retrieval, ranking, recommendation, matching, search, evaluation, production-ML,
-MLOps), seeded from the human seed lexicon (``LexiconSeedConfig``).
-
-Algorithm (Part 5, fully deterministic — no RNG, no embeddings here; O5 adds the
-embedding expansion):
-
-1. **Tokenize** normalized descriptions (streamed; O(1) memory per record).
-2. **c-TF-IDF** per concept: treat each concept's seed-bearing documents as a
-   class; score each candidate term by class term-frequency × inverse document
-   frequency across concepts, so terms that are *characteristic* of a concept
-   rank high and generic terms wash out.
-3. **PMI phrase mining**: bigrams/trigrams whose pointwise mutual information
-   exceeds a threshold become multi-word concept phrases.
-4. **Graph build**: a ``TermGraph`` (term co-occurrence within descriptions) and
-   a ``PhraseGraph`` (phrase → constituent-term edges).
-
-Outputs (all validated against the registry):
-
-* ``lexicon.compiled.json`` — ``LexiconCatalog``: concept → canonical terms +
-  weights (``_v_lexicon_compiled``: non-empty ``concepts`` mapping).
-* ``concepts.json`` — ``ConceptDictionary``: concept → vocab + **anchor_text**
-  (``_v_concepts``: every concept has ``anchor_text``). O5 expands this.
-* ``term_graph.json`` / ``phrase_graph.json`` — ``nodes`` + ``edges``.
-
-Determinism: TF-IDF/PMI are pure functions of the token stream; all term and
-edge collections are emitted in sorted order so the artifact bytes are stable.
-The seed lexicon is injected at construction (an authoring seed, not on the
-runtime context).
-"""
 
 from __future__ import annotations
 

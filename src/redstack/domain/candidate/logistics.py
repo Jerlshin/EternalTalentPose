@@ -1,11 +1,4 @@
-"""``LogisticsProfile`` slice — location / notice / relocation / salary fit (R2).
 
-Owner layer: domain.
-Allowed imports: ids, enums, pydantic.
-
-Salary inversion is preserved (not corrected); it is a logistics sanity flag,
-not a honeypot flag.
-"""
 
 from __future__ import annotations
 

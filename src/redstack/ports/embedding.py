@@ -1,17 +1,4 @@
-"""EmbeddingModelPort (Ports §1) + the offline-only ONNX-export capability.
 
-The core ``EmbeddingModelPort`` is the frozen text->vector seam (encode + dim +
-model_id). ``EmbeddingError`` is the port-level failure type (encode runtime
-failure; never returns zeros to mask failure).
-
-``OnnxExportCapable`` is a *narrow optional* secondary Protocol that the offline
-``SentenceTransformerEmbeddingAdapter`` (Adapters §4) additionally implements: it
-exports the base model's ONNX twin and reports the st<->onnx parity cosine. The
-online onnx adapter does NOT implement it. The O13 stage detects this capability
-at runtime (``isinstance``) so the frozen ``EmbeddingModelPort`` stays unchanged
-while the stage can still register ``model/encoder.onnx`` (Adapters §4: export +
-parity verification happen before the artifact is accepted).
-"""
 from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path

@@ -1,10 +1,4 @@
-"""``Identity`` slice — stable identification + provenance anchor.
 
-Owner layer: domain.
-Allowed imports: ids, provenance, pydantic.
-
-Equality and hash are by ``candidate_id`` only.
-"""
 
 from __future__ import annotations
 

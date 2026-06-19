@@ -1,11 +1,4 @@
-"""Unit tests for ``EligibilityEngine.evaluate_structural`` (engines/eligibility.py).
 
-Owner: tests/unit. Builds ``CareerProfile``/``CredibilityProfile`` directly
-(the engine's own inputs) rather than through a full ``RawCandidate`` --
-``evaluate_structural`` is the pre-embedding hard-gate subset O13a/R2 use to
-skip the expensive embedding step for candidates already certain to be
-hard-blocked on career/credibility alone.
-"""
 
 from __future__ import annotations
 

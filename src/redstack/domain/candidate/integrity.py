@@ -1,11 +1,3 @@
-"""``IntegrityReport`` slice — honeypot / impossible-profile verdict (R4).
-
-Owner layer: domain.
-Allowed imports: ids, enums, provenance, pydantic.
-
-Verdicts are data, not exceptions. Findings are stored pre-sorted by code for
-determinism; each finding cites at least one ``EvidenceRef``.
-"""
 
 from __future__ import annotations
 

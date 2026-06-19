@@ -1,38 +1,3 @@
-"""O11 — Behavioral Calibration.
-
-Owner stage: O11 (Offline Pipeline Part 8; Feature Layer Part 4; Engine Layer §7
-``CandidateBehaviorEngine`` multiplier inputs). Fit the behavioral **multiplier**
-curves and their bounds so behavioral signals *modulate* relevance without ever
-*defining* it — the JD's "perfect-on-paper but inactive ⇒ not available" maps to
-``bhv.availability × bhv.hiring_probability_proxy`` as a bounded multiplier, never
-a relevance source (Part 4). The bounds are the safety rail: they cap how far a
-strong/weak behavioral profile can move the score, preventing behavioral
-domination.
-
-Sentinel discipline (Part 4 / Engine §7): ``github_activity_score = −1``,
-``offer_acceptance_rate = −1``, ``skill_assessment_scores = {}`` ⇒ the contributing
-family is UNKNOWN, which lowers ``bhv.behavioral_confidence`` rather than the score
-itself. O11 therefore calibrates the curve to **regress toward the neutral
-multiplier (1.0) as confidence drops**, so a sparse/UNKNOWN profile is neither
-boosted nor punished on missing data.
-
-Algorithm (deps O14, O8 optional):
-
-1. Read O0's ``dataset_profile`` behavioral distributions (the curve anchors) and
-   the O14 ``feature_snapshot`` row count (calibration scale).
-2. When O8 gold labels are present, fit the curve mapping behavioral composite →
-   multiplier so it correlates with tier on the labeled set; otherwise fall back
-   to a monotone identity-anchored curve from the census quantiles (still
-   deterministic, no labels required).
-3. Set ordered ``bounds`` ``[lower, upper]`` around the neutral 1.0 multiplier and
-   a confidence-regression knee.
-
-Output: ``behavioral_weights.json`` — ``{curves: {...}, bounds: {lower, upper}}``
-(``_v_behavioral_weights``: ``bounds`` ordered ``lower ≤ upper``).
-
-Determinism: a pure function of the census + optional gold; no RNG, no clock; the
-curve knots and bounds are rounded deterministically.
-"""
 
 from __future__ import annotations
 

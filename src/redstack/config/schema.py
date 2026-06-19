@@ -1,37 +1,3 @@
-"""Typed configuration schema for REDSTACK.
-
-Every YAML file under ``configs/`` maps to exactly one frozen Pydantic v2
-model declared here (Repository Layout §11, Architecture §8). All models set
-``frozen=True`` and ``extra="forbid"`` so that a misspelled key fails loudly at
-startup instead of silently disabling a gate or thread pin.
-
-This module is **pure**: it imports only the standard library, ``pydantic``,
-and closed ``domain`` enums (for the calibrated artifact-shaped policy models
-below, whose keys are typed against the domain vocabulary rather than raw
-strings). It performs no IO and reads no clock, so it is importable from any
-layer (engines, features, adapters, pipelines, cli). The IO-bearing
-composition lives in :mod:`redstack.config.loader`.
-
-Two families of config live here:
-
-* **Runtime / IO config** — the three-layer composition
-  ``base.yaml -> runtime/{online|offline}.yaml -> profiles/{ci|local}.yaml``
-  resolved into a single :class:`RedstackConfig`. These knobs are pure
-  runtime/IO: determinism pins, the wall-clock/RAM budget, filesystem paths,
-  the injected ``as_of`` clock, the malformed-record policy, the score
-  presentation transform, and the offline build parameters. They never carry
-  scoring weights.
-
-* **Behaviour / authoring seeds** — ``weights/``, ``lexicon/``, ``anchors/``,
-  ``gates/``, ``integrity/``. These are *intent* authored by Modeling and
-  consumed by the **offline** pipeline (O3/O4/O6/O9), which compiles and
-  calibrates them into the frozen ``artifacts/`` the online run actually reads.
-  Per Repository Layout §5, cross-validation of seed codes against the domain
-  vocabularies (``ScoreComponent`` / ``EligibilityCode`` / ``IntegrityFlag``)
-  is performed at the **artifact boundary** by the offline registry, not here;
-  the authoring seed stays deliberately decoupled from domain so it can be
-  hand-edited without recompiling the core.
-"""
 
 from __future__ import annotations
 

@@ -1,15 +1,3 @@
-"""Structured, deterministic logging: no timestamps in repro-relevant lines.
-
-Owner layer: observability.
-Allowed imports: stdlib.
-
-Every record emitted through :func:`get_logger` is timestamp-free: the
-formatter never reads the wall clock, so two runs over identical inputs
-produce byte-identical log streams (Repository Layout §1, "no volatile system
-clock dependencies"). :func:`stage_metric` is the structured surface stages
-use to record per-stage facts (e.g. counts, gate outcomes) as one
-deterministic, sorted-key line rather than ad hoc string interpolation.
-"""
 
 from __future__ import annotations
 

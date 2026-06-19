@@ -1,19 +1,3 @@
-"""RunReport model builder: reproducible + audit + timings + budget blocks.
-
-Owner layer: observability.
-Allowed imports: domain.
-
-Builds an object conforming structurally to the ports-owned ``RunReport``
-Protocol (``ports._types.RunReport``). ``ports`` and ``observability`` are
-mutually independent (Repository Layout §8c) — neither imports the other.
-``RunReportSnapshot`` and its three nested blocks therefore do not inherit
-from ``ports._types.RunReport`` and its sibling Protocols; they are plain
-frozen dataclasses whose fields exactly mirror those Protocols' properties by
-name and type. mypy verifies that correspondence *structurally*, at whatever
-call site (the pipelines composition root) passes a built snapshot to
-something typed as the ports ``RunReport`` Protocol — e.g.
-``RunReportSinkPort.write``.
-"""
 
 from __future__ import annotations
 

@@ -1,17 +1,4 @@
-"""``CandidateQualityVector`` (CQV) + the ``FeatureLayout`` type (R5).
 
-Owner layer: domain.
-Allowed imports: ids, errors, pydantic, numpy.
-
-The fixed-length float32 vector ``ScoringEngine`` consumes. ``FeatureLayout``
-is the *type* defined here; the populated, ordered constant lives in
-``features/registry.py`` (pinned to a shared ``layout_version``). The layout is
-shared by reference and validated at construction — it is never stored per
-instance.
-
-``CandidateQualityVector`` is the only model granted ``arbitrary_types_allowed``
-(for the ndarray).
-"""
 
 from __future__ import annotations
 

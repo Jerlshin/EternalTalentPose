@@ -1,15 +1,3 @@
-"""``SemanticVectorStorePort`` — O(1) precomputed-vector retrieval (§2).
-
-Owner layer: ports.
-Allowed imports: stdlib typing, ``domain.ids``/``domain.errors``, ``_types``, numpy.
-
-The reason R3 is "Semantic Lookup," not "encode": id->vector lookup, bulk
-gather, and a zero-copy full-matrix view aligned to a stable id order. A
-missing candidate is reported as data (``None`` / ``missing``), never raised;
-structural corruption raises. The port does not encode, compute similarity,
-assign archetypes, or verify artifact integrity (that is the artifact store's
-job at open time).
-"""
 
 from __future__ import annotations
 

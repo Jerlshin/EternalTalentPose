@@ -1,25 +1,4 @@
-"""``CQVAssembler`` — fold feature cells into the CQV (``engines/cqv.py``).
 
-Owner layer: engines. Allowed imports: ``domain``, ``features``, ``config.schema``,
-numpy. Forbidden: ``adapters``, ``pipelines``, ``observability``, sibling engines,
-clock, online RNG.
-
-Logical→physical (Repo §9): the ``CQVAssembler`` folds every populated slice's
-feature values — surfaced uniformly through the read-only ``FeatureView`` — into
-the fixed-length ``(D,)`` ``CandidateQualityVector`` aligned to ``FEATURE_LAYOUT``.
-It is the boundary between rich typed profiles and vectorized scoring.
-
-Determinism & invariants (Domain §G.10 / Online R5 / Testing §131):
-- reduction strictly in ``FEATURE_LAYOUT`` index order; dtype ``float32``;
-- ``len(values) == D``; **no ``NaN``/``inf``** (all sentinels resolved upstream);
-- each index within its documented ``bounds``; ``schema_version`` == layout version.
-Any violation raises ``CQVInvariantError`` (a programming/contract error, never a
-business verdict).
-
-Two surfaces: ``assemble`` materializes one ``CandidateQualityVector`` (survivors /
-top-K); ``fold_row`` writes directly into a shared pre-allocated ``(N, D)`` matrix
-at a deterministic row index (the 100K bulk path, no per-candidate object churn).
-"""
 
 from __future__ import annotations
 

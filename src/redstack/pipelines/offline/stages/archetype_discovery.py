@@ -1,37 +1,3 @@
-"""O7 — Archetype Discovery.
-
-Owner stage: O7 (Offline Pipeline Part 6). Cluster the precomputed candidate
-embedding space into the **10 core archetypes** (retrieval / ranking / recsys /
-data / ML / researcher / consultant / keyword-stuffer / product / startup
-engineer) with scikit-learn KMeans, **seeded securely** via
-``OfflineEntropy.numpy_generator("kmeans")`` so the build is reproducible.
-Fingerprint each cluster and tag the JD-desired (target) archetypes, then emit
-the embedding-space centroids the online nearest-centroid assignment consumes.
-
-Algorithm (Part 6, deps O13a):
-
-1. Load ``candidate_vectors.parquet`` (the O13a unit-norm ``(N, dim)`` matrix +
-   id order) from the artifact tree.
-2. Fit ``KMeans(n_clusters=10)`` with a seeded ``random_state`` derived from the
-   offline entropy port; ``n_init`` fixed for determinism.
-3. **Fingerprint** each cluster: size, the centroid (embedding space), and the
-   top discriminating dimensions (centroid components farthest from the global
-   mean) — the signature reasoning cites.
-4. Assign deterministic labels to the 10 archetypes and mark the target set
-   (retrieval/ranking/recsys/product/startup) per the JD.
-
-Outputs (validated against the registry):
-
-* ``centroids.npy`` — ``(k, dim)`` float32, contiguous, **unit-normalized** rows
-  (so online nearest-centroid is a dot product); ``_v_centroids`` (2-D float32,
-  dim == embedding.dim — §8 coherence).
-* ``archetypes.json`` — id → label, size, fingerprint, target flag;
-  ``_v_archetypes`` (ids contiguous from 0).
-
-Determinism (Part 6): seeded init, fixed k, fixed ``n_init``; centroid **row
-order is canonicalized** (sorted by a stable key) so the artifact bytes and the
-``ArchetypeId`` assignment are reproducible across runs; ties broken by id.
-"""
 
 from __future__ import annotations
 

@@ -1,11 +1,4 @@
-"""features.evidence (§D): mint EvidenceRefs that are guaranteed to resolve.
 
-The minting helper resolves a dotted path (``career_history[0].title``) against a
-``RawCandidate``-shaped mapping and constructs an ``EvidenceRef`` only if the path
-yields a JSON scalar. A dangling path raises ``ProvenanceError`` — turning the
-"no hallucination / every finding cites a real fact" rule into a construction
-constraint rather than a review-time hope.
-"""
 from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence

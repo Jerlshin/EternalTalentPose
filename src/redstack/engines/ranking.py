@@ -1,24 +1,4 @@
-"""``RankingEngine`` — deterministic sort + top-K extraction (``engines/ranking.py``).
 
-Owner layer: engines. Allowed imports: ``domain``. Forbidden: ``adapters``,
-``pipelines``, ``observability``, sibling engines, clock, online RNG, ports.
-
-Logical→physical (Repo §9): the ``CandidateRankingEngine``. A single, total,
-deterministic order produces a spec-valid ``Ranking``:
-
-- floored candidates (failed integrity OR eligibility gate) partition to the
-  filler **tail**; non-floored candidates fill ranks 1..size first (Online R6),
-  keeping the top-100 honeypot rate ≈ 0 by construction, not by special-casing;
-- within each partition, sort by ``(−final_score, candidate_id)`` — score
-  descending, then ``candidate_id`` **alphanumeric ascending** as the rigid
-  tie-break that protects the submission from non-determinism;
-- assign ranks ``1..size`` and hand the slice to the ``Ranking`` factory, which
-  re-asserts the six validator invariants (count / unique-rank / id-pattern /
-  monotonicity / tie-break / sortedness) and raises ``RankingInvariantError`` on
-  any violation.
-
-Pure, single-threaded stable sort; identical inputs ⇒ identical ``Ranking``.
-"""
 
 from __future__ import annotations
 

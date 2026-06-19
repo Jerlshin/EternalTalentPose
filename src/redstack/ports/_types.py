@@ -1,14 +1,3 @@
-"""Shared port DTOs and type aliases (``ports/_types.py``).
-
-Owner layer: ports.
-Allowed imports: stdlib typing/dataclasses, ``domain``, numpy typing.
-
-Declared once and imported by the port modules — the only non-``domain`` types
-the ports introduce. Per the ports purity contract these are stdlib frozen
-dataclasses (no pydantic, no IO, no ML runtime). The ``RunReport`` family is a
-port-owned **structural Protocol** so ``observability`` can build a conforming
-object without ``ports`` importing ``observability``.
-"""
 
 from __future__ import annotations
 

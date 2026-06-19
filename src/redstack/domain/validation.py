@@ -1,13 +1,4 @@
-"""Validation models (``domain/validation.py``).
 
-Owner layer: domain.
-Allowed imports: enums, pydantic.
-
-Mirrors ``validate_submission.py`` plus the Stage-4 reasoning checks. Because
-``Ranking`` enforces structural rules at construction, ``ValidationReport`` is
-belt-and-suspenders for structure and the primary home for reasoning-quality
-verdicts.
-"""
 
 from __future__ import annotations
 

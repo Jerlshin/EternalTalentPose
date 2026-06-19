@@ -1,14 +1,3 @@
-"""``CandidateSourcePort`` — stream raw candidate records, file order (§4).
-
-Owner layer: ports.
-Allowed imports: stdlib typing, ``_types``.
-
-Streams ``.jsonl`` / ``.jsonl.gz`` with constant memory, preserving file
-order. The port performs UTF-8 + JSON structural decode only — the
-schema-validation boundary (``candidate_schema.json`` → ``RawCandidate``) lives
-in ``features.parsing``. A malformed line is data (``SourceMalformed``); an
-open/decompress/IO failure raises.
-"""
 
 from __future__ import annotations
 

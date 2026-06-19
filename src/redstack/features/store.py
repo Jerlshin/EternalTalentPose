@@ -1,32 +1,3 @@
-"""Feature store metadata + the explainability chain (``features/store.py``).
-
-Owner layer: features (pure). Allowed imports: ``features.layout``,
-``features.registry``, ``features.parsing``, ``domain``, stdlib, numpy. No ports,
-adapters, engines, pipelines, IO (the snapshot *holds* arrays; persistence is an
-adapter concern), ML runtime, clock, or RNG.
-
-Realizes Feature Layer Part 6 (store design) + Part 8 (explainability):
-
-* ``FeatureProvenance`` — feature → ``EvidenceRef``[] → raw-field chain.
-* ``FeatureLineage`` — the acyclic feature→dependencies DAG (invalidation +
-  explainability); validated and topologically ordered at construction.
-* ``FeatureSnapshot`` — the materialized ``(N, D)`` value matrix + ``(N, G)``
-  group-confidence matrix + id index for a given input+version.
-* ``FeatureAuditRecord`` — per (candidate, feature) audit row materialized for
-  survivors/top-K. The "audit timestamp" is an *injected* ``recorded_at`` date
-  (this layer takes no wall clock).
-* ``FeatureImportance`` — per-feature contribution (O8 weights + ablation),
-  read by Reasoning to pick which features to cite.
-* ``FeatureContracts`` — cross-feature invariants (``*.competency`` ≤ group
-  corroboration; ``hp.composite`` ≥ max single hard detector).
-* ``FeatureValidation`` — run-time assertions: no NaN, in-range, dependency
-  satisfaction, layout match.
-* ``FeatureCache`` — content-addressed within-run memo (immutable; COW).
-
-The chain ``ScoreBreakdown → FeatureImportance → FeatureProvenance →
-EvidenceRef → RawCandidate.field`` (Part 8) is the single structure serving
-reasoning, audit, and Stage-4 defence.
-"""
 
 from __future__ import annotations
 

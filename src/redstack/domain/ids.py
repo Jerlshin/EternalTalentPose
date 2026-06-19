@@ -1,14 +1,3 @@
-"""Nominal NewType aliases for value separation (mypy-only).
-
-Owner layer: domain.
-Allowed imports: stdlib typing.
-
-NewTypes are checked statically by mypy only; they carry no runtime
-validation. Runtime validation lives in the pydantic models and in the
-smart-constructor functions (``features`` / engine layers) that *mint* them.
-A NewType may only be cast inside the module that owns its validation;
-downstream modules receive it already-typed and never re-cast ad hoc.
-"""
 
 from __future__ import annotations
 
