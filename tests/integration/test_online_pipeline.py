@@ -42,7 +42,9 @@ import statistics
 from datetime import date
 from typing import Final
 
-from redstack.domain.enums import BuildStage, EvidenceKind
+import numpy as np
+
+from redstack.domain.enums import BuildStage, EligibilityCode, EvidenceKind
 from redstack.domain.errors import RepresentationStageError
 from redstack.domain.ids import CandidateId
 from redstack.pipelines.online import stages
@@ -216,8 +218,8 @@ def _make_candidate(i: int, rng_: random.Random) -> dict[str, object]:
             "endorsements_received": rng_.randint(0, 100),
             "notice_period_days": rng_.choice([0, 15, 30, 45, 60, 90, 120]),
             "expected_salary_range_inr_lpa": {
-                "min_lpa": rng_.uniform(10, 50),
-                "max_lpa": rng_.uniform(50, 80),
+                "min": rng_.uniform(10, 50),
+                "max": rng_.uniform(50, 80),
             },
             "preferred_work_mode": rng_.choice(
                 ["remote", "hybrid", "onsite", "flexible"]
@@ -239,7 +241,8 @@ def _make_candidate(i: int, rng_: random.Random) -> dict[str, object]:
 
 def _make_honeypot(cid: str) -> dict[str, object]:
     """Two corroborating HARD impossibilities: tenure >> stated experience,
-    and >=3 ``EXPERT``-proficiency skills claimed at zero duration/usage."""
+    and >=5 ``EXPERT``-proficiency skills claimed at zero duration/usage --
+    R0's locked ``expert_zero_usage_min_count`` (online ``stages.r0_load``)."""
     return {
         "candidate_id": cid,
         "profile": {
@@ -297,6 +300,18 @@ def _make_honeypot(cid: str) -> dict[str, object]:
                 "endorsements": 0,
                 "duration_months": 0,
             },
+            {
+                "name": "tensorflow",
+                "proficiency": "expert",
+                "endorsements": 0,
+                "duration_months": 0,
+            },
+            {
+                "name": "ranking",
+                "proficiency": "expert",
+                "endorsements": 0,
+                "duration_months": None,
+            },
         ],
         "certifications": [],
         "languages": [],
@@ -313,7 +328,7 @@ def _make_honeypot(cid: str) -> dict[str, object]:
             "connection_count": 10,
             "endorsements_received": 0,
             "notice_period_days": 30,
-            "expected_salary_range_inr_lpa": {"min_lpa": 20.0, "max_lpa": 30.0},
+            "expected_salary_range_inr_lpa": {"min": 20.0, "max": 30.0},
             "preferred_work_mode": "hybrid",
             "willing_to_relocate": True,
             "github_activity_score": -1.0,
@@ -405,7 +420,7 @@ def _make_consulting_only(cid: str) -> dict[str, object]:
             "connection_count": 200,
             "endorsements_received": 5,
             "notice_period_days": 60,
-            "expected_salary_range_inr_lpa": {"min_lpa": 15.0, "max_lpa": 25.0},
+            "expected_salary_range_inr_lpa": {"min": 15.0, "max": 25.0},
             "preferred_work_mode": "onsite",
             "willing_to_relocate": False,
             "github_activity_score": -1.0,
@@ -440,26 +455,42 @@ def _full_pool() -> list[dict[str, object]]:
 # Artifact / port assembly.                                                   #
 # --------------------------------------------------------------------------- #
 def _build_artifact_store(*, dim: int = DIM) -> InMemoryArtifactStore:
+    """Build the artifact set ``r0_load`` actually reads (Online Part 1/§R0).
+
+    Keys/shapes mirror ``pipelines/online/stages.py``'s real reads exactly
+    (``scoring_weights`` is YAML-parsed text; ``jd_concepts``/``anchor_vectors``
+    and ``archetypes``/``centroids`` are split pairs aligned by sorted-id /
+    catalog-key order; ``integrity_rules`` -- not ``integrity_thresholds`` --
+    is where per-flag severity now lives) rather than the offline registry's
+    on-disk relative paths, which are not artifact keys.
+    """
     rng = random.Random(7)
-    anchors_positive = [
-        {"id": f"jd.{group}", "vector": _unit([rng.gauss(0, 1) for _ in range(dim)])}
-        for group in COMPETENCY_GROUPS
-    ]
-    anchors_negative = [
-        {"id": "jd.neg1", "vector": _unit([rng.gauss(0, 1) for _ in range(dim)])}
-    ]
-    centroids = {
-        "ids": [0, 1],
-        "vectors": [_unit([rng.gauss(0, 1) for _ in range(dim)]) for _ in range(2)],
-        "target": [1],
-        "labels": {"1": "ideal-fit"},
+    anchor_polarity = {f"jd.{group}": "positive" for group in COMPETENCY_GROUPS}
+    anchor_polarity["jd.neg1"] = "negative"
+    ordered_anchor_ids = sorted(anchor_polarity)
+    anchor_vectors = np.stack(
+        [_unit([rng.gauss(0, 1) for _ in range(dim)]) for _ in ordered_anchor_ids]
+    ).astype(np.float32)
+    jd_concepts = {
+        "anchors": [
+            {"id": aid, "polarity": anchor_polarity[aid], "text": aid}
+            for aid in ordered_anchor_ids
+        ]
     }
+    archetype_catalog = {
+        "0": {"archetype_id": 0, "label": "other", "is_target_archetype": False},
+        "1": {"archetype_id": 1, "label": "ideal-fit", "is_target_archetype": True},
+    }
+    centroids = np.stack(
+        [_unit([rng.gauss(0, 1) for _ in range(dim)]) for _ in range(2)]
+    ).astype(np.float32)
+
     return InMemoryArtifactStore.build(
         {
-            "weights/scoring_weights.locked": (
+            "scoring_weights": (
                 "json",
                 {
-                    "schema_version": "1.1.0",
+                    "layout_version": "1.1.0",
                     "weights": {
                         "skill_match": 0.25,
                         "semantic_fit": 0.2,
@@ -472,12 +503,11 @@ def _build_artifact_store(*, dim: int = DIM) -> InMemoryArtifactStore:
                     "neutral_prior": 0.5,
                 },
             ),
-            "calibration/integrity_thresholds": (
+            "integrity_thresholds": (
                 "json",
                 {
                     "honeypot_threshold": 0.7,
-                    "flag_severity": {},
-                    "flag_weights": {
+                    "risk_weights": {
                         "tenure_exceeds_experience": 0.4,
                         "role_duration_date_mismatch": 0.3,
                         "current_role_has_end_date": 0.3,
@@ -486,70 +516,35 @@ def _build_artifact_store(*, dim: int = DIM) -> InMemoryArtifactStore:
                         "experience_predates_plausible_start": 0.4,
                         "assessment_for_absent_skill": 0.3,
                     },
-                    "tolerance_experience_years": 1.0,
-                    "duration_date_tolerance_months": 2.0,
-                    "expert_zero_usage_min_count": 3,
-                    "experience_predates_tolerance_years": 2,
                 },
             ),
-            "gates/eligibility_rules": (
+            "integrity_rules": (
                 "json",
                 {
-                    "research_min_semantic_fit": 0.6,
-                    "framework_only_stuffing_min": 0.8,
-                    "framework_only_gap_min": 0.8,
-                    "production_recency_max_months": 18,
-                    "adjacent_domain_min_relevant_credibility": 0.2,
-                    "adjacent_domain_min_negative_fit": 0.6,
-                    "closed_source_min_years": 5.0,
-                    "closed_source_max_credible_skills": 0,
-                    "title_chaser_min_hop_rate": 0.6,
-                    "experience_band_min_years": 3.0,
-                    "experience_band_max_years": 12.0,
+                    "rules": [
+                        {"code": code, "severity": "hard"}
+                        for code in (
+                            "tenure_exceeds_experience",
+                            "role_duration_date_mismatch",
+                            "current_role_has_end_date",
+                            "expert_skill_zero_usage",
+                            "education_timeline_impossible",
+                            "experience_predates_plausible_start",
+                            "assessment_for_absent_skill",
+                            "keyword_stuffing",
+                        )
+                    ]
                 },
             ),
-            "calibration/behavioral_weights": (
+            "eligibility_rules": ("yaml", "hard_blocks: []\nsoft_penalties: []\n"),
+            "behavioral_weights": (
                 "json",
-                {
-                    "family_weights": {
-                        "availability": 0.2,
-                        "responsiveness": 0.2,
-                        "engagement": 0.2,
-                        "reliability": 0.2,
-                        "verification": 0.2,
-                    },
-                    "unknown_neutral_base": 0.5,
-                    "m_min": 0.5,
-                    "m_max": 1.0,
-                },
+                {"bounds": {"lower": 0.5, "upper": 1.25}, "neutral_multiplier": 1.0},
             ),
-            "calibration/logistics_weights": (
-                "json",
-                {
-                    "location_fit_factor": {
-                        "preferred_hub": 1.0,
-                        "india_relocatable": 0.9,
-                        "india_non_relocatable": 0.7,
-                        "outside_india_no_sponsor": 0.4,
-                    },
-                    "location_default_factor": 0.7,
-                    "notice_fit_factor": {
-                        "sub_30_ideal": 1.0,
-                        "buyoutable": 0.8,
-                        "over_30_higher_bar": 0.5,
-                    },
-                    "notice_default_factor": 0.7,
-                    "work_mode_weight": 0.1,
-                    "salary_inversion_factor": 0.9,
-                    "m_min": 0.5,
-                    "m_max": 1.0,
-                },
-            ),
-            "anchors/jd_anchors": (
-                "json",
-                {"positive": anchors_positive, "negative": anchors_negative},
-            ),
-            "archetypes/centroids": ("json", centroids),
+            "jd_concepts": ("json", jd_concepts),
+            "anchor_vectors": ("npy", anchor_vectors),
+            "archetypes": ("json", {"archetypes": archetype_catalog}),
+            "centroids": ("npy", centroids),
         },
         layout_version="1.1.0",
         embedding_model_id="stub-embedder-v1",
@@ -811,6 +806,40 @@ def test_cold_start_semantic_miss_falls_back_to_encoder() -> None:
     assert rep.semantic is not None
     assert math.isfinite(float(rep.semantic.net_semantic_fit))
     assert -1.0 <= float(rep.semantic.positive_fit) <= 1.0
+
+
+def test_structurally_disqualified_skip_embedding_and_never_hit_fallback() -> None:
+    """Consulting-only candidates settle CONSULTING_FIRMS_ONLY_CAREER at R2 from
+    career/credibility alone, before any vector lookup -- even with their vector
+    missing from the store (which would otherwise force the onnx fallback), R3
+    must never ask the embedder about them, and R4 must still floor them."""
+    pool = _full_pool()
+    ctx = _build_context(pool, missing_vectors=frozenset(CONSULTING_IDS))
+    embedding_model = ctx.embedding_model
+    assert isinstance(embedding_model, StubEmbeddingModel)
+
+    ingested = stages.r1_ingest(ctx)
+    featured = stages.r2_features(ctx, ingested)
+    for cid in CONSULTING_IDS:
+        findings = featured.structural_findings.get(CandidateId(cid))
+        assert findings is not None
+        assert any(
+            f.code is EligibilityCode.CONSULTING_FIRMS_ONLY_CAREER for f in findings
+        )
+
+    situated = stages.r3_semantic(ctx, featured)
+    # The only missing vectors belong to the consulting-only candidates; if R3
+    # had not skipped them, this miss would force exactly this fallback call.
+    assert embedding_model.encoded_texts == []
+
+    gated = stages.r4_gates(ctx, situated)
+    by_id = {rep.candidate_id: rep for rep in gated.representations}
+    for cid in CONSULTING_IDS:
+        eligibility = by_id[CandidateId(cid)].eligibility
+        assert eligibility is not None
+        assert not eligibility.is_eligible
+        assert eligibility.hard_blocks
+        assert eligibility.soft_penalties == ()
 
 
 def test_determinism_same_input_runs_byte_identical() -> None:

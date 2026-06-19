@@ -58,9 +58,10 @@ from redstack.config.schema import (
     IntegrityThresholds,
     LogisticsPolicy,
     ScoringPolicy,
+    default_eligibility_rules,
 )
 from redstack.domain.candidate.archetype import ArchetypeAssignment
-from redstack.domain.candidate.eligibility import EligibilityReport
+from redstack.domain.candidate.eligibility import EligibilityFinding, EligibilityReport
 from redstack.domain.candidate.identity import Identity
 from redstack.domain.candidate.integrity import IntegrityReport
 from redstack.domain.candidate.representation import CandidateRepresentation
@@ -216,8 +217,42 @@ _DOMAIN_FIT_GROUP_WEIGHT: Final[Mapping[str, float]] = MappingProxyType(
 )
 _OTHER_GROUP_CONFIDENCE_WEIGHT: Final[float] = 0.2
 _GROUP_CONFIDENCE_WEIGHTS: Final[npt.NDArray[np.float64]] = np.array(
-    [_DOMAIN_FIT_GROUP_WEIGHT.get(group, _OTHER_GROUP_CONFIDENCE_WEIGHT) for group in GROUP_ORDER],
+    [
+        _DOMAIN_FIT_GROUP_WEIGHT.get(group, _OTHER_GROUP_CONFIDENCE_WEIGHT)
+        for group in GROUP_ORDER
+    ],
     dtype=np.float64,
+)
+# Denominator of the R5 confidence weighted-average (see ``r5_score``):
+# precomputed once so the per-candidate reduction matches ``np.average``'s
+# ``(a * weights).sum() / weights.sum()`` exactly, just batched over all N
+# rows in one call instead of N separate ``np.average`` calls.
+_GROUP_CONFIDENCE_WEIGHTS_SUM: Final[float] = float(_GROUP_CONFIDENCE_WEIGHTS.sum())
+
+# Static feature-id groupings for R5's component aggregation (``_score_components``/
+# ``_skill_match_value``). Hoisted to module scope so the hot per-candidate loop
+# doesn't reconstruct the same list/tuple literal (and, for skill-match, redo the
+# same f-string formatting) on every one of the 100k calls.
+_SKILL_MATCH_IDS: Final[tuple[str, ...]] = tuple(
+    f"{group}.competency" for group in _COMPETENCY_GROUPS
+)
+_CAREER_FIT_IDS: Final[tuple[str, ...]] = (
+    "career.progression_quality",
+    "pvs.product_density",
+)
+_EXPERIENCE_FIT_IDS: Final[tuple[str, ...]] = (
+    "exp.in_band",
+    "career.experience_authenticity",
+)
+_EDUCATION_FIT_IDS: Final[tuple[str, ...]] = (
+    "edu.tier_score",
+    "edu.field_relevance",
+    "edu.timeline_valid",
+)
+_CREDIBILITY_IDS: Final[tuple[str, ...]] = (
+    "cons.skill_role_coherence",
+    "cons.title_role_coherence",
+    "cons.summary_coherence",
 )
 
 
@@ -344,34 +379,12 @@ def r0_load(
     # ``eligibility_rules`` (real, from O6) is YAML, and carries only human
     # descriptions per code (no calibrated numeric thresholds — O6 never
     # calibrates them, it authors rule *shape*). EligibilityEngine's thresholds
-    # are therefore locked defaults here, not loaded from the artifact; several
-    # are pinned by the EligibilityCode names themselves (18-month / 5-year).
+    # are therefore the locked defaults in ``config.schema.default_eligibility_rules``
+    # (also used by O13a, so both paths agree by construction), not loaded from
+    # the artifact; several are pinned by the EligibilityCode names themselves
+    # (18-month / 5-year).
     _ = artifact_store.load_text(ArtifactKey("eligibility_rules"))  # presence check
-    eligibility_rules = EligibilityRuleSet(
-        research_min_semantic_fit=0.5,
-        framework_only_stuffing_min=0.6,
-        framework_only_gap_min=0.3,
-        production_recency_max_months=18,
-        # Raised from 0.3: diagnostic evidence across 27 real candidates found
-        # a clean gap between domain-irrelevant titles (HR Manager, Civil
-        # Engineer, Accountant, ... — 0.11-0.50) and genuinely ML-titled ones
-        # (Senior ML Engineer / Applied Scientist / RecSys Engineer —
-        # 0.80-0.94); 0.6 sits in that gap with margin on both sides.
-        adjacent_domain_min_relevant_credibility=0.6,
-        adjacent_domain_min_negative_fit=0.3,
-        # Catches the complementary failure mode: a candidate whose few
-        # listed skills are all non-ML but well-corroborated (so
-        # relevant_skill_credibility alone reads high) still needs *some*
-        # claimed ML-specific competency to pass. 0.05 sits comfortably below
-        # every genuinely ML-titled sample observed (0.15-0.19+) and at/above
-        # the near-zero values non-ML titles showed.
-        adjacent_domain_min_skill_match=0.05,
-        closed_source_min_years=5.0,
-        closed_source_max_credible_skills=0,
-        title_chaser_min_hop_rate=0.5,
-        experience_band_min_years=2.0,
-        experience_band_max_years=15.0,
-    )
+    eligibility_rules = default_eligibility_rules()
 
     # ``behavioral_weights`` (real, from O11) is calibrated as monotone curves
     # keyed by {availability, hiring_probability_proxy, confidence_regression} —
@@ -625,6 +638,12 @@ class FeaturedSet:
     cqv: npt.NDArray[np.float32]
     confidence: npt.NDArray[np.float32]
     representations: tuple[CandidateRepresentation, ...]
+    #: ids already certain to be hard-blocked on career/credibility alone
+    #: (``EligibilityEngine.evaluate_structural``) -> their fired findings.
+    #: R3 reads this to skip the vector-store lookup/onnx fallback for them;
+    #: R4 reads it to build their ``EligibilityReport`` without a semantic
+    #: profile. Absent entries simply weren't structurally blocked yet.
+    structural_findings: Mapping[CandidateId, tuple[EligibilityFinding, ...]]
 
 
 def r2_features(
@@ -636,10 +655,12 @@ def r2_features(
         CQVInvariantError: a registry/extractor contract breach (fatal).
     """
     registry = _registry(ctx)
+    eligibility_engine = EligibilityEngine(rules=_eligibility_rules(ctx))
     n = len(ingested)
     cqv = np.zeros((n, registry.dim), dtype=np.float32)
     confidence = np.zeros((n, len(registry.groups)), dtype=np.float32)
     reps: list[CandidateRepresentation] = []
+    structural_findings: dict[CandidateId, tuple[EligibilityFinding, ...]] = {}
 
     for i, cand in enumerate(ingested):
         # ``extract_row`` builds the placeholder (semantic={}) cell map itself
@@ -650,10 +671,17 @@ def r2_features(
         row, conf_row = extract_row(cand.raw, registry, as_of=ctx.as_of)
         cqv[i] = row
         confidence[i] = conf_row
+        career = build_career_profile(cand.raw, as_of=ctx.as_of)
+        credibility = build_credibility_profile(cand.raw)
+        findings = eligibility_engine.evaluate_structural(
+            career=career, credibility=credibility
+        )
+        if findings:
+            structural_findings[cand.candidate_id] = findings
         reps.append(
             cand.representation.with_features(
-                career=build_career_profile(cand.raw, as_of=ctx.as_of),
-                credibility=build_credibility_profile(cand.raw),
+                career=career,
+                credibility=credibility,
                 behavioral=build_behavioral_profile(cand.raw, as_of=ctx.as_of),
                 logistics=build_logistics_profile(cand.raw),
             )
@@ -663,6 +691,7 @@ def r2_features(
         cqv=cqv,
         confidence=confidence,
         representations=tuple(reps),
+        structural_findings=structural_findings,
     )
 
 
@@ -679,10 +708,23 @@ class SituatedSet:
     confidence: npt.NDArray[np.float32]
     representations: tuple[CandidateRepresentation, ...]
     cells: tuple[Mapping[str, FeatureCell], ...]
+    #: carried forward from ``FeaturedSet`` (see its docstring); R4 reads it.
+    structural_findings: Mapping[CandidateId, tuple[EligibilityFinding, ...]]
 
 
 def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
-    """Hydrate semantics by lookup (onnx fallback on a store miss); fold into CQV."""
+    """Hydrate semantics by lookup (onnx fallback on a store miss); fold into CQV.
+
+    Candidates already hard-blocked by ``featured.structural_findings`` (career/
+    credibility alone) never reach the vector store or the onnx fallback —
+    asking about them would be a guaranteed miss for no decision-relevant
+    gain, since their eligibility is already settled. They get a deterministic
+    all-zero placeholder vector instead, run through the same
+    ``SemanticEngine.profile_for`` as everyone else purely to satisfy the
+    representation's FEATURED->SITUATED stage invariant (Domain
+    ``CandidateRepresentation``); R4 ignores this placeholder profile for them
+    and builds their ``EligibilityReport`` from the structural findings alone.
+    """
     registry = _registry(ctx)
     anchor_set = _anchor_set(ctx)
     archetype_space = _archetype_space(ctx)
@@ -693,15 +735,27 @@ def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
         archetypes=archetype_space,
     )
 
-    ids = [cand.candidate_id for cand in featured.candidates]
+    skip_ids = frozenset(featured.structural_findings)
+    embed_candidates = [
+        cand for cand in featured.candidates if cand.candidate_id not in skip_ids
+    ]
+    ids = [cand.candidate_id for cand in embed_candidates]
     documents = {
         cand.candidate_id: _compose_fallback_document(cand.raw)
-        for cand in featured.candidates
+        for cand in embed_candidates
     }
     try:
-        matrix, _misses = engine.resolve_vectors(ids, documents)
+        matrix, _misses = (
+            engine.resolve_vectors(ids, documents)
+            if ids
+            else (np.zeros((0, ctx.vector_store.dim), dtype=np.float32), ())
+        )
     except EmbeddingError as exc:
         raise VectorStoreError(f"semantic fallback encode failed: {exc}") from exc
+    vector_by_id: dict[CandidateId, npt.NDArray[np.float32]] = dict(
+        zip(ids, matrix, strict=True)
+    )
+    placeholder_vector = np.zeros(ctx.vector_store.dim, dtype=np.float32)
 
     cqv = featured.cqv.copy()
     confidence = featured.confidence.copy()
@@ -709,7 +763,7 @@ def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
     cells_list: list[Mapping[str, FeatureCell]] = []
 
     for i, cand in enumerate(featured.candidates):
-        vector = matrix[i]
+        vector = vector_by_id.get(cand.candidate_id, placeholder_vector)
         semantic, archetype = engine.profile_for(vector, row_index=i)
         similarity_map: Mapping[str, Similarity] = {
             str(anchor_id): sim
@@ -739,6 +793,7 @@ def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
         confidence=confidence,
         representations=tuple(reps),
         cells=tuple(cells_list),
+        structural_findings=featured.structural_findings,
     )
 
 
@@ -771,7 +826,15 @@ class GatedSet:
 
 
 def r4_gates(ctx: OnlineRunContext, situated: SituatedSet) -> GatedSet:
-    """Run integrity + eligibility gates; build the floor mask (data, never raises)."""
+    """Run integrity + eligibility gates; build the floor mask (data, never raises).
+
+    Candidates already hard-blocked at R2/R3 on career/credibility alone get
+    their ``EligibilityReport`` built directly from those structural findings
+    instead of the full ``evaluate()`` -- their R3 semantic profile is a
+    zero-vector placeholder (no real document was ever embedded for them), so
+    asking the semantic-dependent detectors about it would report a finding
+    "evidenced" by a fact that isn't true of the candidate.
+    """
     integrity_engine = IntegrityEngine(thresholds=_integrity_thresholds(ctx))
     eligibility_engine = EligibilityEngine(rules=_eligibility_rules(ctx))
 
@@ -783,17 +846,27 @@ def r4_gates(ctx: OnlineRunContext, situated: SituatedSet) -> GatedSet:
         career = rep.require_career()
         credibility = rep.require_credibility()
         logistics = rep.require_logistics()
-        semantic = rep.require_semantic()
 
         integrity_report: IntegrityReport = integrity_engine.evaluate(career, cand.raw)
-        eligibility_report: EligibilityReport = eligibility_engine.evaluate(
-            career=career,
-            credibility=credibility,
-            semantic=semantic,
-            logistics=logistics,
-            jd=_JD_SPEC,
-            skill_match=_skill_match_value(situated.cells[i]),
-        )
+        structural = situated.structural_findings.get(cand.candidate_id)
+        eligibility_report: EligibilityReport
+        if structural is not None:
+            eligibility_report = EligibilityReport(
+                hard_blocks=structural,
+                soft_penalties=(),
+                is_eligible=False,
+                gates_passed=frozenset(),
+            )
+        else:
+            semantic = rep.require_semantic()
+            eligibility_report = eligibility_engine.evaluate(
+                career=career,
+                credibility=credibility,
+                semantic=semantic,
+                logistics=logistics,
+                jd=_JD_SPEC,
+                skill_match=_skill_match_value(situated.cells[i]),
+            )
         floor[i] = integrity_report.is_honeypot or not eligibility_report.is_eligible
         reps.append(
             rep.with_gates(integrity=integrity_report, eligibility=eligibility_report)
@@ -833,6 +906,14 @@ def r5_score(ctx: OnlineRunContext, gated: GatedSet) -> ScoredSet:
     behavioral_engine = BehavioralEngine(policy=behavioral_policy)
     logistics_engine = LogisticsEngine(policy=logistics_policy)
 
+    # Batched once over the full (N, G) confidence matrix instead of N separate
+    # ``np.average`` calls in the loop below -- same reduction
+    # (``(row * weights).sum() / weights.sum()``), just amortized over the whole
+    # population in a single vectorized pass.
+    confidence_weighted_avg = (
+        gated.confidence.astype(np.float64) * _GROUP_CONFIDENCE_WEIGHTS
+    ).sum(axis=1) / _GROUP_CONFIDENCE_WEIGHTS_SUM
+
     scored: list[ScoredCandidate] = []
     for i, cand in enumerate(gated.candidates):
         rep = gated.representations[i]
@@ -846,9 +927,7 @@ def r5_score(ctx: OnlineRunContext, gated: GatedSet) -> ScoredSet:
         )
         logistics_multiplier = logistics_engine.multiplier(rep.require_logistics())
         archetype_adjustment = _archetype_adjustment(rep.archetype)
-        confidence = UnitScore(
-            float(np.average(gated.confidence[i], weights=_GROUP_CONFIDENCE_WEIGHTS))
-        )
+        confidence = UnitScore(float(confidence_weighted_avg[i]))
 
         scored.append(
             scoring_engine.score(
@@ -871,11 +950,19 @@ def _skill_match_value(cells: Mapping[str, FeatureCell]) -> float:
     Shared by ``_score_components`` (the scored component) and ``r4_gates``
     (the eligibility gate input) so both read the identical aggregate.
     """
-    ids = [f"{group}.competency" for group in _COMPETENCY_GROUPS]
-    found = [cells[fid] for fid in ids if fid in cells]
+    found = [cells[fid] for fid in _SKILL_MATCH_IDS if fid in cells]
     if not found:
         return 0.0
     return clamp_unit(math.fsum(c.value for c in found) / len(found))
+
+
+def _agg(cells: Mapping[str, FeatureCell], ids: Sequence[str]) -> ComponentRaw:
+    found = [cells[fid] for fid in ids if fid in cells]
+    if not found:
+        return (UnitScore(0.0), ())
+    value = UnitScore(clamp_unit(math.fsum(c.value for c in found) / len(found)))
+    evidence = tuple(c.evidence[0] for c in found)
+    return (value, evidence)
 
 
 def _score_components(
@@ -884,32 +971,15 @@ def _score_components(
     archetype: ArchetypeAssignment | None,
 ) -> dict[ScoreComponent, ComponentRaw]:
     """Project the CQV cells into the seven ``ScoreComponent`` raw values."""
-
-    def agg(ids: Sequence[str]) -> ComponentRaw:
-        found = [cells[fid] for fid in ids if fid in cells]
-        if not found:
-            return (UnitScore(0.0), ())
-        value = UnitScore(clamp_unit(math.fsum(c.value for c in found) / len(found)))
-        evidence = tuple(c.evidence[0] for c in found)
-        return (value, evidence)
-
     skill_match_value = _skill_match_value(cells)
     skill_match_evidence = tuple(
-        cells[fid].evidence[0]
-        for fid in (f"{group}.competency" for group in _COMPETENCY_GROUPS)
-        if fid in cells
+        cells[fid].evidence[0] for fid in _SKILL_MATCH_IDS if fid in cells
     )
     skill_match: ComponentRaw = (UnitScore(skill_match_value), skill_match_evidence)
-    career_fit = agg(["career.progression_quality", "pvs.product_density"])
-    experience_fit = agg(["exp.in_band", "career.experience_authenticity"])
-    education_fit = agg(["edu.tier_score", "edu.field_relevance", "edu.timeline_valid"])
-    credibility = agg(
-        [
-            "cons.skill_role_coherence",
-            "cons.title_role_coherence",
-            "cons.summary_coherence",
-        ]
-    )
+    career_fit = _agg(cells, _CAREER_FIT_IDS)
+    experience_fit = _agg(cells, _EXPERIENCE_FIT_IDS)
+    education_fit = _agg(cells, _EDUCATION_FIT_IDS)
+    credibility = _agg(cells, _CREDIBILITY_IDS)
 
     if semantic is not None:
         semantic_fit: ComponentRaw = (

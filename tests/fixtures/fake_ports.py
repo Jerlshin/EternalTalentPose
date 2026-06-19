@@ -367,7 +367,7 @@ class StubEmbeddingModel:
     never an all-zero vector (the contract's "never mask failure" rule).
     """
 
-    __slots__ = ("_dim", "_fail_on", "_model_id")
+    __slots__ = ("_dim", "_fail_on", "_model_id", "encoded_texts")
 
     def __init__(
         self,
@@ -381,6 +381,10 @@ class StubEmbeddingModel:
         self._dim: Final[int] = dim
         self._model_id: Final[str] = model_id
         self._fail_on: Final[frozenset[str]] = frozenset(fail_on)
+        #: every text ever handed to :meth:`encode`, in call order -- lets a
+        #: test assert the (expensive) encode path was never reached for a
+        #: given candidate (e.g. one skipped via a pre-embedding hard gate).
+        self.encoded_texts: list[str] = []
 
     @property
     def dim(self) -> int:
@@ -398,6 +402,7 @@ class StubEmbeddingModel:
         Raises:
             EmbeddingError: ``text`` is one of the configured ``fail_on`` texts.
         """
+        self.encoded_texts.extend(texts)
         if not texts:
             return np.zeros((0, self._dim), dtype=np.float32)
         rows = [self._encode_one(text) for text in texts]

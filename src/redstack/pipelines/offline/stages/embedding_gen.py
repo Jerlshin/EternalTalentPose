@@ -38,7 +38,12 @@ from typing import Final
 import numpy as np
 import numpy.typing as npt
 
-from redstack.domain.errors import ArtifactContractError
+from redstack.config.schema import default_eligibility_rules
+from redstack.domain.errors import ArtifactContractError, SchemaError
+from redstack.engines.eligibility import EligibilityEngine
+from redstack.features.extraction import build_career_profile, build_credibility_profile
+from redstack.features.parsing import validate as validate_raw
+from redstack.pipelines.offline.context import OfflinePipelineContext
 from redstack.pipelines.offline.runner import StageReceipt, StageResult
 from redstack.pipelines.offline.stages import OfflineStage
 from redstack.pipelines.offline.stages.normalization import (
@@ -47,8 +52,6 @@ from redstack.pipelines.offline.stages.normalization import (
 )
 from redstack.ports._types import SourceMalformed, SourceOk
 from redstack.ports.embedding import OnnxExportCapable
-
-from redstack.pipelines.offline.context import OfflinePipelineContext
 
 __all__: tuple[str, ...] = (
     "CandidateEmbeddingStage",
@@ -111,7 +114,21 @@ class _EmbeddingStageBase(OfflineStage):
 
 
 class CandidateEmbeddingStage(_EmbeddingStageBase):
-    """O13a — stream the pool, encode composed docs → ``candidate_vectors.parquet``."""
+    """O13a — stream the pool, encode composed docs → ``candidate_vectors.parquet``.
+
+    Skips the sentence-transformers call entirely for candidates already
+    certain to be hard-blocked on career/credibility alone (consulting-only
+    career, langchain/openai-only-recent, no-production-code-18m --
+    ``EligibilityEngine.evaluate_structural``) -- the expensive part of this
+    stage is the encode, not the structural check, so there is no embedding
+    work to save for the other three hard codes (they need the embedding's
+    own ``SemanticProfile`` output to decide). Their row is simply omitted
+    from ``candidate_vectors.parquet`` (the registry has no full-coverage
+    validator over it; the online R2 stage independently reaches the same
+    verdict from the same locked ``EligibilityRuleSet``, so it never queries
+    the vector store for these ids and so never triggers the onnx fallback
+    a missing row would otherwise cause).
+    """
 
     stage_id = "O13a"
     stage_version = "1.0"
@@ -121,11 +138,13 @@ class CandidateEmbeddingStage(_EmbeddingStageBase):
         ctx: OfflinePipelineContext,
         upstream: Mapping[str, StageReceipt],
     ) -> StageResult:
+        eligibility_engine = EligibilityEngine(rules=default_eligibility_rules())
         ids: list[str] = []
         chunks: list[npt.NDArray[np.float32]] = []
         pending_ids: list[str] = []
         pending_docs: list[str] = []
         encoded = 0
+        disqualified = 0
 
         def flush() -> None:
             nonlocal encoded
@@ -147,6 +166,9 @@ class CandidateEmbeddingStage(_EmbeddingStageBase):
             cid = raw.get("candidate_id")
             if not isinstance(cid, str) or not cid:
                 continue
+            if self._is_structurally_disqualified(raw, ctx, eligibility_engine):
+                disqualified += 1
+                continue
             pending_ids.append(cid)
             pending_docs.append(compose_embedding_document(raw))
             if len(pending_docs) >= _FLUSH_EVERY:
@@ -167,11 +189,35 @@ class CandidateEmbeddingStage(_EmbeddingStageBase):
         )
         metrics: dict[str, object] = {
             "encoded_candidates": encoded,
+            "disqualified_skipped": disqualified,
             "dim": int(vectors.shape[1]),
             "model_id": ctx.embedding_model.model_id,
             "recipe_version": EMBEDDING_DOC_RECIPE_VERSION,
         }
         return StageResult(artifacts=(artifact,), metrics=metrics)
+
+    @staticmethod
+    def _is_structurally_disqualified(
+        raw: Mapping[str, object],
+        ctx: OfflinePipelineContext,
+        eligibility_engine: EligibilityEngine,
+    ) -> bool:
+        """Pre-embedding hard gate: career/credibility-only disqualifiers.
+
+        Fails open -- a record that doesn't validate is left to the embedding
+        path (and whatever downstream stage already owns malformed-record
+        handling), never silently skipped here on a parse failure.
+        """
+        try:
+            candidate = validate_raw(raw)
+        except SchemaError:
+            return False
+        career = build_career_profile(candidate, as_of=ctx.as_of)
+        credibility = build_credibility_profile(candidate)
+        findings = eligibility_engine.evaluate_structural(
+            career=career, credibility=credibility
+        )
+        return bool(findings)
 
 
 class AnchorEmbeddingStage(_EmbeddingStageBase):

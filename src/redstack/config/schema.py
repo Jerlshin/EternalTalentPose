@@ -514,6 +514,43 @@ class EligibilityRuleSet(_FrozenConfig):
     experience_band_max_years: float = Field(ge=0.0)
 
 
+def default_eligibility_rules() -> EligibilityRuleSet:
+    """The locked ``EligibilityRuleSet`` thresholds.
+
+    ``gates/eligibility_rules.yaml`` (O6) carries only human descriptions per
+    code -- O6 never calibrates numeric thresholds, it authors rule *shape*
+    (no gold-labeled data exists for these). The literal values below are
+    therefore the single source of truth both the offline (O13a) and online
+    (R0) paths construct their ``EligibilityEngine`` from, so the two stay in
+    lockstep by construction rather than by two hand-synced literals.
+    """
+    return EligibilityRuleSet(
+        research_min_semantic_fit=0.5,
+        framework_only_stuffing_min=0.6,
+        framework_only_gap_min=0.3,
+        production_recency_max_months=18,
+        # Raised from 0.3: diagnostic evidence across 27 real candidates found
+        # a clean gap between domain-irrelevant titles (HR Manager, Civil
+        # Engineer, Accountant, ... — 0.11-0.50) and genuinely ML-titled ones
+        # (Senior ML Engineer / Applied Scientist / RecSys Engineer —
+        # 0.80-0.94); 0.6 sits in that gap with margin on both sides.
+        adjacent_domain_min_relevant_credibility=0.6,
+        adjacent_domain_min_negative_fit=0.3,
+        # Catches the complementary failure mode: a candidate whose few
+        # listed skills are all non-ML but well-corroborated (so
+        # relevant_skill_credibility alone reads high) still needs *some*
+        # claimed ML-specific competency to pass. 0.05 sits comfortably below
+        # every genuinely ML-titled sample observed (0.15-0.19+) and at/above
+        # the near-zero values non-ML titles showed.
+        adjacent_domain_min_skill_match=0.05,
+        closed_source_min_years=5.0,
+        closed_source_max_credible_skills=0,
+        title_chaser_min_hop_rate=0.5,
+        experience_band_min_years=2.0,
+        experience_band_max_years=15.0,
+    )
+
+
 class ScoringPolicy(_FrozenConfig):
     """Scoring combination policy (floor + neutral prior); consumed by
     ``ScoringEngine``."""

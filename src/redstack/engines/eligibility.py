@@ -65,6 +65,18 @@ _SOFT_CODES: Final[frozenset[EligibilityCode]] = frozenset(
     )
 )
 _ALL_CODES: Final[frozenset[EligibilityCode]] = _HARD_CODES | _SOFT_CODES
+#: Hard codes decidable from CareerProfile + CredibilityProfile alone --
+#: PURE_RESEARCH_NO_PRODUCTION and PRIMARY_CV_SPEECH_ROBOTICS_NO_NLP need
+#: SemanticProfile/skill_match (only available once the candidate is embedded)
+#: and are deliberately excluded. Lets a caller pre-gate before the expensive
+#: embedding step for the subset that doesn't need its output.
+_STRUCTURAL_HARD_CODES: Final[frozenset[EligibilityCode]] = frozenset(
+    (
+        EligibilityCode.CONSULTING_FIRMS_ONLY_CAREER,
+        EligibilityCode.LANGCHAIN_OPENAI_ONLY_RECENT,
+        EligibilityCode.NO_PRODUCTION_CODE_18M,
+    )
+)
 
 
 @final
@@ -130,6 +142,29 @@ class EligibilityEngine(BaseModel):
             soft_penalties=soft_penalties,
             is_eligible=(len(hard_blocks) == 0),
             gates_passed=gates_passed,
+        )
+
+    def evaluate_structural(
+        self, *, career: CareerProfile, credibility: CredibilityProfile
+    ) -> tuple[EligibilityFinding, ...]:
+        """Pre-embedding hard-gate subset (``_STRUCTURAL_HARD_CODES`` only).
+
+        For callers that need to know whether a candidate is *already*
+        certain to be hard-blocked before the embedding step runs (so they
+        can skip it): consulting-only career, langchain/openai-only-recent,
+        and no-production-code-18m all read only ``career``/``credibility``.
+        Findings are sorted by code, matching :meth:`evaluate`'s convention.
+        Does not run the soft detectors or the two semantic-dependent hard
+        detectors -- a candidate with no findings here may still be blocked
+        once a real :class:`SemanticProfile` exists.
+        """
+        candidates: list[EligibilityFinding | None] = [
+            self._consulting_firms_only_career(career),
+            self._langchain_openai_only_recent(credibility),
+            self._no_production_code_18m(career),
+        ]
+        return tuple(
+            sorted((f for f in candidates if f is not None), key=lambda f: f.code.value)
         )
 
     # --------------------------------------------------------------- builders
