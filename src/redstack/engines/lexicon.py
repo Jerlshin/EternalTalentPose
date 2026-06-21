@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from typing import final
@@ -38,14 +36,18 @@ class LexiconMatch(BaseModel):
 class LexiconEngine(BaseModel):
     """Stateless, pure symbolic matcher over normalized free-text."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid", arbitrary_types_allowed=False)
+    model_config = ConfigDict(
+        frozen=True, extra="forbid", arbitrary_types_allowed=False
+    )
 
     lexicon: CompiledLexicon
     # A mention equal to this count saturates corroboration to ~1.0.
     mention_saturation: float = Field(default=4.0, gt=0.0)
 
     # ------------------------------------------------------------------ public
-    def match_text(self, concept: str, normalized_text: str, *, path: str) -> LexiconMatch:
+    def match_text(
+        self, concept: str, normalized_text: str, *, path: str
+    ) -> LexiconMatch:
         """Count term/phrase hits for one concept inside one normalized text span."""
         return self._match_tokens(concept, (normalized_text,), path=path)
 
@@ -87,8 +89,13 @@ class LexiconEngine(BaseModel):
                 continue
             hits += local
             evidence.append(
+                # DERIVED, not CAREER_FIELD: this engine never sees a
+                # RawCandidate (pure text matcher), so it cannot validate
+                # ``path`` against one -- the path is a caller-supplied
+                # locator, the value a synthesized "concept:count" label,
+                # not a literal field citation.
                 make_evidence(
-                    EvidenceKind.CAREER_FIELD,
+                    EvidenceKind.DERIVED,
                     f"{path}[{offset}]",
                     f"{concept}:{local}",
                 )
@@ -100,7 +107,9 @@ class LexiconEngine(BaseModel):
             corroboration = UnitScore(0.0)
         else:
             corroboration = UnitScore(
-                clamp_unit(bounded_log_scale(float(hits), saturation=self.mention_saturation))
+                clamp_unit(
+                    bounded_log_scale(float(hits), saturation=self.mention_saturation)
+                )
             )
         concept_hits = ((concept, hits),) if hits > 0 else ()
         return LexiconMatch(

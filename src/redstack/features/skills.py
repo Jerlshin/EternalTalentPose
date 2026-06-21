@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import re
@@ -131,11 +130,15 @@ def _skill_trust(skill: RawSkill, assessment: float | None) -> float:
     """
     from redstack.features.view import bounded_log_scale
 
-    e_norm = bounded_log_scale(float(skill.endorsements), saturation=ENDORSEMENT_SATURATION)
+    e_norm = bounded_log_scale(
+        float(skill.endorsements), saturation=ENDORSEMENT_SATURATION
+    )
     if skill.duration_months is None:
         d_norm = 0.0
     else:
-        d_norm = bounded_log_scale(float(skill.duration_months), saturation=DURATION_SATURATION_MONTHS)
+        d_norm = bounded_log_scale(
+            float(skill.duration_months), saturation=DURATION_SATURATION_MONTHS
+        )
     a_norm = 0.0 if assessment is None else clamp_unit(assessment / 100.0)
     return clamp_unit(0.4 * e_norm + 0.3 * d_norm + 0.3 * a_norm)
 
@@ -175,9 +178,7 @@ def _competency_group(
     trust = _noisy_or(tuple(t for (_, _, t) in matched))
 
     # in_career: fraction of concept tokens that appear in role descriptions.
-    in_career = clamp_unit(
-        len(tokens & description_tokens) / float(len(tokens))
-    )
+    in_career = clamp_unit(len(tokens & description_tokens) / float(len(tokens)))
 
     # semantic: resolved anchor cosine mapped from [-1, 1] to [0, 1].
     sim = semantic.get(concept.anchor_id)
@@ -185,10 +186,14 @@ def _competency_group(
     semantic_value = clamp_unit((float(sim) + 1.0) / 2.0) if sim is not None else 0.0
 
     corroboration = mean_of((trust, in_career, semantic_value))
-    weighted = _W_TRUST * trust + _W_IN_CAREER * in_career + _W_SEMANTIC * semantic_value
+    weighted = (
+        _W_TRUST * trust + _W_IN_CAREER * in_career + _W_SEMANTIC * semantic_value
+    )
     stuffing_penalty = clamp_unit(claimed - corroboration)
     # Cap at the corroboration mean ⇒ satisfies the competency-LE contract.
-    competency = clamp_unit(min(weighted, corroboration) - _W_STUFFING * stuffing_penalty)
+    competency = clamp_unit(
+        min(weighted, corroboration) - _W_STUFFING * stuffing_penalty
+    )
 
     sources_present = (
         (1 if trust > 0.0 else 0)
@@ -200,7 +205,7 @@ def _competency_group(
     # Evidence: matched skills (capped), else a derived concept marker.
     if matched:
         skill_ev = tuple(
-            make_evidence(_SKILL, f"skills[{idx}].name", skill.name)
+            make_evidence(_SKILL, f"skills[{idx}].name", skill.name, raw=raw)
             for (idx, skill, _) in matched[:_MAX_SKILL_EVIDENCE]
         )
     else:
@@ -225,7 +230,11 @@ def _competency_group(
         ),
         (
             f"{group}.competency",
-            cell(competency, corroboration_conf, (make_evidence(_DERIVED, f"{group}.competency", competency),)),
+            cell(
+                competency,
+                corroboration_conf,
+                (make_evidence(_DERIVED, f"{group}.competency", competency),),
+            ),
         ),
     ]
 
@@ -271,8 +280,15 @@ def _consistency(
                 title_role,
                 0.7,
                 (
-                    make_evidence(_PROFILE, "profile.current_title", profile.current_title),
-                    make_evidence(_CAREER, current_desc_path, "role_description"),
+                    make_evidence(
+                        _PROFILE,
+                        "profile.current_title",
+                        profile.current_title,
+                        raw=raw,
+                    ),
+                    make_evidence(
+                        _CAREER, current_desc_path, "role_description", raw=raw
+                    ),
                 ),
             ),
         ),
@@ -289,7 +305,14 @@ def _consistency(
             cell(
                 summary_coherence,
                 0.6,
-                (make_evidence(_PROFILE, "profile.summary", profile.summary[:64] or "summary"),),
+                (
+                    make_evidence(
+                        _PROFILE,
+                        "profile.summary",
+                        profile.summary[:64] or "summary",
+                        raw=raw,
+                    ),
+                ),
             ),
         ),
     ]

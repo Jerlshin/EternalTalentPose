@@ -1,0 +1,11 @@
+calibrated_by: locked-heuristics (no gold-label search)
+layout_version: 1.1.0
+neutral_prior: 0.5
+weights:
+  archetype_fit: 0.03
+  career_fit: 0.2
+  credibility: 0.1
+  education_fit: 0.04
+  experience_fit: 0.08
+  semantic_fit: 0.3
+  skill_match: 0.25

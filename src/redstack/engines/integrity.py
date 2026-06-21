@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 from datetime import date
@@ -11,6 +9,7 @@ from redstack.config.schema import IntegrityThresholds
 from redstack.domain.candidate.career import CareerProfile, PositionFact
 from redstack.domain.candidate.integrity import IntegrityFinding, IntegrityReport
 from redstack.domain.enums import EvidenceKind, IntegrityFlag, Proficiency, Severity
+from redstack.domain.errors import ProvenanceError
 from redstack.domain.ids import UnitScore
 from redstack.domain.provenance import EvidenceRef
 from redstack.domain.source import RawCandidate
@@ -32,7 +31,9 @@ class IntegrityEngine(BaseModel):
     ``(CareerProfile, RawCandidate)`` given those thresholds.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid", arbitrary_types_allowed=False)
+    model_config = ConfigDict(
+        frozen=True, extra="forbid", arbitrary_types_allowed=False
+    )
 
     thresholds: IntegrityThresholds
 
@@ -41,8 +42,8 @@ class IntegrityEngine(BaseModel):
         """Run all seven rules, aggregate risk, finalize the ``IntegrityReport``."""
         findings: list[IntegrityFinding] = []
         findings.extend(self._tenure_exceeds_experience(career, raw))
-        findings.extend(self._role_duration_date_mismatch(career))
-        findings.extend(self._current_role_has_end_date(career))
+        findings.extend(self._role_duration_date_mismatch(career, raw))
+        findings.extend(self._current_role_has_end_date(career, raw))
         findings.extend(self._expert_skill_zero_usage(raw))
         findings.extend(self._education_timeline_impossible(raw))
         findings.extend(self._experience_predates_plausible_start(career, raw))
@@ -90,10 +91,15 @@ class IntegrityEngine(BaseModel):
         flag = IntegrityFlag.TENURE_EXCEEDS_EXPERIENCE
         evidence = (
             make_evidence(
-                EvidenceKind.DERIVED, "career.summed_duration_years", round(summed_years, 4)
+                EvidenceKind.DERIVED,
+                "career.summed_duration_years",
+                round(summed_years, 4),
             ),
             make_evidence(
-                EvidenceKind.PROFILE_FIELD, "profile.years_of_experience", stated
+                EvidenceKind.PROFILE_FIELD,
+                "profile.years_of_experience",
+                stated,
+                raw=raw,
             ),
         )
         return (
@@ -108,19 +114,41 @@ class IntegrityEngine(BaseModel):
             ),
         )
 
+    @staticmethod
+    def _raw_index(raw: RawCandidate, pos: PositionFact) -> int:
+        """The ``raw.career_history`` index matching a ``PositionFact``.
+
+        ``CareerProfile.positions`` is reverse-chronologically re-sorted by
+        :func:`build_career_profile`, so its index does not generally line up
+        with ``raw.career_history``'s -- citing ``positions``' enumeration
+        index directly would mint evidence pointing at an unrelated raw
+        record. ``(company, start_date)`` is copied verbatim into
+        ``PositionFact`` and is therefore a reliable join key back to raw.
+        """
+        for index, candidate in enumerate(raw.career_history):
+            if (
+                candidate.company == pos.company
+                and candidate.start_date == pos.start_date
+            ):
+                return index
+        raise ProvenanceError(
+            f"no career_history entry matches position {pos.company!r}/{pos.start_date}"
+        )
+
     # -- rule 2 -------------------------------------------------------------- #
     def _role_duration_date_mismatch(
-        self, career: CareerProfile
+        self, career: CareerProfile, raw: RawCandidate
     ) -> tuple[IntegrityFinding, ...]:
         flag = IntegrityFlag.ROLE_DURATION_DATE_MISMATCH
         out: list[IntegrityFinding] = []
         tol = float(self.thresholds.duration_date_tolerance_months)
-        for idx, pos in enumerate(career.positions):
+        for pos in career.positions:
             if pos.end_date is None:
                 continue
             span_months = days_between(pos.end_date, pos.start_date) / _DAYS_PER_MONTH
             if abs(span_months - float(pos.duration_months)) <= tol:
                 continue
+            idx = self._raw_index(raw, pos)
             out.append(
                 IntegrityFinding(
                     code=flag,
@@ -152,13 +180,14 @@ class IntegrityEngine(BaseModel):
 
     # -- rule 3 -------------------------------------------------------------- #
     def _current_role_has_end_date(
-        self, career: CareerProfile
+        self, career: CareerProfile, raw: RawCandidate
     ) -> tuple[IntegrityFinding, ...]:
         flag = IntegrityFlag.CURRENT_ROLE_HAS_END_DATE
         out: list[IntegrityFinding] = []
-        for idx, pos in enumerate(career.positions):
+        for pos in career.positions:
             if not (pos.is_current and pos.end_date is not None):
                 continue
+            idx = self._raw_index(raw, pos)
             out.append(
                 IntegrityFinding(
                     code=flag,
@@ -188,13 +217,15 @@ class IntegrityEngine(BaseModel):
         offenders: list[tuple[int, str]] = []
         for idx, skill in enumerate(raw.skills):
             advanced = skill.proficiency >= Proficiency.ADVANCED
-            zero_usage = skill.duration_months is None or int(skill.duration_months) == 0
+            zero_usage = (
+                skill.duration_months is None or int(skill.duration_months) == 0
+            )
             if advanced and zero_usage:
                 offenders.append((idx, skill.name))
         if len(offenders) < self.thresholds.expert_zero_usage_min_count:
             return ()
         evidence = tuple(
-            make_evidence(EvidenceKind.SKILL, f"skills[{idx}].name", name)
+            make_evidence(EvidenceKind.SKILL, f"skills[{idx}].name", name, raw=raw)
             for idx, name in offenders
         )
         return (
@@ -216,9 +247,7 @@ class IntegrityEngine(BaseModel):
         flag = IntegrityFlag.EDUCATION_TIMELINE_IMPOSSIBLE
         out: list[IntegrityFinding] = []
         for idx, edu in enumerate(raw.education):
-            if edu.end_year is None or edu.start_year is None:
-                continue
-            if int(edu.end_year) >= int(edu.start_year):
+            if edu.end_year >= edu.start_year:
                 continue
             out.append(
                 IntegrityFinding(
@@ -229,11 +258,13 @@ class IntegrityEngine(BaseModel):
                             EvidenceKind.EDUCATION,
                             f"education[{idx}].start_year",
                             int(edu.start_year),
+                            raw=raw,
                         ),
                         make_evidence(
                             EvidenceKind.EDUCATION,
                             f"education[{idx}].end_year",
                             int(edu.end_year),
+                            raw=raw,
                         ),
                     ),
                     detail=(
@@ -251,16 +282,18 @@ class IntegrityEngine(BaseModel):
         flag = IntegrityFlag.EXPERIENCE_PREDATES_PLAUSIBLE_START
         if not career.positions:
             return ()
-        start_years = [
-            int(e.start_year) for e in raw.education if e.start_year is not None
-        ]
-        if not start_years:
+        if not raw.education:
             return ()
-        earliest_education = min(start_years)
-        earliest_career: date = min(p.start_date for p in career.positions)
+        edu_idx = min(
+            range(len(raw.education)), key=lambda i: raw.education[i].start_year
+        )
+        earliest_education = raw.education[edu_idx].start_year
+        earliest_position = min(career.positions, key=lambda p: p.start_date)
+        earliest_career: date = earliest_position.start_date
         tol = self.thresholds.experience_predates_tolerance_years
         if earliest_career.year >= earliest_education - tol:
             return ()
+        career_idx = self._raw_index(raw, earliest_position)
         return (
             IntegrityFinding(
                 code=flag,
@@ -268,13 +301,15 @@ class IntegrityEngine(BaseModel):
                 evidence=(
                     make_evidence(
                         EvidenceKind.CAREER_FIELD,
-                        "career.earliest_start_year",
+                        f"career_history[{career_idx}].start_date",
                         earliest_career.year,
+                        raw=raw,
                     ),
                     make_evidence(
                         EvidenceKind.EDUCATION,
-                        "education.earliest_start_year",
+                        f"education[{edu_idx}].start_year",
                         earliest_education,
+                        raw=raw,
                     ),
                 ),
                 detail=(
@@ -299,8 +334,9 @@ class IntegrityEngine(BaseModel):
         evidence = tuple(
             make_evidence(
                 EvidenceKind.SIGNAL,
-                f"redrob_signals.skill_assessment_scores.{name}",
+                f'redrob_signals.skill_assessment_scores["{name}"]',
                 float(scores[name]),
+                raw=raw,
             )
             for name in orphans
         )

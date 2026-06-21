@@ -286,6 +286,19 @@ class OnlinePipeline:
             )
             clock.record("R9", started)
         finally:
+            # gc.disable() never promotes anything out of generation 0 (that
+            # only happens during a collection), so every object allocated
+            # since the call above — tens of millions, at full pool scale —
+            # is still sitting in gen0. Re-enabling naively leaves the *next*
+            # allocation-triggered collection to cycle-scan that entire
+            # backlog in one pass, even though it's claimed acyclic (so the
+            # scan is pure waste): a multi-minute stall in practice, after
+            # the run's actual output has already been written. Freezing
+            # moves the live set into the permanent generation first, so the
+            # cyclic collector skips it entirely; refcounting (unaffected by
+            # freeze) still reclaims every object normally as soon as it's
+            # dropped, so this is free as long as the acyclic claim holds.
+            gc.freeze()
             if gc_was_enabled:
                 gc.enable()
 

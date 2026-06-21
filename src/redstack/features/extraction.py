@@ -465,11 +465,14 @@ def _simple_groups(
     Several reuse an already-computed ``career.*``/``pvs.*`` cell as an honest
     proxy rather than re-deriving an equivalent signal from scratch.
     """
-    id_ev = make_evidence(EvidenceKind.PROFILE_FIELD, "candidate_id", raw.candidate_id)
+    id_ev = make_evidence(
+        EvidenceKind.PROFILE_FIELD, "candidate_id", raw.candidate_id, raw=raw
+    )
     years_ev = make_evidence(
         EvidenceKind.PROFILE_FIELD,
         "profile.years_of_experience",
         float(raw.profile.years_of_experience),
+        raw=raw,
     )
     authenticity = career_cells["career.experience_authenticity"]
     progression = career_cells["career.progression_quality"]
@@ -485,13 +488,17 @@ def _simple_groups(
         EvidenceKind.CAREER_FIELD,
         "career_history[0].company_size",
         first_position.company_size.value,
+        raw=raw,
     )
     founder_hit = any(
         any(token in p.title.casefold() for token in _FOUNDER_TITLE_TOKENS)
         for p in raw.career_history
     )
     founder_ev = make_evidence(
-        EvidenceKind.CAREER_FIELD, "career_history[0].title", first_position.title
+        EvidenceKind.CAREER_FIELD,
+        "career_history[0].title",
+        first_position.title,
+        raw=raw,
     )
 
     return {

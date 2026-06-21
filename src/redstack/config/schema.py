@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import enum
@@ -33,6 +32,8 @@ __all__ = [
     "ScoringWeightsConfig",
     "ConceptSeed",
     "LexiconSeedConfig",
+    "CompiledLexiconConcept",
+    "CompiledLexicon",
     "AnchorIntent",
     "JdAnchorsConfig",
     "EligibilityRule",
@@ -335,6 +336,25 @@ class LexiconSeedConfig(_FrozenConfig):
     """The ``lexicon/lexicon.seed.yaml`` authoring seed: concept -> seed terms."""
 
     concepts: dict[str, ConceptSeed] = Field(min_length=1)
+
+
+class CompiledLexiconConcept(_FrozenConfig):
+    """One concept's matchable surface forms inside the compiled lexicon.
+
+    ``terms`` is the bag-of-words membership set mined by O4 (single tokens);
+    ``phrases`` is the set of multi-word surface forms admitted for that
+    concept. Both are consulted for plain substring/token-set matching by
+    :class:`redstack.engines.lexicon.LexiconEngine`.
+    """
+
+    terms: frozenset[str] = Field(default_factory=frozenset)
+    phrases: tuple[str, ...] = Field(default_factory=tuple)
+
+
+class CompiledLexicon(_FrozenConfig):
+    """The O4 ``lexicon_compiled`` artifact: concept id -> matchable surface forms."""
+
+    concepts: dict[str, CompiledLexiconConcept] = Field(default_factory=dict)
 
 
 class AnchorIntent(_FrozenConfig):

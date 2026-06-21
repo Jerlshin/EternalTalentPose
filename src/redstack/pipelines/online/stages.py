@@ -1113,7 +1113,7 @@ def r8_submit(ctx: OnlineRunContext, ranking: Ranking) -> SubmissionReceipt:
             finding (no rejectable file is written).
     """
     validation_engine = ValidationEngine(expected_size=ranking.size)
-    report = validation_engine.validate(ranking)
+    report = validation_engine.validate_ranking(ranking)
     if not report.is_valid:
         hard = [f for f in report.findings if f.severity is Severity.HARD]
         raise SubmissionContractError(
