@@ -56,19 +56,37 @@ _BASE_SIGNALS = {
 }
 
 
-def _raw(career_history: list[dict[str, object]]) -> RawCandidate:
+def _raw(
+    career_history: list[dict[str, object]],
+    *,
+    education: list[dict[str, object]] | None = None,
+) -> RawCandidate:
     return RawCandidate.model_validate(
         {
             "candidate_id": "CAND_0000001",
             "profile": _BASE_PROFILE,
             "career_history": career_history,
-            "education": [],
+            "education": education if education is not None else [],
             "skills": [],
             "certifications": [],
             "languages": [],
             "redrob_signals": _BASE_SIGNALS,
         }
     )
+
+
+def _education(
+    *, degree: str, start_year: int, end_year: int
+) -> dict[str, object]:
+    return {
+        "institution": "Test University",
+        "degree": degree,
+        "field_of_study": "Computer Science",
+        "start_year": start_year,
+        "end_year": end_year,
+        "grade": None,
+        "tier": "tier_2",
+    }
 
 
 def test_role_duration_mismatch_evidence_cites_the_flagged_raw_position() -> None:
@@ -160,3 +178,77 @@ def test_current_role_has_end_date_evidence_cites_the_flagged_raw_position() -> 
     assert len(findings) == 1
     paths = {e.path for e in findings[0].evidence}
     assert all(path.startswith("career_history[1]") for path in paths), paths
+
+
+_ONE_POSITION = [
+    {
+        "company": "Acme",
+        "title": "Engineer",
+        "start_date": "2022-01-01",
+        "end_date": None,
+        "duration_months": 24,
+        "is_current": True,
+        "industry": "software",
+        "company_size": "11-50",
+        "description": "current job",
+    }
+]
+
+
+def test_degree_rank_backwards_fires_for_bachelors_after_masters() -> None:
+    """Regression: a Master's degree (2003-2008) followed by a Bachelor's
+    degree (2011-2016) is an impossible academic sequence -- you don't enroll
+    in undergrad after finishing a graduate degree -- but neither individual
+    entry is internally backwards (each has end_year >= start_year), so rule 5
+    (_education_timeline_impossible) alone never caught it.
+    """
+    raw = _raw(
+        _ONE_POSITION,
+        education=[
+            _education(degree="M.E.", start_year=2003, end_year=2008),
+            _education(degree="B.Tech", start_year=2011, end_year=2016),
+        ],
+    )
+    career = build_career_profile(raw, as_of=date(2024, 6, 1))
+    report = _ENGINE.evaluate(career, raw)
+    findings = [
+        f for f in report.findings if f.code is IntegrityFlag.EDUCATION_TIMELINE_IMPOSSIBLE
+    ]
+    assert len(findings) == 1
+    paths = {e.path for e in findings[0].evidence}
+    assert any(path.startswith("education[1]") for path in paths), paths
+
+
+def test_degree_rank_forwards_does_not_fire() -> None:
+    """A normal Bachelor's-then-Master's sequence must not be flagged."""
+    raw = _raw(
+        _ONE_POSITION,
+        education=[
+            _education(degree="B.Tech", start_year=2011, end_year=2015),
+            _education(degree="M.Tech", start_year=2015, end_year=2017),
+        ],
+    )
+    career = build_career_profile(raw, as_of=date(2024, 6, 1))
+    report = _ENGINE.evaluate(career, raw)
+    findings = [
+        f for f in report.findings if f.code is IntegrityFlag.EDUCATION_TIMELINE_IMPOSSIBLE
+    ]
+    assert findings == []
+
+
+def test_degree_rank_same_rank_does_not_fire() -> None:
+    """Two same-rank degrees (e.g. a second Bachelor's) are never "higher
+    rank than each other" regardless of order, so must never fire."""
+    raw = _raw(
+        _ONE_POSITION,
+        education=[
+            _education(degree="B.Tech", start_year=2011, end_year=2015),
+            _education(degree="B.Sc", start_year=2016, end_year=2019),
+        ],
+    )
+    career = build_career_profile(raw, as_of=date(2024, 6, 1))
+    report = _ENGINE.evaluate(career, raw)
+    findings = [
+        f for f in report.findings if f.code is IntegrityFlag.EDUCATION_TIMELINE_IMPOSSIBLE
+    ]
+    assert findings == []

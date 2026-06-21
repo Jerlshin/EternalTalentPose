@@ -23,12 +23,8 @@ __all__ = [
     "onnx_session_options",
 ]
 
-#: The only ONNX Runtime execution provider permitted online (CPU-only sandbox).
 CPU_EXECUTION_PROVIDER: Final[str] = "CPUExecutionProvider"
 
-#: Environment variables that cap native threading for every BLAS backend we
-#: may encounter. ``OMP_NUM_THREADS`` and ``MKL_NUM_THREADS`` are authoritative
-#: from config; the rest mirror the OMP cap to prevent oversubscription thrash.
 THREAD_ENV_VARS: Final[tuple[str, ...]] = (
     "OMP_NUM_THREADS",
     "MKL_NUM_THREADS",

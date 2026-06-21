@@ -1,9 +1,4 @@
-# O6 eligibility SEED — JD hard disqualifiers + soft penalties, keyed by code.
-# Codes are cross-checked against domain.EligibilityCode when O6 packages this
-# into artifacts/gates/eligibility_rules.yaml. Hard blocks carry no penalty.
-# Codes/severities mirror engines/eligibility.py's own HARD/SOFT classification
-# (_HARD_CODES / _SOFT_CODES) exactly; this file supplies the human-readable
-# description (and, for soft codes, the penalty weight) the artifact carries.
+
 hard_blocks:
   - code: pure_research_no_production
     description: "Research-aligned profile with no production-company tenure."

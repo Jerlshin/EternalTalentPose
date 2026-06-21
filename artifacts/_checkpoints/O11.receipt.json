@@ -1,1 +1,0 @@
-{"artifact_bytes":{"behavioral_weights":742},"artifact_hashes":{"behavioral_weights":"dc4ff5469c62437b6ba94fa22acd647480bd600c5e0a233872fcca81d6a9b11e"},"metrics":{"confidence_knee":0.4,"gold_fitted":false,"gold_pairs":0,"lower_bound":0.6,"upper_bound":1.25},"stage_id":"O11","stage_version":"1.0","staleness_key":"5b28f4c22e137644659c325308e542c3079b9855e53f5bf4abbc101e5da657cf"}

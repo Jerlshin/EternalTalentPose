@@ -12,7 +12,9 @@ from redstack.domain.candidate.career import (
     TenureStats,
 )
 from redstack.domain.candidate.credibility import CredibilityProfile
+from redstack.domain.candidate.semantic import SemanticProfile, VectorRef
 from redstack.domain.enums import CareerTrack, CompanySize, EligibilityCode
+from redstack.domain.ids import Similarity, UnitScore
 from redstack.engines.eligibility import EligibilityEngine
 
 _RULES = default_eligibility_rules()
@@ -79,6 +81,37 @@ def _credibility(
         title_description_coherence=0.8,
         relevant_skill_credibility=0.8,
     )
+
+
+def _semantic() -> SemanticProfile:
+    return SemanticProfile(
+        anchor_similarities={},
+        positive_fit=Similarity(0.5),
+        negative_fit=Similarity(0.3),
+        net_semantic_fit=UnitScore(0.6),
+        best_positive_anchor=None,
+        vector_ref=VectorRef(store_key="test", row_index=0, dim=8),
+    )
+
+
+def test_primary_cv_speech_robotics_no_nlp_fires_below_threshold() -> None:
+    """A CV/speech/robotics specialist with no real NLP/IR-group competency
+    (nlp_ir_exposure below the floor) must be hard-blocked, regardless of how
+    high their unrelated ML competency (mle/llm/mlops, not part of this
+    signal) happens to be."""
+    finding = _ENGINE._primary_cv_speech_robotics_no_nlp(
+        _credibility(), _semantic(), 0.0
+    )
+    assert finding is not None
+    assert finding.code is EligibilityCode.PRIMARY_CV_SPEECH_ROBOTICS_NO_NLP
+
+
+def test_primary_cv_speech_robotics_no_nlp_passes_above_threshold() -> None:
+    """Genuine NLP/IR-group competency above the floor must not block."""
+    finding = _ENGINE._primary_cv_speech_robotics_no_nlp(
+        _credibility(), _semantic(), 0.3
+    )
+    assert finding is None
 
 
 def test_consulting_only_career_fires() -> None:

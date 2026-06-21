@@ -492,7 +492,7 @@ class EligibilityRuleSet(_FrozenConfig):
     production_recency_max_months: int = Field(ge=0)
     adjacent_domain_min_relevant_credibility: float = Field(ge=0.0, le=1.0)
     adjacent_domain_min_negative_fit: float = Field(ge=-1.0, le=1.0)
-    adjacent_domain_min_skill_match: float = Field(ge=0.0, le=1.0)
+    adjacent_domain_min_nlp_ir_exposure: float = Field(ge=0.0, le=1.0)
     closed_source_min_years: float = Field(ge=0.0)
     closed_source_max_credible_skills: int = Field(ge=0)
     title_chaser_min_hop_rate: float = Field(ge=0.0, le=1.0)
@@ -522,13 +522,13 @@ def default_eligibility_rules() -> EligibilityRuleSet:
         # 0.80-0.94); 0.6 sits in that gap with margin on both sides.
         adjacent_domain_min_relevant_credibility=0.6,
         adjacent_domain_min_negative_fit=0.3,
-        # Catches the complementary failure mode: a candidate whose few
-        # listed skills are all non-ML but well-corroborated (so
-        # relevant_skill_credibility alone reads high) still needs *some*
-        # claimed ML-specific competency to pass. 0.05 sits comfortably below
-        # every genuinely ML-titled sample observed (0.15-0.19+) and at/above
-        # the near-zero values non-ML titles showed.
-        adjacent_domain_min_skill_match=0.05,
+        # Same near-zero-noise-vs-any-real-signal floor as the prior
+        # nine-group skill_match version, now measured over the six groups
+        # (retr/rank/recsys/ir/nlp/eval) that actually constitute NLP/IR
+        # exposure -- excluding llm/mle/mlops closes the regression where a
+        # CV/speech/robotics specialist's genuine-but-irrelevant competency
+        # in those three groups cleared the old nine-group floor on its own.
+        adjacent_domain_min_nlp_ir_exposure=0.05,
         closed_source_min_years=5.0,
         closed_source_max_credible_skills=0,
         title_chaser_min_hop_rate=0.5,

@@ -1,1 +1,0 @@
-{"confidence_shrink":{"confidence_floor":0.2,"max_shrink":0.35},"weights":{"assessment_for_absent_skill":3.0,"current_role_has_end_date":3.0,"education_timeline_impossible":3.0,"experience_predates_plausible_start":1.0,"expert_skill_zero_usage":3.0,"keyword_stuffing":1.0,"role_duration_date_mismatch":1.0,"tenure_exceeds_experience":3.0}}

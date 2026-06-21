@@ -32,7 +32,6 @@ _PROFILE = EvidenceKind.PROFILE_FIELD
 _SEMANTIC = EvidenceKind.DERIVED
 _DERIVED = EvidenceKind.DERIVED
 
-# The nine competency groups in fixed layout order.
 _GROUPS: Final[tuple[str, ...]] = (
     "retr",
     "rank",
@@ -45,25 +44,7 @@ _GROUPS: Final[tuple[str, ...]] = (
     "eval",
 )
 
-# Competency fusion weights (convex) and stuffing-penalty strength.
-#
-# Full-pool audit (data/raw/candidates.jsonl, all 100k) found a concrete
-# trap-candidate archetype the original 0.45/0.30/0.25 split let through at
-# scale: a non-ML title (Cloud/DevOps/QA/Full-stack Engineer) whose actual
-# job-description text has zero overlap with the concept's lexicon tokens
-# (``in_career`` == 0) but who lists a trendy AI skill with inflated
-# endorsements/duration (``trust`` high) and whose profile *summary* mentions
-# the same buzzwords in hedged, self-disclosed-hobbyist language ("I've been
-# keeping up with AI/ML at a self-learner level ... haven't done it in a
-# professional capacity yet") that the full-resume embedding still reads as
-# topically similar (``semantic`` high). With trust+semantic carrying 70% of
-# the fused weight, this pattern alone made up 62/100 of one post-fix top-100
-# ranking. ``in_career`` is the one source anchored to job-description text
-# rather than self-reported metadata or hedge-blind cosine similarity --
-# exactly the JD's own instruction ("if their career history shows they
-# built X, they're a fit; a candidate with all the keywords but the wrong
-# title is not"). Rebalanced so it dominates rather than trailing both
-# gameable sources combined.
+
 _W_TRUST: Final[float] = 0.25
 _W_IN_CAREER: Final[float] = 0.50
 _W_SEMANTIC: Final[float] = 0.25
@@ -77,12 +58,41 @@ _STOPWORDS: Final[frozenset[str]] = frozenset(
 )
 
 
+_SENTENCE_SPLIT_RE: Final[re.Pattern[str]] = re.compile(r"(?<=[.!?])\s+")
+
+
+_HEDGE_MARKERS: Final[tuple[str, ...]] = (
+    "interested in transitioning",
+    "professional experience there is limited",
+    "limited professional experience",
+    "haven't done it in a professional capacity",
+    "have not done it in a professional capacity",
+    "still building depth",
+    "beyond the surface level",
+    "self-learner level",
+)
+
+
 def _tokenize(text: str) -> frozenset[str]:
     """Lowercase alphanumeric tokens (length ≥ 2), stopwords removed."""
     return frozenset(
         token
         for token in _TOKEN_RE.findall(text.lower())
         if len(token) >= 2 and token not in _STOPWORDS
+    )
+
+
+def _drop_hedged_sentences(text: str) -> str:
+    """Remove sentences carrying a disclaiming/aspirational marker.
+
+    Used only for the ``in_career`` evidence pool: a sentence asserting "I
+    haven't done X professionally" must not let X's tokens count as
+    hands-on-evidence just because it also names X by its canonical term.
+    """
+    return " ".join(
+        sentence
+        for sentence in _SENTENCE_SPLIT_RE.split(text)
+        if not any(marker in sentence.lower() for marker in _HEDGE_MARKERS)
     )
 
 
@@ -333,7 +343,7 @@ def extract(
     """
     description_tokens: frozenset[str] = frozenset()
     for position in raw.career_history:
-        description_tokens |= _tokenize(position.description)
+        description_tokens |= _tokenize(_drop_hedged_sentences(position.description))
 
     rows: list[tuple[str, FeatureCell]] = []
     for group in _GROUPS:

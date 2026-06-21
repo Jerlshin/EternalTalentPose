@@ -1,4 +1,3 @@
-# Layer 2 (ci) — smallest-footprint overrides for the CI sample.
 logging:
   level: WARNING
 offline:

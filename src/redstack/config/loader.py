@@ -36,12 +36,10 @@ __all__ = [
 
 _ModelT = TypeVar("_ModelT", bound=BaseModel)
 
-# Fixed layer filenames within the configs root. Order is load-bearing.
 _BASE_FILENAME = "base.yaml"
 _RUNTIME_DIR = "runtime"
 _PROFILES_DIR = "profiles"
 
-# Behaviour / authoring seed locations (relative to the configs root).
 _SCORING_WEIGHTS = ("weights", "scoring_weights.yaml")
 _LEXICON_SEED = ("lexicon", "lexicon.seed.yaml")
 _JD_ANCHORS = ("anchors", "jd_anchors.yaml")

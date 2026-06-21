@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from types import MappingProxyType
 from typing import Final, final
 
 from pydantic import BaseModel, ConfigDict
@@ -15,11 +16,23 @@ from redstack.domain.provenance import EvidenceRef
 from redstack.domain.source import RawCandidate
 from redstack.features.view import clamp_unit, days_between, make_evidence
 
-# All seven flags are categorical impossibilities → HARD unless calibration
-# overrides per flag. Re-stated here as the closed evaluated set (determinism).
+
 _ALL_FLAGS: Final[frozenset[IntegrityFlag]] = frozenset(IntegrityFlag)
 
 _DAYS_PER_MONTH: Final[float] = 30.4375
+
+_DEGREE_RANK: Final[MappingProxyType[str, int]] = MappingProxyType(
+    {
+        "B.Tech": 1,
+        "B.E.": 1,
+        "B.Sc": 1,
+        "M.E.": 2,
+        "M.S.": 2,
+        "M.Sc": 2,
+        "M.Tech": 2,
+        "Ph.D": 3,
+    }
+)
 
 
 @final
@@ -39,13 +52,14 @@ class IntegrityEngine(BaseModel):
 
     # ------------------------------------------------------------------ public
     def evaluate(self, career: CareerProfile, raw: RawCandidate) -> IntegrityReport:
-        """Run all seven rules, aggregate risk, finalize the ``IntegrityReport``."""
+        """Run all eight rules, aggregate risk, finalize the ``IntegrityReport``."""
         findings: list[IntegrityFinding] = []
         findings.extend(self._tenure_exceeds_experience(career, raw))
         findings.extend(self._role_duration_date_mismatch(career, raw))
         findings.extend(self._current_role_has_end_date(career, raw))
         findings.extend(self._expert_skill_zero_usage(raw))
         findings.extend(self._education_timeline_impossible(raw))
+        findings.extend(self._degree_rank_backwards(raw))
         findings.extend(self._experience_predates_plausible_start(career, raw))
         findings.extend(self._assessment_for_absent_skill(raw))
 
@@ -273,6 +287,75 @@ class IntegrityEngine(BaseModel):
                     ),
                 )
             )
+        return tuple(out)
+
+    # -- rule 5b (same flag as rule 5: a degree-rank-aware timeline check) --- #
+    def _degree_rank_backwards(
+        self, raw: RawCandidate
+    ) -> tuple[IntegrityFinding, ...]:
+        """A lower-ranked degree (e.g. Bachelor's) starting only after a
+        higher-ranked one (Master's/PhD) already concluded -- academically
+        backwards regardless of either entry's own internal date ordering, so
+        rule 5's single-entry ``end_year < start_year`` check above never
+        catches it. Flags the lower-ranked entry against the first
+        (iteration-order) higher-ranked entry it impossibly follows --
+        evaluation order is ``raw.education``'s own (input) order, so this is
+        deterministic without an extra tie-break rule.
+        """
+        flag = IntegrityFlag.EDUCATION_TIMELINE_IMPOSSIBLE
+        out: list[IntegrityFinding] = []
+        for idx, edu in enumerate(raw.education):
+            rank = _DEGREE_RANK.get(edu.degree)
+            if rank is None:
+                continue
+            for other_idx, other in enumerate(raw.education):
+                if other_idx == idx:
+                    continue
+                other_rank = _DEGREE_RANK.get(other.degree)
+                if other_rank is None or other_rank <= rank:
+                    continue
+                if edu.start_year <= other.end_year:
+                    continue
+                out.append(
+                    IntegrityFinding(
+                        code=flag,
+                        severity=self._severity_of(flag),
+                        evidence=(
+                            make_evidence(
+                                EvidenceKind.EDUCATION,
+                                f"education[{idx}].degree",
+                                edu.degree,
+                                raw=raw,
+                            ),
+                            make_evidence(
+                                EvidenceKind.EDUCATION,
+                                f"education[{idx}].start_year",
+                                int(edu.start_year),
+                                raw=raw,
+                            ),
+                            make_evidence(
+                                EvidenceKind.EDUCATION,
+                                f"education[{other_idx}].degree",
+                                other.degree,
+                                raw=raw,
+                            ),
+                            make_evidence(
+                                EvidenceKind.EDUCATION,
+                                f"education[{other_idx}].end_year",
+                                int(other.end_year),
+                                raw=raw,
+                            ),
+                        ),
+                        detail=(
+                            f"education {idx} ({edu.degree}) begins "
+                            f"{int(edu.start_year)}, after the higher-ranked "
+                            f"education {other_idx} ({other.degree}) already "
+                            f"concluded {int(other.end_year)} -- backwards "
+                            "degree sequence"
+                        ),
+                    )
+                )
+                break
         return tuple(out)
 
     # -- rule 6 -------------------------------------------------------------- #

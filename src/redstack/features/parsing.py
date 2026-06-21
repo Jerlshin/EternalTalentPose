@@ -22,9 +22,7 @@ _STRICT = ConfigDict(
     frozen=True, extra="forbid", str_strip_whitespace=True, validate_default=True
 )
 
-# ``FeatureId`` is the stable string key of the taxonomy; ``features.layout`` /
-# ``features.registry`` bind it to a ``FeatureIndex``. Minted here (lowercased,
-# dotted) so every extractor refers to features by one nominal type.
+
 FeatureId = NewType("FeatureId", str)
 
 _FEATURE_ID_RE = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")

@@ -1,6 +1,4 @@
-# Layer 0 — shared defaults for every run (online and offline).
-# Runtime/IO only: this file never carries scoring weights, anchors, or gates.
-# Later layers (runtime/<mode>.yaml, profiles/<profile>.yaml) deep-merge over it.
+
 schema_version: "1.1"
 
 determinism:

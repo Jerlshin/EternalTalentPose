@@ -77,13 +77,6 @@ def _as_int(payload: Mapping[str, object], key: str) -> int | None:
     return None
 
 
-# --------------------------------------------------------------------------- #
-# Per-artifact validators (Part 10 "Validation" column, encoded as predicates). #
-# Each is deliberately structural-not-semantic: it checks shape/coverage/range #
-# invariants the runner can confirm without re-running the stage's algorithm.  #
-# Cross-artifact coherence (layout/dim/model_id agreement) is enforced by the  #
-# registry's coherence pass at O17, not by these single-artifact predicates.   #
-# --------------------------------------------------------------------------- #
 def _v_dataset_profile(p: Mapping[str, object]) -> str | None:
     reason = _require_keys(p, ("candidate_count", "field_coverage", "distributions"))
     if reason is not None:

@@ -1,6 +1,4 @@
-# O3 honeypot SEED — human-declared rule shapes, keyed by integrity flag.
-# Flags are cross-checked against domain.IntegrityFlag at the O3 artifact
-# boundary; O3 calibrates the numeric thresholds against the census.
+
 rules:
   - flag: EXPERIENCE_EXCEEDS_COMPANY_AGE
     severity: hard

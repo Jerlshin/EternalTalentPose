@@ -18,9 +18,7 @@ _VO = ConfigDict(
     frozen=True, extra="forbid", str_strip_whitespace=True, validate_default=True
 )
 
-# A feature id is the ``"<group>.<name>"`` string the layout/registry validate.
 FeatureId = str
-# An ordered extractor emission: ``((feature_id, cell), ...)`` in extraction order.
 CellEmission = tuple[tuple[FeatureId, "FeatureCell"], ...]
 
 

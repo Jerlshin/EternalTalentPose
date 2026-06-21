@@ -22,12 +22,9 @@ from redstack.domain.scoring import (
     ScoringWeights,
 )
 
-# Fixed reduction order (Determinism §R): the enum's declaration order.
 _COMPONENT_ORDER: Final[tuple[ScoreComponent, ...]] = tuple(ScoreComponent)
 
-# One component's projected raw value plus the evidence backing it.
 ComponentRaw = tuple[UnitScore, tuple[EvidenceRef, ...]]
-
 
 @final
 class ScoringEngine(BaseModel):

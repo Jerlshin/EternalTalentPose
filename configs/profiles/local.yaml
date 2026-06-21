@@ -1,4 +1,3 @@
-# Layer 2 (local) — developer-run overrides.
 logging:
   level: DEBUG
   deterministic: false

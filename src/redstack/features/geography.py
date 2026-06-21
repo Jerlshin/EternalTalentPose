@@ -36,9 +36,7 @@ NOTICE_OVER_30: FeatureId = feature_id("notice", "over_30")
 SAL_FIT: FeatureId = feature_id("sal", "fit")
 SAL_IS_INVERTED: FeatureId = feature_id("sal", "is_inverted")
 
-# The JD's preferred hubs (Pune / Noida / Hyderabad / Mumbai / Delhi-NCR),
-# normalized. Delhi-NCR expands to its constituent cities so a Gurgaon/Gurugram
-# or Noida profile matches the NCR hub.
+
 DEFAULT_JD_HUBS: frozenset[str] = frozenset(
     {
         "pune",
@@ -57,7 +55,6 @@ DEFAULT_JD_HUBS: frozenset[str] = frozenset(
     }
 )
 
-# ``NoticeFit`` -> fit ``UnitScore`` (≤30 ideal, buyout window, >30 higher bar).
 _NOTICE_FIT_SCORE: Mapping[NoticeFit, float] = MappingProxyType(
     {
         NoticeFit.SUB_30_IDEAL: 1.0,

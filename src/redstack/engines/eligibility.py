@@ -81,15 +81,18 @@ class EligibilityEngine(BaseModel):
         semantic: SemanticProfile,
         logistics: LogisticsProfile,
         jd: JobDescriptionSpec,
-        skill_match: float = 1.0,
+        nlp_ir_exposure: float = 1.0,
     ) -> EligibilityReport:
         """Evaluate every gate; partition into hard blocks and soft penalties.
 
-        ``skill_match`` is the mean of the candidate's top-3 (of nine)
-        retr/rank/recsys/ir/nlp/llm/mle/mlops/eval ``.competency`` cells (the
-        same aggregate Scoring's ``SKILL_MATCH`` component reads) — the one
-        component diagnostic evidence showed reliably tracks ML/AI domain
-        relevance. Defaults to ``1.0`` (never blocks) so existing call sites
+        ``nlp_ir_exposure`` is the breadth-weighted mean of the candidate's
+        top-3 (of six) retr/rank/recsys/ir/nlp/eval ``.competency`` cells --
+        deliberately *not* the nine-group aggregate Scoring's ``SKILL_MATCH``
+        component reads, because llm/mle/mlops are exactly the groups a
+        CV/speech/robotics specialist can score on without any search/
+        ranking/retrieval depth (PyTorch/scikit-learn usage, ChatGPT-API
+        dabbling, MLflow), which is the JD's own named disqualifier this gate
+        polices. Defaults to ``1.0`` (never blocks) so existing call sites
         that don't pass it keep their prior behavior.
         """
         candidates: list[EligibilityFinding | None] = [
@@ -97,7 +100,9 @@ class EligibilityEngine(BaseModel):
             self._langchain_openai_only_recent(credibility),
             self._no_production_code_18m(career),
             self._consulting_firms_only_career(career),
-            self._primary_cv_speech_robotics_no_nlp(credibility, semantic, skill_match),
+            self._primary_cv_speech_robotics_no_nlp(
+                credibility, semantic, nlp_ir_exposure
+            ),
             self._closed_source_5y_no_validation(career, credibility),
             self._title_chaser_sub_18m_hops(career),
             self._notice_over_30(logistics),
@@ -259,9 +264,9 @@ class EligibilityEngine(BaseModel):
         self,
         credibility: CredibilityProfile,
         semantic: SemanticProfile,
-        skill_match: float,
+        nlp_ir_exposure: float,
     ) -> EligibilityFinding | None:
-        """Gate on demonstrated relevant ML/AI skill credibility (``skill_match``).
+        """Gate on demonstrated NLP/IR-specific skill credibility (``nlp_ir_exposure``).
 
         Two earlier signals were tried and dropped here, in order:
 
@@ -275,22 +280,38 @@ class EligibilityEngine(BaseModel):
            signal for *this* gate and AND-ing it in only suppressed firing.
 
         2. ``relevant_skill_credibility`` (fraction of *all* claimed skills
-           that are corroborated, regardless of domain) — ANDed with
-           ``skill_match`` to catch a candidate whose few listed skills are
-           all non-ML but well-corroborated. In practice this is a generic
-           credibility signal with no ML/AI domain content of its own, and a
-           full-pool audit (100k candidates) showed it alone clears only
-           2.5% of the pool — independently restrictive enough that ANDing
-           it with ``skill_match`` (itself previously miscalibrated, see
-           ``_skill_match_value``) compounded into a 99.6% hard-block rate.
-           Dropped; ``skill_match`` alone — now top-3-of-nine rather than a
-           flat mean — already incorporates the ``nlp``/``ir`` competency
-           groups directly and is the one signal diagnostic evidence found to
-           reliably track ML/AI domain relevance (every sampled non-ML title
-           scored at or near 0.0 there, regardless of how well-corroborated
-           their non-ML skills were).
+           that are corroborated, regardless of domain) — ANDed with the
+           generic nine-group ``skill_match`` to catch a candidate whose few
+           listed skills are all non-ML but well-corroborated. In practice
+           this is a generic credibility signal with no ML/AI domain content
+           of its own, and a full-pool audit (100k candidates) showed it
+           alone clears only 2.5% of the pool — independently restrictive
+           enough that ANDing it with ``skill_match`` (itself previously
+           miscalibrated, see ``_skill_match_value``) compounded into a 99.6%
+           hard-block rate. Dropped in favor of ``skill_match`` alone.
+
+        ``skill_match`` alone (the same nine-group retr/rank/recsys/ir/nlp/
+        llm/mle/mlops/eval aggregate Scoring's ``SKILL_MATCH`` component
+        reads) was *also* dropped as this gate's input, after a regression:
+        a Computer Vision Engineer with zero production NLP/IR work cleared
+        it because ``llm``/``mle`` (self-reported LangChain familiarity,
+        genuine PyTorch/scikit-learn usage) are groups any ML-adjacent
+        specialist can score on without any search/ranking/retrieval depth —
+        the gate's job is specifically to catch that profile, so reusing an
+        aggregate that *includes* the groups that let it through cannot do
+        the job regardless of threshold. (A second, independent bug
+        compounded the same case — a disclaiming sentence inside the
+        candidate's own career text, "interested in transitioning toward
+        NLP/LLM work but my professional experience there is limited", was
+        read by ``in_career``'s bag-of-tokens overlap as positive evidence
+        for the literal "nlp"/"llm" tokens it contains; fixed independently
+        in ``features.skills._drop_hedged_sentences``.) ``nlp_ir_exposure``
+        restricts the same top-K/breadth machinery to the six groups
+        (retr/rank/recsys/ir/nlp/eval) that actually constitute "NLP/IR
+        exposure" per the JD's own skills inventory, so a candidate's
+        unrelated-but-real ML competency can no longer stand in for it.
         """
-        if skill_match >= self.rules.adjacent_domain_min_skill_match:
+        if nlp_ir_exposure >= self.rules.adjacent_domain_min_nlp_ir_exposure:
             return None
         return self._finding(
             EligibilityCode.PRIMARY_CV_SPEECH_ROBOTICS_NO_NLP,
@@ -307,10 +328,10 @@ class EligibilityEngine(BaseModel):
                     float(semantic.negative_fit),
                 ),
                 make_evidence(
-                    EvidenceKind.DERIVED, "derived.skill_match", skill_match
+                    EvidenceKind.DERIVED, "derived.nlp_ir_exposure", nlp_ir_exposure
                 ),
             ),
-            "no demonstrated relevant ML/AI skill credibility for this role",
+            "no demonstrated NLP/IR skill credibility for this role",
         )
 
     def _closed_source_5y_no_validation(

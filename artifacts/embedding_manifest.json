@@ -1,1 +1,0 @@
-{"dim":384,"model_id":"sentence-transformers/all-MiniLM-L6-v2","normalization":"l2","opset":17,"parity_cosine":1.0,"pooling":"mean","recipe":"recipe-v1.0"}

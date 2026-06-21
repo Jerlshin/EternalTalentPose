@@ -21,32 +21,7 @@ __all__: tuple[str, ...] = ("OfflinePipelineContext",)
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class OfflinePipelineContext(RunContext):
-    """Immutable resolved build environment for O0–O18.
 
-    Extends the shared :class:`RunContext` (config + reproducibility provenance)
-    with the bound ports, output roots, and the layout constant a build needs.
-    Construct via :meth:`build` from the offline composition root; never mutate.
-
-    Attributes:
-        candidate_source: Streams raw candidate records (O0/O1/O2/O5/O13a).
-        embedding_model: The offline ``sentence-transformers`` backend behind
-            ``EmbeddingModelPort`` (O13 candidate/anchor vectors). Import-guarded
-            to the offline path.
-        artifact_store: Verifies the freshly built artifact set at O17/O18.
-        entropy: The seeded ``OfflineEntropy`` — KMeans init (O7), weight search
-            (O9), sampling/splits (O8). Distinct labels yield independent streams.
-        feature_registry: The populated ordered feature registry carrying the
-            shared ``layout_version`` (Repository Layout §6/§8). The CQV/feature
-            snapshot (O14) and weight calibration (O9) bind to it.
-        artifacts_root: The single write target for produced artifacts.
-        data_root: Read-only raw input root.
-        quarantine_root: Where the runner moves partial/failed stage output so it
-            is never manifested (Offline Pipeline Part 11).
-        checkpoints_root: Where the runner persists ``StageReceipt``s + outputs
-            for resume.
-        layout_version: The shared layout version mirrored from the registry,
-            pinned for the manifest's ``layout_version`` coherence check.
-    """
 
     candidate_source: CandidateSourcePort
     embedding_model: EmbeddingModelPort

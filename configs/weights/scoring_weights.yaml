@@ -1,14 +1,4 @@
-# O9 weight-search SEED (candidate priors). Keys are score-component
-# identifiers and MUST equal redstack.domain.enums.ScoreComponent exactly --
-# logistics/eligibility are not score components (they're separate
-# multipliers/gates applied by ScoringEngine, never weighted-summed here).
-#
-# With --golden-labels: this is only the search's starting point; O9 searches
-# from here and emits the calibrated artifacts/weights/scoring_weights.locked.yaml.
-# Without --golden-labels (default, no human-reviewed gold labels committed):
-# O9 skips the search and emits these weights through unchanged as the locked
-# online weights, so editing this file directly changes ranking behavior in
-# that mode.
+
 layout_version: "1.0.0"
 weights:
   semantic_fit: 0.30

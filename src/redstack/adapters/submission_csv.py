@@ -17,7 +17,6 @@ from redstack.ports.submission_sink import (
     SubmissionWriteError,
 )
 
-#: The frozen, validator-mandated column order.
 _HEADER: Final[tuple[str, str, str, str]] = (
     "candidate_id",
     "rank",

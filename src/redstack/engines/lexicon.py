@@ -89,11 +89,7 @@ class LexiconEngine(BaseModel):
                 continue
             hits += local
             evidence.append(
-                # DERIVED, not CAREER_FIELD: this engine never sees a
-                # RawCandidate (pure text matcher), so it cannot validate
-                # ``path`` against one -- the path is a caller-supplied
-                # locator, the value a synthesized "concept:count" label,
-                # not a literal field citation.
+
                 make_evidence(
                     EvidenceKind.DERIVED,
                     f"{path}[{offset}]",
