@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from datetime import date
@@ -53,7 +52,9 @@ _SENIORITY_CUES: Final[tuple[str, ...]] = (
 _SENIORITY_MIN_YEARS: Final[float] = 4.0
 
 
-def _fallback(evidence: list[EvidenceRef], feature_id: str, value: float) -> tuple[EvidenceRef, ...]:
+def _fallback(
+    evidence: list[EvidenceRef], feature_id: str, value: float
+) -> tuple[EvidenceRef, ...]:
     """Guarantee ≥1 evidence ref: a derived self-ref when nothing else fired."""
     if evidence:
         return tuple(evidence)
@@ -83,14 +84,25 @@ def _timeline_impossible(raw: RawCandidate, as_of: date) -> FeatureCell:
     for i, position in enumerate(raw.career_history):
         if position.end_date is not None and position.end_date < position.start_date:
             contradictions += 1
-            evidence.append(make_evidence(_CAREER, f"career_history[{i}].end_date", position.end_date.isoformat()))
+            evidence.append(
+                make_evidence(
+                    _CAREER,
+                    f"career_history[{i}].end_date",
+                    position.end_date.isoformat(),
+                    raw=raw,
+                )
+            )
         if position.is_current and position.end_date is not None:
             contradictions += 1
-            evidence.append(make_evidence(_CAREER, f"career_history[{i}].is_current", True))
+            evidence.append(
+                make_evidence(_CAREER, f"career_history[{i}].is_current", True, raw=raw)
+            )
     for j, edu in enumerate(raw.education):
         if edu.end_year < edu.start_year:
             contradictions += 1
-            evidence.append(make_evidence(_EDU, f"education[{j}].end_year", edu.end_year))
+            evidence.append(
+                make_evidence(_EDU, f"education[{j}].end_year", edu.end_year, raw=raw)
+            )
     value = 1.0 if contradictions >= 1 else 0.0
     confidence = 0.97 if contradictions >= 1 else 0.9
     return cell(value, confidence, _fallback(evidence, "hp.timeline_impossible", value))
@@ -105,14 +117,25 @@ def _skill_time_contradiction(raw: RawCandidate) -> FeatureCell:
         ):
             count += 1
             if len(evidence) < 4:
-                evidence.append(make_evidence(_SKILL, f"skills[{i}].duration_months", skill.duration_months if skill.duration_months is not None else "null"))
+                evidence.append(
+                    make_evidence(
+                        _SKILL,
+                        f"skills[{i}].duration_months",
+                        skill.duration_months
+                        if skill.duration_months is not None
+                        else "null",
+                        raw=raw,
+                    )
+                )
     # Require corroborating breadth: a single advanced-zero-usage skill is noise.
     if count < _SKILL_TIME_MIN_COUNT:
         value = 0.0
     else:
         value = bounded_log_scale(float(count), saturation=6.0)
     confidence = clamp_unit(0.4 + 0.1 * count)
-    return cell(value, confidence, _fallback(evidence, "hp.skill_time_contradiction", value))
+    return cell(
+        value, confidence, _fallback(evidence, "hp.skill_time_contradiction", value)
+    )
 
 
 def _employment_overlap(raw: RawCandidate, as_of: date) -> FeatureCell:
@@ -125,8 +148,22 @@ def _employment_overlap(raw: RawCandidate, as_of: date) -> FeatureCell:
             if overlap > _OVERLAP_GRACE_MONTHS:
                 egregious_months += overlap - _OVERLAP_GRACE_MONTHS
                 if len(evidence) < 4:
-                    evidence.append(make_evidence(_CAREER, f"career_history[{i}].start_date", positions[i].start_date.isoformat()))
-                    evidence.append(make_evidence(_CAREER, f"career_history[{k}].start_date", positions[k].start_date.isoformat()))
+                    evidence.append(
+                        make_evidence(
+                            _CAREER,
+                            f"career_history[{i}].start_date",
+                            positions[i].start_date.isoformat(),
+                            raw=raw,
+                        )
+                    )
+                    evidence.append(
+                        make_evidence(
+                            _CAREER,
+                            f"career_history[{k}].start_date",
+                            positions[k].start_date.isoformat(),
+                            raw=raw,
+                        )
+                    )
     value = bounded_log_scale(egregious_months, saturation=24.0)
     return cell(value, 0.6, _fallback(evidence, "hp.employment_overlap", value))
 
@@ -141,8 +178,10 @@ def _title_seniority_anomaly(raw: RawCandidate) -> FeatureCell:
     else:
         value = 0.0
     evidence = [
-        make_evidence(_PROFILE, "profile.current_title", raw.profile.current_title),
-        make_evidence(_PROFILE, "profile.years_of_experience", years),
+        make_evidence(
+            _PROFILE, "profile.current_title", raw.profile.current_title, raw=raw
+        ),
+        make_evidence(_PROFILE, "profile.years_of_experience", years, raw=raw),
     ]
     return cell(value, 0.55, tuple(evidence))
 
@@ -151,20 +190,48 @@ def _education_career_anomaly(raw: RawCandidate) -> FeatureCell:
     evidence: list[EvidenceRef] = []
     value = 0.0
     if raw.education:
-        earliest_edu_start = min(edu.start_year for edu in raw.education)
-        earliest_career = min((p.start_date.year for p in raw.career_history), default=earliest_edu_start)
+        edu_idx = min(
+            range(len(raw.education)), key=lambda i: raw.education[i].start_year
+        )
+        earliest_edu_start = raw.education[edu_idx].start_year
+        # career_history is schema-guaranteed non-empty (min_length=1).
+        career_idx = min(
+            range(len(raw.career_history)),
+            key=lambda i: raw.career_history[i].start_date,
+        )
+        earliest_career = raw.career_history[career_idx].start_date.year
         # Career beginning well before any education start is implausible.
         if earliest_career < earliest_edu_start - 1:
             value = 1.0
-            evidence.append(make_evidence(_CAREER, "career_history.start_date", earliest_career))
-            evidence.append(make_evidence(_EDU, "education.start_year", earliest_edu_start))
+            evidence.append(
+                make_evidence(
+                    _CAREER,
+                    f"career_history[{career_idx}].start_date",
+                    earliest_career,
+                    raw=raw,
+                )
+            )
+            evidence.append(
+                make_evidence(
+                    _EDU,
+                    f"education[{edu_idx}].start_year",
+                    earliest_edu_start,
+                    raw=raw,
+                )
+            )
         # A degree that ends absurdly far in the future relative to its start.
         for j, edu in enumerate(raw.education):
             if edu.end_year - edu.start_year > 15:
                 value = max(value, 0.8)
-                evidence.append(make_evidence(_EDU, f"education[{j}].end_year", edu.end_year))
+                evidence.append(
+                    make_evidence(
+                        _EDU, f"education[{j}].end_year", edu.end_year, raw=raw
+                    )
+                )
     confidence = 0.95 if value >= 0.8 else 0.85
-    return cell(value, confidence, _fallback(evidence, "hp.education_career_anomaly", value))
+    return cell(
+        value, confidence, _fallback(evidence, "hp.education_career_anomaly", value)
+    )
 
 
 def _salary_anomaly(raw: RawCandidate) -> FeatureCell:
@@ -173,8 +240,18 @@ def _salary_anomaly(raw: RawCandidate) -> FeatureCell:
     # Soft only: inversion is common in the pool — cap the contribution low.
     value = 0.25 if inverted else 0.0
     evidence = [
-        make_evidence(_SIGNAL, "redrob_signals.expected_salary_range_inr_lpa.min", salary.min),
-        make_evidence(_SIGNAL, "redrob_signals.expected_salary_range_inr_lpa.max", salary.max),
+        make_evidence(
+            _SIGNAL,
+            "redrob_signals.expected_salary_range_inr_lpa.min",
+            salary.min,
+            raw=raw,
+        ),
+        make_evidence(
+            _SIGNAL,
+            "redrob_signals.expected_salary_range_inr_lpa.max",
+            salary.max,
+            raw=raw,
+        ),
     ]
     return cell(value, 0.4, tuple(evidence))
 
@@ -188,13 +265,17 @@ def _experience_inflation(raw: RawCandidate) -> FeatureCell:
     else:
         value = 0.0
     evidence = [
-        make_evidence(_PROFILE, "profile.years_of_experience", stated),
-        make_evidence(_DERIVED, "career_history.summed_duration_years", round(summed_years, 2)),
+        make_evidence(_PROFILE, "profile.years_of_experience", stated, raw=raw),
+        make_evidence(
+            _DERIVED, "career_history.summed_duration_years", round(summed_years, 2)
+        ),
     ]
     return cell(value, clamp_unit(0.5 + 0.1 * gap), tuple(evidence))
 
 
-def _keyword_stuffing(raw: RawCandidate, description_tokens: frozenset[str]) -> FeatureCell:
+def _keyword_stuffing(
+    raw: RawCandidate, description_tokens: frozenset[str]
+) -> FeatureCell:
     evidence: list[EvidenceRef] = []
     count = 0
     for i, skill in enumerate(raw.skills):
@@ -206,13 +287,19 @@ def _keyword_stuffing(raw: RawCandidate, description_tokens: frozenset[str]) -> 
         if skill.proficiency >= Proficiency.ADVANCED and zero_corroboration:
             count += 1
             if len(evidence) < 4:
-                evidence.append(make_evidence(_SKILL, f"skills[{i}].name", skill.name))
+                evidence.append(
+                    make_evidence(_SKILL, f"skills[{i}].name", skill.name, raw=raw)
+                )
     # Require breadth: a couple of uncorroborated skills is not stuffing.
     if count < _STUFFING_MIN_COUNT:
         value = 0.0
     else:
         value = bounded_log_scale(float(count), saturation=12.0)
-    return cell(value, clamp_unit(0.4 + 0.05 * count), _fallback(evidence, "hp.keyword_stuffing", value))
+    return cell(
+        value,
+        clamp_unit(0.4 + 0.05 * count),
+        _fallback(evidence, "hp.keyword_stuffing", value),
+    )
 
 
 def _behavioral_inconsistency(raw: RawCandidate) -> FeatureCell:
@@ -221,10 +308,28 @@ def _behavioral_inconsistency(raw: RawCandidate) -> FeatureCell:
     impossible = 0
     if sig.saved_by_recruiters_30d > 0 and sig.profile_views_received_30d == 0:
         impossible += 1
-        evidence.append(make_evidence(_SIGNAL, "redrob_signals.saved_by_recruiters_30d", sig.saved_by_recruiters_30d))
-    if sig.search_appearance_30d > 0 and sig.profile_views_received_30d == 0 and sig.saved_by_recruiters_30d > 0:
+        evidence.append(
+            make_evidence(
+                _SIGNAL,
+                "redrob_signals.saved_by_recruiters_30d",
+                sig.saved_by_recruiters_30d,
+                raw=raw,
+            )
+        )
+    if (
+        sig.search_appearance_30d > 0
+        and sig.profile_views_received_30d == 0
+        and sig.saved_by_recruiters_30d > 0
+    ):
         impossible += 1
-        evidence.append(make_evidence(_SIGNAL, "redrob_signals.search_appearance_30d", sig.search_appearance_30d))
+        evidence.append(
+            make_evidence(
+                _SIGNAL,
+                "redrob_signals.search_appearance_30d",
+                sig.search_appearance_30d,
+                raw=raw,
+            )
+        )
     value = bounded_log_scale(float(impossible), saturation=2.0) if impossible else 0.0
     return cell(value, 0.6, _fallback(evidence, "hp.behavioral_inconsistency", value))
 
@@ -235,22 +340,63 @@ def _signal_impossibility(raw: RawCandidate, as_of: date) -> FeatureCell:
     value = 0.0
     if sig.last_active_date < sig.signup_date:
         value = 1.0
-        evidence.append(make_evidence(_SIGNAL, "redrob_signals.last_active_date", sig.last_active_date.isoformat()))
-        evidence.append(make_evidence(_SIGNAL, "redrob_signals.signup_date", sig.signup_date.isoformat()))
+        evidence.append(
+            make_evidence(
+                _SIGNAL,
+                "redrob_signals.last_active_date",
+                sig.last_active_date.isoformat(),
+                raw=raw,
+            )
+        )
+        evidence.append(
+            make_evidence(
+                _SIGNAL,
+                "redrob_signals.signup_date",
+                sig.signup_date.isoformat(),
+                raw=raw,
+            )
+        )
     if sig.last_active_date > as_of or sig.signup_date > as_of:
         value = 1.0
-        evidence.append(make_evidence(_SIGNAL, "redrob_signals.last_active_date", sig.last_active_date.isoformat()))
+        evidence.append(
+            make_evidence(
+                _SIGNAL,
+                "redrob_signals.last_active_date",
+                sig.last_active_date.isoformat(),
+                raw=raw,
+            )
+        )
     return cell(value, 0.95, _fallback(evidence, "hp.signal_impossibility", value))
 
 
 def _identity_anomaly(raw: RawCandidate) -> FeatureCell:
     evidence: list[EvidenceRef] = []
     value = 0.0
-    current = next((p for p in raw.career_history if p.is_current), None)
-    if current is not None and current.company.strip().lower() != raw.profile.current_company.strip().lower():
+    current_idx, current = next(
+        ((i, p) for i, p in enumerate(raw.career_history) if p.is_current), (None, None)
+    )
+    if (
+        current is not None
+        and current.company.strip().lower()
+        != raw.profile.current_company.strip().lower()
+    ):
         value = 0.4
-        evidence.append(make_evidence(_PROFILE, "profile.current_company", raw.profile.current_company))
-        evidence.append(make_evidence(_CAREER, "career_history.current.company", current.company))
+        evidence.append(
+            make_evidence(
+                _PROFILE,
+                "profile.current_company",
+                raw.profile.current_company,
+                raw=raw,
+            )
+        )
+        evidence.append(
+            make_evidence(
+                _CAREER,
+                f"career_history[{current_idx}].company",
+                current.company,
+                raw=raw,
+            )
+        )
     return cell(value, 0.7, _fallback(evidence, "hp.identity_anomaly", value))
 
 
@@ -284,9 +430,30 @@ def _risk(
     )
     confidence = clamp_unit(1.0 - uncertainty)
     return [
-        ("risk.uncertainty", cell(uncertainty, 0.7, (make_evidence(_DERIVED, "risk.uncertainty", uncertainty),))),
-        ("risk.contradiction", cell(contradiction, 0.7, (make_evidence(_DERIVED, "risk.contradiction", contradiction),))),
-        ("risk.confidence", cell(confidence, 0.8, (make_evidence(_DERIVED, "risk.confidence", confidence),))),
+        (
+            "risk.uncertainty",
+            cell(
+                uncertainty,
+                0.7,
+                (make_evidence(_DERIVED, "risk.uncertainty", uncertainty),),
+            ),
+        ),
+        (
+            "risk.contradiction",
+            cell(
+                contradiction,
+                0.7,
+                (make_evidence(_DERIVED, "risk.contradiction", contradiction),),
+            ),
+        ),
+        (
+            "risk.confidence",
+            cell(
+                confidence,
+                0.8,
+                (make_evidence(_DERIVED, "risk.confidence", confidence),),
+            ),
+        ),
     ]
 
 

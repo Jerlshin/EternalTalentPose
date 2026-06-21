@@ -1,4 +1,3 @@
-# Layer 1 (offline) — O0..O18 build parameters.
 determinism:
   seed: 20240601
 

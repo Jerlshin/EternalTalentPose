@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import math
@@ -23,9 +22,7 @@ _STRICT = ConfigDict(
     frozen=True, extra="forbid", str_strip_whitespace=True, validate_default=True
 )
 
-# ``FeatureId`` is the stable string key of the taxonomy; ``features.layout`` /
-# ``features.registry`` bind it to a ``FeatureIndex``. Minted here (lowercased,
-# dotted) so every extractor refers to features by one nominal type.
+
 FeatureId = NewType("FeatureId", str)
 
 _FEATURE_ID_RE = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")
@@ -84,7 +81,9 @@ def make_cell(
     evidence: tuple[EvidenceRef, ...],
 ) -> FeatureCell:
     """Construct a ``FeatureCell``, clamping ``confidence`` into ``[0, 1]``."""
-    return FeatureCell(value=value, confidence=clamp_unit(confidence), evidence=evidence)
+    return FeatureCell(
+        value=value, confidence=clamp_unit(confidence), evidence=evidence
+    )
 
 
 def validate(raw: Mapping[str, object]) -> RawCandidate:
@@ -119,8 +118,13 @@ def _scalarize(value: object, path: str) -> str | int | float | bool:
     """Project a resolved leaf to a JSON scalar (the ``EvidenceRef.value`` type).
 
     Dates serialize to ISO strings and enums to their ``.value`` (serialization
-    is by value, §P/§R), so evidence round-trips stably. Non-scalar leaves are a
-    provenance error: an ``EvidenceRef`` must point at an atomic fact.
+    is by value, §P/§R), so evidence round-trips stably. A ``None`` at a
+    resolvable path (an optional field genuinely unset, e.g.
+    ``RawSkill.duration_months``) is recorded as the literal string ``"null"``
+    -- the path *exists*, mirroring :func:`redstack.features.evidence.mint`'s
+    convention -- rather than being treated as a dangling path. Any other
+    non-scalar leaf is a provenance error: an ``EvidenceRef`` must point at an
+    atomic fact.
     """
     if isinstance(value, bool):
         return value
@@ -128,6 +132,8 @@ def _scalarize(value: object, path: str) -> str | int | float | bool:
         return value
     if isinstance(value, date):
         return value.isoformat()
+    if value is None:
+        return "null"
     if isinstance(value, Enum):
         member: object = value.value
         if isinstance(member, bool):
@@ -179,7 +185,9 @@ def resolve_path(raw: RawCandidate, path: str) -> str | int | float | bool:
                 current = getattr(current, attr)
                 expect_dot = True
             elif index is not None:
-                if not isinstance(current, Sequence) or isinstance(current, (str, bytes)):
+                if not isinstance(current, Sequence) or isinstance(
+                    current, (str, bytes)
+                ):
                     raise ProvenanceError(
                         f"index [{index}] applied to non-sequence in path {path!r}"
                     )

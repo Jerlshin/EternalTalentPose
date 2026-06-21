@@ -7,12 +7,30 @@ from pathlib import Path
 from typing import Any, cast
 
 import typer
+import yaml
 
 from redstack.config.determinism import apply_determinism
 from redstack.config.loader import ConfigLoadError, load_config
 from redstack.config.schema import Profile, RunMode
 
 __all__: tuple[str, ...] = ("build",)
+
+#: Default online ``ScoringPolicy.neutral_prior`` (config/schema.py), reused
+#: when packaging the locked-heuristics scoring_weights artifact.
+_DEFAULT_NEUTRAL_PRIOR: float = 0.5
+
+
+def _load_seed_weights(configs_root: Path) -> tuple[dict[str, float], float]:
+    """Read ``weights/scoring_weights.yaml`` -> (component weights, neutral prior).
+
+    This is the locked-heuristics default: the human-authored seed weights,
+    used verbatim (no gold-label search) when ``--golden-labels`` is not given.
+    """
+    path = configs_root / "weights" / "scoring_weights.yaml"
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    weights = {str(k): float(v) for k, v in doc["weights"].items()}
+    neutral_prior = float(doc.get("neutral_prior", _DEFAULT_NEUTRAL_PRIOR))
+    return weights, neutral_prior
 
 
 def _resolve_configs_root(config_arg: Path) -> Path:
@@ -55,6 +73,19 @@ def build(
         "--force",
         help="Comma-separated stage ids to force-recompute (e.g. 'O9,O15').",
     ),
+    golden_labels: bool = typer.Option(
+        True,
+        "--golden-labels/--no-golden-labels",
+        help=(
+            "Run the real O8-O10 gold-label calibration search against the "
+            "committed data/golden/golden_labels.csv (default — fails loudly "
+            "via GoldLabelSeedMissingError if it isn't committed). Pass "
+            "--no-golden-labels to skip O8-O10's search and use the locked "
+            "heuristic weights from configs/weights/scoring_weights.yaml "
+            "as-is; this is an uncalibrated dev shortcut, not a substitute "
+            "for the real search."
+        ),
+    ),
 ) -> None:
     """Run the offline O0-O18 build: artifacts/ + MANIFEST.json."""
     configs_root = _resolve_configs_root(config)
@@ -69,15 +100,29 @@ def build(
 
     # Dynamic on purpose — see module docstring (layering seam + import order).
     compose = importlib.import_module("redstack.pipelines.offline.compose")
-    run_offline_build = cast("Any", compose.run_offline_build)
 
     force_ids = tuple(s.strip() for s in force.split(",")) if force else None
-    report = run_offline_build(
-        resolved,
-        configs_root=configs_root,
-        code_version=_code_version(),
-        force=force_ids,
-    )
+    if golden_labels:
+        run_offline_build = cast("Any", compose.run_offline_build)
+        report = run_offline_build(
+            resolved,
+            configs_root=configs_root,
+            code_version=_code_version(),
+            force=force_ids,
+        )
+    else:
+        component_weights, neutral_prior = _load_seed_weights(configs_root)
+        run_offline_build_with_locked_heuristics = cast(
+            "Any", compose.run_offline_build_with_locked_heuristics
+        )
+        report = run_offline_build_with_locked_heuristics(
+            resolved,
+            configs_root=configs_root,
+            code_version=_code_version(),
+            component_weights=component_weights,
+            neutral_prior=neutral_prior,
+            force=force_ids,
+        )
 
     typer.echo(
         "offline build complete: "

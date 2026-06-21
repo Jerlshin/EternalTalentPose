@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import math
@@ -12,14 +11,14 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from redstack.domain.enums import EvidenceKind
 from redstack.domain.ids import UnitScore
 from redstack.domain.provenance import EvidenceRef
+from redstack.domain.source import RawCandidate
+from redstack.features.parsing import resolve_path
 
 _VO = ConfigDict(
     frozen=True, extra="forbid", str_strip_whitespace=True, validate_default=True
 )
 
-# A feature id is the ``"<group>.<name>"`` string the layout/registry validate.
 FeatureId = str
-# An ordered extractor emission: ``((feature_id, cell), ...)`` in extraction order.
 CellEmission = tuple[tuple[FeatureId, "FeatureCell"], ...]
 
 
@@ -92,9 +91,26 @@ def mean_of(values: tuple[float, ...]) -> float:
 
 
 def make_evidence(
-    kind: EvidenceKind, path: str, value: str | int | float | bool
+    kind: EvidenceKind,
+    path: str,
+    value: str | int | float | bool,
+    *,
+    raw: RawCandidate | None = None,
 ) -> EvidenceRef:
-    """Mint an ``EvidenceRef``; ``date`` callers pass ``.isoformat()`` strings."""
+    """Mint an ``EvidenceRef``; ``date`` callers pass ``.isoformat()`` strings.
+
+    When ``raw`` is given, ``path`` is verified to resolve inside it before
+    the ref is minted -- a dangling path (wrong index, renamed field) raises
+    ``ProvenanceError`` immediately rather than shipping a citation nothing
+    backs. ``value`` is kept as the caller supplied it (it may be a derived
+    label, not the literal scalar at ``path``); only existence is checked.
+    Callers citing a literal ``RawCandidate`` field must pass ``raw``.
+    ``EvidenceKind.DERIVED`` evidence (and citations of fields on an
+    already-validated domain profile, where no raw record exists to dangle
+    against) may omit it.
+    """
+    if raw is not None:
+        resolve_path(raw, path)
     return EvidenceRef(kind=kind, path=path, value=value)
 
 
@@ -127,9 +143,7 @@ def cell(
     value: float, confidence: float, evidence: tuple[EvidenceRef, ...]
 ) -> FeatureCell:
     """Build a ``FeatureCell``, clamping ``confidence`` into ``[0, 1]``."""
-    return FeatureCell(
-        value=value, confidence=unit(confidence), evidence=evidence
-    )
+    return FeatureCell(value=value, confidence=unit(confidence), evidence=evidence)
 
 
 def group_of(feature_id: str) -> str:

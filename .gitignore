@@ -96,21 +96,11 @@ data/golden/*
 # ==========================================================
 # Generated Artifacts
 # ==========================================================
-artifacts/archetypes/*
-artifacts/calibration/*
 artifacts/embeddings/*
-artifacts/gates/*
-artifacts/lexicon/*
 artifacts/model/*
-artifacts/weights/*
 
-!artifacts/archetypes/.gitkeep
-!artifacts/calibration/.gitkeep
 !artifacts/embeddings/.gitkeep
-!artifacts/gates/.gitkeep
-!artifacts/lexicon/.gitkeep
 !artifacts/model/.gitkeep
-!artifacts/weights/.gitkeep
 
 # ==========================================================
 # Offline Pipeline Outputs
@@ -140,11 +130,6 @@ reports/
 outputs/
 runs/
 
-# Ranking submissions
-submission.csv
-
-# Generated metadata
-run_report.json
 
 # ==========================================================
 # Jupyter

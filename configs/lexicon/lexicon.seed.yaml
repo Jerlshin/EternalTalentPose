@@ -1,5 +1,4 @@
-# O4 lexicon SEED — human seed terms per concept. O4 mines and O5 expands these
-# into artifacts/lexicon/lexicon.compiled.json. Concept keys are free-form.
+
 concepts:
   retrieval:
     seed_terms: ["retrieval", "dense retrieval", "vector search", "ann", "faiss"]

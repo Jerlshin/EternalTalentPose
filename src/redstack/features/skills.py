@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import re
@@ -33,7 +32,6 @@ _PROFILE = EvidenceKind.PROFILE_FIELD
 _SEMANTIC = EvidenceKind.DERIVED
 _DERIVED = EvidenceKind.DERIVED
 
-# The nine competency groups in fixed layout order.
 _GROUPS: Final[tuple[str, ...]] = (
     "retr",
     "rank",
@@ -46,25 +44,7 @@ _GROUPS: Final[tuple[str, ...]] = (
     "eval",
 )
 
-# Competency fusion weights (convex) and stuffing-penalty strength.
-#
-# Full-pool audit (data/raw/candidates.jsonl, all 100k) found a concrete
-# trap-candidate archetype the original 0.45/0.30/0.25 split let through at
-# scale: a non-ML title (Cloud/DevOps/QA/Full-stack Engineer) whose actual
-# job-description text has zero overlap with the concept's lexicon tokens
-# (``in_career`` == 0) but who lists a trendy AI skill with inflated
-# endorsements/duration (``trust`` high) and whose profile *summary* mentions
-# the same buzzwords in hedged, self-disclosed-hobbyist language ("I've been
-# keeping up with AI/ML at a self-learner level ... haven't done it in a
-# professional capacity yet") that the full-resume embedding still reads as
-# topically similar (``semantic`` high). With trust+semantic carrying 70% of
-# the fused weight, this pattern alone made up 62/100 of one post-fix top-100
-# ranking. ``in_career`` is the one source anchored to job-description text
-# rather than self-reported metadata or hedge-blind cosine similarity --
-# exactly the JD's own instruction ("if their career history shows they
-# built X, they're a fit; a candidate with all the keywords but the wrong
-# title is not"). Rebalanced so it dominates rather than trailing both
-# gameable sources combined.
+
 _W_TRUST: Final[float] = 0.25
 _W_IN_CAREER: Final[float] = 0.50
 _W_SEMANTIC: Final[float] = 0.25
@@ -78,12 +58,41 @@ _STOPWORDS: Final[frozenset[str]] = frozenset(
 )
 
 
+_SENTENCE_SPLIT_RE: Final[re.Pattern[str]] = re.compile(r"(?<=[.!?])\s+")
+
+
+_HEDGE_MARKERS: Final[tuple[str, ...]] = (
+    "interested in transitioning",
+    "professional experience there is limited",
+    "limited professional experience",
+    "haven't done it in a professional capacity",
+    "have not done it in a professional capacity",
+    "still building depth",
+    "beyond the surface level",
+    "self-learner level",
+)
+
+
 def _tokenize(text: str) -> frozenset[str]:
     """Lowercase alphanumeric tokens (length ≥ 2), stopwords removed."""
     return frozenset(
         token
         for token in _TOKEN_RE.findall(text.lower())
         if len(token) >= 2 and token not in _STOPWORDS
+    )
+
+
+def _drop_hedged_sentences(text: str) -> str:
+    """Remove sentences carrying a disclaiming/aspirational marker.
+
+    Used only for the ``in_career`` evidence pool: a sentence asserting "I
+    haven't done X professionally" must not let X's tokens count as
+    hands-on-evidence just because it also names X by its canonical term.
+    """
+    return " ".join(
+        sentence
+        for sentence in _SENTENCE_SPLIT_RE.split(text)
+        if not any(marker in sentence.lower() for marker in _HEDGE_MARKERS)
     )
 
 
@@ -131,11 +140,15 @@ def _skill_trust(skill: RawSkill, assessment: float | None) -> float:
     """
     from redstack.features.view import bounded_log_scale
 
-    e_norm = bounded_log_scale(float(skill.endorsements), saturation=ENDORSEMENT_SATURATION)
+    e_norm = bounded_log_scale(
+        float(skill.endorsements), saturation=ENDORSEMENT_SATURATION
+    )
     if skill.duration_months is None:
         d_norm = 0.0
     else:
-        d_norm = bounded_log_scale(float(skill.duration_months), saturation=DURATION_SATURATION_MONTHS)
+        d_norm = bounded_log_scale(
+            float(skill.duration_months), saturation=DURATION_SATURATION_MONTHS
+        )
     a_norm = 0.0 if assessment is None else clamp_unit(assessment / 100.0)
     return clamp_unit(0.4 * e_norm + 0.3 * d_norm + 0.3 * a_norm)
 
@@ -175,9 +188,7 @@ def _competency_group(
     trust = _noisy_or(tuple(t for (_, _, t) in matched))
 
     # in_career: fraction of concept tokens that appear in role descriptions.
-    in_career = clamp_unit(
-        len(tokens & description_tokens) / float(len(tokens))
-    )
+    in_career = clamp_unit(len(tokens & description_tokens) / float(len(tokens)))
 
     # semantic: resolved anchor cosine mapped from [-1, 1] to [0, 1].
     sim = semantic.get(concept.anchor_id)
@@ -185,10 +196,14 @@ def _competency_group(
     semantic_value = clamp_unit((float(sim) + 1.0) / 2.0) if sim is not None else 0.0
 
     corroboration = mean_of((trust, in_career, semantic_value))
-    weighted = _W_TRUST * trust + _W_IN_CAREER * in_career + _W_SEMANTIC * semantic_value
+    weighted = (
+        _W_TRUST * trust + _W_IN_CAREER * in_career + _W_SEMANTIC * semantic_value
+    )
     stuffing_penalty = clamp_unit(claimed - corroboration)
     # Cap at the corroboration mean ⇒ satisfies the competency-LE contract.
-    competency = clamp_unit(min(weighted, corroboration) - _W_STUFFING * stuffing_penalty)
+    competency = clamp_unit(
+        min(weighted, corroboration) - _W_STUFFING * stuffing_penalty
+    )
 
     sources_present = (
         (1 if trust > 0.0 else 0)
@@ -200,7 +215,7 @@ def _competency_group(
     # Evidence: matched skills (capped), else a derived concept marker.
     if matched:
         skill_ev = tuple(
-            make_evidence(_SKILL, f"skills[{idx}].name", skill.name)
+            make_evidence(_SKILL, f"skills[{idx}].name", skill.name, raw=raw)
             for (idx, skill, _) in matched[:_MAX_SKILL_EVIDENCE]
         )
     else:
@@ -225,7 +240,11 @@ def _competency_group(
         ),
         (
             f"{group}.competency",
-            cell(competency, corroboration_conf, (make_evidence(_DERIVED, f"{group}.competency", competency),)),
+            cell(
+                competency,
+                corroboration_conf,
+                (make_evidence(_DERIVED, f"{group}.competency", competency),),
+            ),
         ),
     ]
 
@@ -271,8 +290,15 @@ def _consistency(
                 title_role,
                 0.7,
                 (
-                    make_evidence(_PROFILE, "profile.current_title", profile.current_title),
-                    make_evidence(_CAREER, current_desc_path, "role_description"),
+                    make_evidence(
+                        _PROFILE,
+                        "profile.current_title",
+                        profile.current_title,
+                        raw=raw,
+                    ),
+                    make_evidence(
+                        _CAREER, current_desc_path, "role_description", raw=raw
+                    ),
                 ),
             ),
         ),
@@ -289,7 +315,14 @@ def _consistency(
             cell(
                 summary_coherence,
                 0.6,
-                (make_evidence(_PROFILE, "profile.summary", profile.summary[:64] or "summary"),),
+                (
+                    make_evidence(
+                        _PROFILE,
+                        "profile.summary",
+                        profile.summary[:64] or "summary",
+                        raw=raw,
+                    ),
+                ),
             ),
         ),
     ]
@@ -310,7 +343,7 @@ def extract(
     """
     description_tokens: frozenset[str] = frozenset()
     for position in raw.career_history:
-        description_tokens |= _tokenize(position.description)
+        description_tokens |= _tokenize(_drop_hedged_sentences(position.description))
 
     rows: list[tuple[str, FeatureCell]] = []
     for group in _GROUPS:

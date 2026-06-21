@@ -50,9 +50,9 @@ test-unit: ## Fast unit + property suites only
 test-integration: ## Integration + determinism suites
 	$(UV) run pytest -m "integration or determinism" tests/
 
-build: ## Offline: O0..O18 -> artifacts/ + MANIFEST.json
+build: ## Offline: O0..O18 -> artifacts/ + MANIFEST.json (locked heuristic weights; no gold-label search)
 	@mkdir -p artifacts/embeddings artifacts/models artifacts/gates artifacts/weights artifacts/calibration artifacts/lexicon artifacts/archetypes
-	$(UV) run redstack build --config configs/runtime/offline.yaml
+	$(UV) run redstack build --config configs/runtime/offline.yaml --no-golden-labels
 
 rank: ## Online: R0..R9 -> submission.csv + run_report.json
 	@mkdir -p artifacts

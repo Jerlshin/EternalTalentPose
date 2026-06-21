@@ -8,11 +8,8 @@ from types import MappingProxyType
 from redstack.domain.candidate.quality import FeatureLayout, FeatureLayoutEntry
 from redstack.domain.ids import FeatureIndex
 
-# Major.minor.patch — order change ⇒ major bump.
 LAYOUT_VERSION = "1.1.0"
-# The CQV ``schema_version`` is pinned to the layout version (one shared pin,
-# Repository §0/§6): a CQV produced under one layout cannot be scored under
-# another.
+
 SCHEMA_VERSION = LAYOUT_VERSION
 
 
@@ -31,12 +28,10 @@ class SourceSlice(str, Enum):
     DERIVED = "derived"
 
 
-# Competency groups (Feature Layer groups 8–16) and their fixed suffix order.
 _COMPETENCY_GROUPS: tuple[str, ...] = (
     "retr", "rank", "recsys", "ir", "nlp", "llm", "mle", "mlops", "eval",
 )
-# (suffix, source_slice) — ``.semantic`` comes from the semantic slice, the rest
-# from the credibility (trust) slice.
+
 _COMPETENCY_SUFFIXES: tuple[tuple[str, SourceSlice], ...] = (
     ("claimed", SourceSlice.CREDIBILITY),
     ("trust", SourceSlice.CREDIBILITY),

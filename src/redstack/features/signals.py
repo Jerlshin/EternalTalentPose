@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from datetime import date
@@ -50,9 +49,11 @@ _OSS_CUES: Final[tuple[str, ...]] = (
 )
 
 
-def _sig_ev(field: str, value: str | int | float | bool) -> tuple[EvidenceRef, ...]:
+def _sig_ev(
+    raw: RawCandidate, field: str, value: str | int | float | bool
+) -> tuple[EvidenceRef, ...]:
     """One ``EvidenceRef`` tuple anchored at ``redrob_signals.<field>``."""
-    return (make_evidence(_SIGNAL, f"redrob_signals.{field}", value),)
+    return (make_evidence(_SIGNAL, f"redrob_signals.{field}", value, raw=raw),)
 
 
 # --------------------------------------------------------------------------- #
@@ -84,17 +85,21 @@ def _oss(raw: RawCandidate) -> list[tuple[str, FeatureCell]]:
         (0.6 if github_known and github > 20.0 else 0.0)
         + bounded_log_scale(float(cue_hits), saturation=3.0) * 0.6
     )
-    validation_ev: tuple[EvidenceRef, ...] = _sig_ev("github_activity_score", github)
+    validation_ev: tuple[EvidenceRef, ...] = _sig_ev(
+        raw, "github_activity_score", github
+    )
     if cue_path:
         validation_ev = (
             *validation_ev,
-            make_evidence(_CAREER, cue_path, "oss_cue"),
+            make_evidence(_CAREER, cue_path, "oss_cue", raw=raw),
         )
 
     return [
         (
             "oss.activity",
-            cell(activity, activity_conf, _sig_ev("github_activity_score", github)),
+            cell(
+                activity, activity_conf, _sig_ev(raw, "github_activity_score", github)
+            ),
         ),
         (
             "oss.has_external_validation",
@@ -106,7 +111,9 @@ def _oss(raw: RawCandidate) -> list[tuple[str, FeatureCell]]:
 # --------------------------------------------------------------------------- #
 # Availability (group 21).                                                    #
 # --------------------------------------------------------------------------- #
-def _availability(raw: RawCandidate, as_of: date) -> tuple[float, float, list[tuple[str, FeatureCell]]]:
+def _availability(
+    raw: RawCandidate, as_of: date
+) -> tuple[float, float, list[tuple[str, FeatureCell]]]:
     sig = raw.redrob_signals
     is_open = 1.0 if sig.open_to_work_flag else 0.0
     elapsed = days_between(as_of, sig.last_active_date)
@@ -116,14 +123,18 @@ def _availability(raw: RawCandidate, as_of: date) -> tuple[float, float, list[tu
     rows: list[tuple[str, FeatureCell]] = [
         (
             "avail.open",
-            cell(is_open, _HIGH_CONF, _sig_ev("open_to_work_flag", sig.open_to_work_flag)),
+            cell(
+                is_open,
+                _HIGH_CONF,
+                _sig_ev(raw, "open_to_work_flag", sig.open_to_work_flag),
+            ),
         ),
         (
             "avail.recency",
             cell(
                 recency,
                 _HIGH_CONF,
-                _sig_ev("last_active_date", sig.last_active_date.isoformat()),
+                _sig_ev(raw, "last_active_date", sig.last_active_date.isoformat()),
             ),
         ),
         (
@@ -131,11 +142,7 @@ def _availability(raw: RawCandidate, as_of: date) -> tuple[float, float, list[tu
             cell(
                 available,
                 _HIGH_CONF,
-                (
-                    make_evidence(
-                        _DERIVED, "avail.available", available
-                    ),
-                ),
+                (make_evidence(_DERIVED, "avail.available", available),),
             ),
         ),
     ]
@@ -145,15 +152,25 @@ def _availability(raw: RawCandidate, as_of: date) -> tuple[float, float, list[tu
 # --------------------------------------------------------------------------- #
 # Engagement (group 22).                                                      #
 # --------------------------------------------------------------------------- #
-def _engagement(sig: RawSignals) -> tuple[float, float, float, list[tuple[str, FeatureCell]]]:
-    views = bounded_log_scale(float(sig.profile_views_received_30d), saturation=_VIEW_SATURATION)
-    searches = bounded_log_scale(float(sig.search_appearance_30d), saturation=_SEARCH_SATURATION)
-    saves = bounded_log_scale(float(sig.saved_by_recruiters_30d), saturation=_SAVES_SATURATION)
+def _engagement(
+    raw: RawCandidate, sig: RawSignals
+) -> tuple[float, float, float, list[tuple[str, FeatureCell]]]:
+    views = bounded_log_scale(
+        float(sig.profile_views_received_30d), saturation=_VIEW_SATURATION
+    )
+    searches = bounded_log_scale(
+        float(sig.search_appearance_30d), saturation=_SEARCH_SATURATION
+    )
+    saves = bounded_log_scale(
+        float(sig.saved_by_recruiters_30d), saturation=_SAVES_SATURATION
+    )
     passive = mean_of((views, searches, saves))
     active = bounded_log_scale(
         float(sig.applications_submitted_30d), saturation=_APPLICATION_SATURATION
     )
-    network = bounded_log_scale(float(sig.connection_count), saturation=_CONNECTION_SATURATION)
+    network = bounded_log_scale(
+        float(sig.connection_count), saturation=_CONNECTION_SATURATION
+    )
     velocity = clamp_unit(0.5 * active + 0.5 * passive)
     rows: list[tuple[str, FeatureCell]] = [
         (
@@ -162,22 +179,46 @@ def _engagement(sig: RawSignals) -> tuple[float, float, float, list[tuple[str, F
                 passive,
                 _HIGH_CONF,
                 (
-                    make_evidence(_SIGNAL, "redrob_signals.profile_views_received_30d", sig.profile_views_received_30d),
-                    make_evidence(_SIGNAL, "redrob_signals.saved_by_recruiters_30d", sig.saved_by_recruiters_30d),
+                    make_evidence(
+                        _SIGNAL,
+                        "redrob_signals.profile_views_received_30d",
+                        sig.profile_views_received_30d,
+                        raw=raw,
+                    ),
+                    make_evidence(
+                        _SIGNAL,
+                        "redrob_signals.saved_by_recruiters_30d",
+                        sig.saved_by_recruiters_30d,
+                        raw=raw,
+                    ),
                 ),
             ),
         ),
         (
             "eng.active",
-            cell(active, _HIGH_CONF, _sig_ev("applications_submitted_30d", sig.applications_submitted_30d)),
+            cell(
+                active,
+                _HIGH_CONF,
+                _sig_ev(
+                    raw, "applications_submitted_30d", sig.applications_submitted_30d
+                ),
+            ),
         ),
         (
             "eng.network",
-            cell(network, _HIGH_CONF, _sig_ev("connection_count", sig.connection_count)),
+            cell(
+                network,
+                _HIGH_CONF,
+                _sig_ev(raw, "connection_count", sig.connection_count),
+            ),
         ),
         (
             "eng.velocity",
-            cell(velocity, _HIGH_CONF, (make_evidence(_DERIVED, "eng.velocity", velocity),)),
+            cell(
+                velocity,
+                _HIGH_CONF,
+                (make_evidence(_DERIVED, "eng.velocity", velocity),),
+            ),
         ),
     ]
     return passive, active, saves, rows
@@ -186,14 +227,39 @@ def _engagement(sig: RawSignals) -> tuple[float, float, float, list[tuple[str, F
 # --------------------------------------------------------------------------- #
 # Responsiveness (group 23).                                                  #
 # --------------------------------------------------------------------------- #
-def _responsiveness(sig: RawSignals) -> tuple[float, list[tuple[str, FeatureCell]]]:
+def _responsiveness(
+    raw: RawCandidate, sig: RawSignals
+) -> tuple[float, list[tuple[str, FeatureCell]]]:
     rate = clamp_unit(sig.recruiter_response_rate)
-    speed = inverse_bounded(sig.avg_response_time_hours, scale=RESPONSE_TIME_SCALE_HOURS)
+    speed = inverse_bounded(
+        sig.avg_response_time_hours, scale=RESPONSE_TIME_SCALE_HOURS
+    )
     reliable = mean_of((rate, speed))
     rows: list[tuple[str, FeatureCell]] = [
-        ("resp.rate", cell(rate, _HIGH_CONF, _sig_ev("recruiter_response_rate", sig.recruiter_response_rate))),
-        ("resp.speed", cell(speed, _HIGH_CONF, _sig_ev("avg_response_time_hours", sig.avg_response_time_hours))),
-        ("resp.reliable", cell(reliable, _HIGH_CONF, (make_evidence(_DERIVED, "resp.reliable", reliable),))),
+        (
+            "resp.rate",
+            cell(
+                rate,
+                _HIGH_CONF,
+                _sig_ev(raw, "recruiter_response_rate", sig.recruiter_response_rate),
+            ),
+        ),
+        (
+            "resp.speed",
+            cell(
+                speed,
+                _HIGH_CONF,
+                _sig_ev(raw, "avg_response_time_hours", sig.avg_response_time_hours),
+            ),
+        ),
+        (
+            "resp.reliable",
+            cell(
+                reliable,
+                _HIGH_CONF,
+                (make_evidence(_DERIVED, "resp.reliable", reliable),),
+            ),
+        ),
     ]
     return reliable, rows
 
@@ -229,7 +295,11 @@ def _signal_consistency(sig: RawSignals) -> float:
     flags = 0
     if sig.saved_by_recruiters_30d > 0 and sig.profile_views_received_30d == 0:
         flags += 1  # saved but never surfaced
-    if sig.applications_submitted_30d > 0 and sig.open_to_work_flag is False and sig.recruiter_response_rate == 0.0:
+    if (
+        sig.applications_submitted_30d > 0
+        and sig.open_to_work_flag is False
+        and sig.recruiter_response_rate == 0.0
+    ):
         flags += 0  # not impossible — applications can precede openness
     if sig.connection_count == 0 and sig.profile_views_received_30d > 50:
         flags += 1  # heavily viewed yet zero network
@@ -268,10 +338,12 @@ def _behavioral(
     saves_norm = saves
 
     signup_recency = recency_unit(
-        float(days_between(as_of, sig.signup_date)), half_life_days=_SIGNUP_HALF_LIFE_DAYS
+        float(days_between(as_of, sig.signup_date)),
+        half_life_days=_SIGNUP_HALF_LIFE_DAYS,
     )
     last_active_recency = recency_unit(
-        float(days_between(as_of, sig.last_active_date)), half_life_days=ACTIVITY_HALF_LIFE_DAYS
+        float(days_between(as_of, sig.last_active_date)),
+        half_life_days=ACTIVITY_HALF_LIFE_DAYS,
     )
 
     recruitability = clamp_unit(mean_of((is_open, responsiveness, saves_norm)))
@@ -282,7 +354,9 @@ def _behavioral(
     recruiter_attractiveness = market_demand
     hiring_probability_proxy = clamp_unit(availability * responsiveness * reliability)
     freshness = clamp_unit(0.7 * last_active_recency + 0.3 * signup_recency)
-    behavioral_confidence = clamp_unit(0.5 * (1.0 - unknown_density) + 0.5 * consistency)
+    behavioral_confidence = clamp_unit(
+        0.5 * (1.0 - unknown_density) + 0.5 * consistency
+    )
     behavioral_risk = clamp_unit(
         mean_of((1.0 - availability, 1.0 - reliability, 1.0 - consistency))
     )
@@ -294,24 +368,99 @@ def _behavioral(
         return (make_evidence(_DERIVED, feature_id, value),)
 
     return [
-        ("bhv.availability", cell(availability, _HIGH_CONF, d("bhv.availability", availability))),
-        ("bhv.recruitability", cell(recruitability, 0.85, d("bhv.recruitability", recruitability))),
-        ("bhv.response_reliability", cell(responsiveness, _HIGH_CONF, d("bhv.response_reliability", responsiveness))),
+        (
+            "bhv.availability",
+            cell(availability, _HIGH_CONF, d("bhv.availability", availability)),
+        ),
+        (
+            "bhv.recruitability",
+            cell(recruitability, 0.85, d("bhv.recruitability", recruitability)),
+        ),
+        (
+            "bhv.response_reliability",
+            cell(
+                responsiveness,
+                _HIGH_CONF,
+                d("bhv.response_reliability", responsiveness),
+            ),
+        ),
         (
             "bhv.interview_reliability",
-            cell(interview, 0.9, _sig_ev("interview_completion_rate", sig.interview_completion_rate)),
+            cell(
+                interview,
+                0.9,
+                _sig_ev(
+                    raw, "interview_completion_rate", sig.interview_completion_rate
+                ),
+            ),
         ),
-        ("bhv.market_demand", cell(market_demand, _HIGH_CONF, d("bhv.market_demand", market_demand))),
-        ("bhv.market_momentum", cell(market_momentum, 0.7, d("bhv.market_momentum", market_momentum))),
-        ("bhv.engagement_velocity", cell(engagement_velocity, 0.8, d("bhv.engagement_velocity", engagement_velocity))),
-        ("bhv.candidate_temperature", cell(candidate_temperature, 0.8, d("bhv.candidate_temperature", candidate_temperature))),
-        ("bhv.recruiter_attractiveness", cell(recruiter_attractiveness, _HIGH_CONF, d("bhv.recruiter_attractiveness", recruiter_attractiveness))),
-        ("bhv.hiring_probability_proxy", cell(hiring_probability_proxy, reliability_conf, d("bhv.hiring_probability_proxy", hiring_probability_proxy))),
+        (
+            "bhv.market_demand",
+            cell(market_demand, _HIGH_CONF, d("bhv.market_demand", market_demand)),
+        ),
+        (
+            "bhv.market_momentum",
+            cell(market_momentum, 0.7, d("bhv.market_momentum", market_momentum)),
+        ),
+        (
+            "bhv.engagement_velocity",
+            cell(
+                engagement_velocity,
+                0.8,
+                d("bhv.engagement_velocity", engagement_velocity),
+            ),
+        ),
+        (
+            "bhv.candidate_temperature",
+            cell(
+                candidate_temperature,
+                0.8,
+                d("bhv.candidate_temperature", candidate_temperature),
+            ),
+        ),
+        (
+            "bhv.recruiter_attractiveness",
+            cell(
+                recruiter_attractiveness,
+                _HIGH_CONF,
+                d("bhv.recruiter_attractiveness", recruiter_attractiveness),
+            ),
+        ),
+        (
+            "bhv.hiring_probability_proxy",
+            cell(
+                hiring_probability_proxy,
+                reliability_conf,
+                d("bhv.hiring_probability_proxy", hiring_probability_proxy),
+            ),
+        ),
         ("bhv.freshness", cell(freshness, _HIGH_CONF, d("bhv.freshness", freshness))),
-        ("bhv.trust", cell(verification, 0.9, _sig_ev("profile_completeness_score", sig.profile_completeness_score))),
-        ("bhv.signal_consistency", cell(consistency, 0.8, d("bhv.signal_consistency", consistency))),
-        ("bhv.behavioral_confidence", cell(behavioral_confidence, _HIGH_CONF, d("bhv.behavioral_confidence", behavioral_confidence))),
-        ("bhv.behavioral_risk", cell(behavioral_risk, 0.8, d("bhv.behavioral_risk", behavioral_risk))),
+        (
+            "bhv.trust",
+            cell(
+                verification,
+                0.9,
+                _sig_ev(
+                    raw, "profile_completeness_score", sig.profile_completeness_score
+                ),
+            ),
+        ),
+        (
+            "bhv.signal_consistency",
+            cell(consistency, 0.8, d("bhv.signal_consistency", consistency)),
+        ),
+        (
+            "bhv.behavioral_confidence",
+            cell(
+                behavioral_confidence,
+                _HIGH_CONF,
+                d("bhv.behavioral_confidence", behavioral_confidence),
+            ),
+        ),
+        (
+            "bhv.behavioral_risk",
+            cell(behavioral_risk, 0.8, d("bhv.behavioral_risk", behavioral_risk)),
+        ),
     ]
 
 
@@ -332,10 +481,10 @@ def extract(raw: RawCandidate, *, as_of: date) -> CellEmission:
     available, recency, avail_rows = _availability(raw, as_of)
     rows.extend(avail_rows)
 
-    passive, active, saves, eng_rows = _engagement(sig)
+    passive, active, saves, eng_rows = _engagement(raw, sig)
     rows.extend(eng_rows)
 
-    responsiveness, resp_rows = _responsiveness(sig)
+    responsiveness, resp_rows = _responsiveness(raw, sig)
     rows.extend(resp_rows)
 
     rows.extend(

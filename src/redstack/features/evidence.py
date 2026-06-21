@@ -14,11 +14,7 @@ _INDEX_RE = re.compile(r"^(?P<name>[^\[]+)\[(?P<idx>\d+)\]$")
 
 
 def resolve_path(raw: Mapping[str, object], path: str) -> object:
-    """Resolve a dotted/indexed path into a raw record; raise if it dangles.
 
-    Supports ``a.b``, ``a[0].b`` segments. Raises ``ProvenanceError`` if any
-    segment is missing or an index is out of range.
-    """
     cursor: object = raw
     for segment in path.split("."):
         match = _INDEX_RE.match(segment)

@@ -1,5 +1,4 @@
-# O6 anchor authoring SEED — positive/negative jd.* intents (re-authored per JD).
-# Embedded offline into artifacts/embeddings/anchor_vectors.npy keyed by id.
+
 anchors:
   - id: jd.retrieval_ranking
     polarity: positive

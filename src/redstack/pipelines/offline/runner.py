@@ -112,25 +112,7 @@ class StageCallable(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class StageReceipt:
-    """The persisted record of a stage execution (Part 1 outputs).
-
-    Split into a deterministic *reproducible* region and a wall-clock *audit*
-    region (mirrors Ports §13). The staleness key and produced-artifact hashes
-    are reproducible; ``wall_ms`` and ``status`` are audit-only and never enter a
-    staleness or reproducibility hash.
-
-    Attributes:
-        stage_id: The stage this receipt records.
-        stage_version: The stage's semver at execution time.
-        staleness_key: ``hash(input_hashes + stage_version + config_slice)`` —
-            the resume key (Part 11).
-        artifact_hashes: produced ``key -> sha256`` (deterministic).
-        artifact_bytes: produced ``key -> bytes_written``.
-        metrics: the stage's deterministic metrics.
-        status: this-run disposition (audit).
-        wall_ms: measured stage wall-time in ms (audit; excluded from hashes).
-    """
-
+   
     stage_id: str
     stage_version: str
     staleness_key: str
@@ -162,8 +144,6 @@ def _sha256_hex(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-# Injected monotonic clock seam: returns elapsed seconds. Defaults to
-# ``time.monotonic`` but tests pass a deterministic stub so receipts are stable.
 MonotonicClock = Callable[[], float]
 
 

@@ -1,5 +1,3 @@
-
-
 from __future__ import annotations
 
 import math
@@ -26,13 +24,20 @@ _ALL_CODES: Final[frozenset[ValidationCode]] = frozenset(ValidationCode)
 class ValidationEngine(BaseModel):
     """Stateless, pure validator over a (reasoned) ``Ranking``."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid", arbitrary_types_allowed=False)
+    model_config = ConfigDict(
+        frozen=True, extra="forbid", arbitrary_types_allowed=False
+    )
 
     expected_size: int = 100
 
     # ------------------------------------------------------------------ public
-    def validate(self, ranking: Ranking) -> ValidationReport:
-        """Run all structural + Stage-4 checks; assemble the ``ValidationReport``."""
+    def validate_ranking(self, ranking: Ranking) -> ValidationReport:
+        """Run all structural + Stage-4 checks; assemble the ``ValidationReport``.
+
+        Named ``validate_ranking`` rather than ``validate`` so this doesn't
+        shadow ``pydantic.BaseModel.validate`` (a deprecated classmethod with
+        an unrelated signature).
+        """
         findings: list[ValidationFinding] = []
         ordered = ranking.ordered
 

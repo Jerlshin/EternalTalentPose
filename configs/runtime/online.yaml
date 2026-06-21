@@ -1,4 +1,3 @@
-# Layer 1 (online) — R0..R9 runtime knobs. IO/runtime only, never weights.
 online:
   as_of: "2025-01-01T00:00:00+00:00"   # injected clock; no module reads OS time
   top_k: 100                           # validator-fixed top-100 cut

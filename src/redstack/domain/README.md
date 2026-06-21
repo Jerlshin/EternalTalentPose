@@ -1,0 +1,34 @@
+# `domain/` — Pure Data Models and Invariants
+
+**Purity contract.** This package imports only the standard library, `pydantic` v2, and `numpy` (and the latter only for the candidate quality vector's array type). No IO, no ML runtime, no `pandas`, no clock, no RNG, no network, and no other package in this repository. Every model is `frozen=True, extra="forbid"`. The only `Any`-accepting boundary in the entire layer is `RawCandidate.from_mapping`, which narrows to a fully-typed model immediately. See [`/ARCHITECTURE.md` §7](../../../ARCHITECTURE.md#7-the-domain-model) for the system-level view and [`docs/specs/REDSTACK_DOMAIN_LAYER.md`](../../../docs/specs/REDSTACK_DOMAIN_LAYER.md) for the exhaustive specification this README summarizes.
+
+## Why this package exists
+
+`domain/` is where RedStack's central design discipline lives: **illegal states are unrepresentable.** A `Ranking` cannot be constructed with a duplicate rank — the constructor rejects it before the object exists. A cosine similarity and a final ranking score are distinct types (`Similarity` vs. `Score`), so a static type checker rejects passing one where the other belongs. A reasoning sentence cannot be built without at least one reference to a real candidate field. None of this is enforced by review discipline; it is enforced by what the type system and `pydantic` validators will and will not let you construct.
+
+## File inventory
+
+| File | Defines | Notes |
+|---|---|---|
+| [`ids.py`](ids.py) | `CandidateId, AnchorId, ArchetypeId, SkillName, Score, Similarity, UnitScore, Multiplier, Months, LpaAmount, FeatureIndex` | `NewType` nominal aliases, checked statically by mypy only. A value may only be *minted* into one of these types inside the one module that owns its validation (e.g. `Score` only by `ScoringEngine`). |
+| [`enums.py`](enums.py) | `CompanySize, InstitutionTier, WorkMode, Proficiency, LanguageProficiency, RelevanceTier, CareerTrack, Severity, BuildStage, ScoreComponent, IntegrityFlag, EligibilityCode, ReasoningPolarity, LocationFit, NoticeFit, SignalAvailability, ValidationCode, EvidenceKind` | All closed vocabularies. Ordered enums (`CompanySize`, `Proficiency`, `BuildStage`, ...) expose an explicit `ordinal` — comparison is never by definition order. Every enum serializes **by value**, never by name, so artifacts and run reports stay stable across refactors. Values that mirror the candidate schema (e.g. `CompanySize`) match the dataset's literal strings exactly, per the project's lowercase-snake_case data-primitive convention. |
+| [`errors.py`](errors.py) | `DomainError` hierarchy: `SchemaError`, `InvariantViolation` (`RepresentationStageError`, `CQVInvariantError`, `ScoreInvariantError`, `RankingInvariantError`), `ProvenanceError`, `ArtifactContractError` | Two deliberate philosophies: business verdicts ("this candidate is a honeypot") are **data** (`Report` objects), never exceptions; invariant or programming failures **raise**, immediately. |
+| [`provenance.py`](provenance.py) | `EvidenceRef`, `ProvenanceHandle` | The anti-hallucination mechanism, as types. An `EvidenceRef` may only be constructed from a value that actually exists in the raw candidate record — a dangling path raises `ProvenanceError`. `ProvenanceHandle` holds either an inlined raw record (for survivors / the top-K) or a row index into the bulk columnar store, never both — the single most important memory decision in this layer. |
+| [`source.py`](source.py) | `RawCandidate, RawProfile, RawPosition, RawEducation, RawSkill, RawCertification, RawLanguage, RawSignals` | A lossless, validated mirror of the external candidate schema. Tolerant of **semantic** contradictions (inverted salary bands, an "expert" skill claimed with zero months of use) — these are preserved, not rejected, so the integrity engine can detect them downstream. Strict on **type/shape** violations only. |
+| [`jd.py`](jd.py) | `JobDescriptionSpec` | A frozen value object: the parsed job description, shared read-only across the entire candidate pool. |
+| [`candidate/`](candidate/README.md) | The ten `CandidateRepresentation` slices | See [`candidate/README.md`](candidate/README.md). |
+| [`scoring.py`](scoring.py) | `ScoringWeights, ScoreComponentValue, GateOutcome, ScoreBreakdown, ScoredCandidate` | The scoring contract: `weighted == raw * weight` for every component; `base_relevance == Σ component.weighted`; a failed integrity or eligibility gate forces `final_score` to a fixed floor sentinel, never a partial penalty. |
+| [`ranking.py`](ranking.py) | `RankedCandidate, Ranking` | The aggregate whose constructor enforces all six structural validity rules of a finished ranking at once: exactly 100 entries, ranks 1–100 each used once, unique pattern-valid candidate IDs, non-increasing score by rank, ties broken by ascending candidate ID, and the whole sequence sorted by `(-score, candidate_id)`. A violation of any rule raises `RankingInvariantError` rather than producing a structurally invalid ranking. |
+| [`reasoning.py`](reasoning.py) | `ReasoningClause, CandidateReasoning` | A `ReasoningClause` cannot be constructed without at least one resolvable `EvidenceRef` — the no-hallucination guarantee, enforced at construction rather than checked afterward. |
+| [`validation.py`](validation.py) | `ValidationFinding, ValidationReport` | The external submission-format validator's rules, plus the reasoning-quality checks, expressed as data. |
+
+## The aggregate root
+
+`candidate/representation.py` defines `CandidateRepresentation`, threaded through the online ranking run one slice at a time. Each slice attaches via a `with_*()` copy-on-write method that returns a *new* representation and advances a monotonic `BuildStage` marker (`PARSED → FEATURED → SITUATED → GATED → VECTORIZED → SCORED → RANKED → EXPLAINED`). Attaching a slice out of order, twice, or reading one before it's populated raises `RepresentationStageError` — this is what lets every pipeline stage be tested as an isolated, referentially transparent function.
+
+## Determinism and memory discipline
+
+- **No wall clock.** Every recency or tenure calculation takes an injected `as_of: date`; nothing in this package calls `datetime.now()`.
+- **No randomness.** Every tie (anchors, archetypes, final ranking) resolves by ascending ID, never an RNG draw.
+- **Vectors are referenced, not inlined.** `SemanticProfile` holds a `VectorRef` (a row index into the memory-mapped vector store), not the 384-dimensional array itself — across 100,000 candidates this is the difference between megabytes and nothing in Python object overhead.
+- **Bulk vs. rich materialization.** The full candidate pool flows through a single `(N, D)` columnar quality-vector matrix; a fully rich `CandidateRepresentation` object (with an inlined raw record) is materialized only for gate survivors and the eventual top-100 that need reasoning text.

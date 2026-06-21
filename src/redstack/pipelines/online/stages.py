@@ -149,22 +149,7 @@ _COMPETENCY_GROUPS: Final[tuple[str, ...]] = (
 )
 _RANKING_SIZE: Final[int] = 100
 
-# Per-group weight for the R5 confidence average that drives ``_shrink``'s pull
-# toward the neutral prior. A flat ``np.mean`` over all 32 CQV groups let
-# structurally-sparse optional groups (``oss``/``bhv``/``risk``/``hp``/...  —
-# low-confidence for most of the population regardless of domain fit, e.g. a
-# missing GitHub link or no prior offer history) dilute the handful of groups
-# that actually carry domain-fit signal, collapsing genuine skill/semantic
-# differences into a narrow band around 0.5 for everyone. Weights below are
-# proportional to each group's role in the locked ``ScoringWeights``: the nine
-# competency groups get the largest share (skill_match's 0.15, plus standing in
-# for semantic_fit's 0.30 since ``SemanticProfile`` carries no confidence field
-# of its own — these groups' nested ``.semantic`` cells are the closest proxy);
-# career/pvs/cons/edu/exp follow their own component weights. Every other group
-# (logistics/behavioral/integrity/identity) keeps a small non-zero floor so it
-# still nudges confidence — never a hard zero, per the "never create or
-# destroy relevance outright" multiplier discipline — but can no longer
-# dominate the average.
+
 _DOMAIN_FIT_GROUP_WEIGHT: Final[Mapping[str, float]] = MappingProxyType(
     {
         **{group: 3.0 for group in _COMPETENCY_GROUPS},
@@ -183,18 +168,24 @@ _GROUP_CONFIDENCE_WEIGHTS: Final[npt.NDArray[np.float64]] = np.array(
     ],
     dtype=np.float64,
 )
-# Denominator of the R5 confidence weighted-average (see ``r5_score``):
-# precomputed once so the per-candidate reduction matches ``np.average``'s
-# ``(a * weights).sum() / weights.sum()`` exactly, just batched over all N
-# rows in one call instead of N separate ``np.average`` calls.
+
 _GROUP_CONFIDENCE_WEIGHTS_SUM: Final[float] = float(_GROUP_CONFIDENCE_WEIGHTS.sum())
 
-# Static feature-id groupings for R5's component aggregation (``_score_components``/
-# ``_skill_match_value``). Hoisted to module scope so the hot per-candidate loop
-# doesn't reconstruct the same list/tuple literal (and, for skill-match, redo the
-# same f-string formatting) on every one of the 100k calls.
+
 _SKILL_MATCH_IDS: Final[tuple[str, ...]] = tuple(
     f"{group}.competency" for group in _COMPETENCY_GROUPS
+)
+
+_NLP_IR_EXPOSURE_GROUPS: Final[tuple[str, ...]] = (
+    "retr",
+    "rank",
+    "recsys",
+    "ir",
+    "nlp",
+    "eval",
+)
+_NLP_IR_EXPOSURE_IDS: Final[tuple[str, ...]] = tuple(
+    f"{group}.competency" for group in _NLP_IR_EXPOSURE_GROUPS
 )
 _CAREER_FIT_IDS: Final[tuple[str, ...]] = (
     "career.progression_quality",
@@ -306,12 +297,7 @@ def r0_load(
         neutral_prior=_as_float(weights_json.get("neutral_prior", 0.5)),
     )
 
-    # ``integrity_thresholds`` (real, from O3/O12) carries ``honeypot_threshold``
-    # and ``risk_weights`` (-> flag_weights) but no per-flag severity and none of
-    # the four online re-detection tolerances below — those are IntegrityEngine's
-    # own re-derivation constants (it independently re-runs all seven rules per
-    # candidate; it does not replay O3's bulk findings). Severity instead comes
-    # from the real ``integrity_rules`` artifact, which does carry it per flag.
+   
     thr = artifact_store.load_json(ArtifactKey("integrity_thresholds"))
     flag_weights = _as_mapping(thr.get("risk_weights", {}))
     rules_catalog = artifact_store.load_json(ArtifactKey("integrity_rules"))
@@ -825,9 +811,10 @@ def r4_gates(ctx: OnlineRunContext, situated: SituatedSet) -> GatedSet:
                 semantic=semantic,
                 logistics=logistics,
                 jd=_JD_SPEC,
-                skill_match=_skill_match_value(
+                nlp_ir_exposure=_skill_match_value(
                     situated.cells[i],
                     breadth_exponent=_SKILL_MATCH_GATE_BREADTH_EXPONENT,
+                    ids=_NLP_IR_EXPOSURE_IDS,
                 ),
             )
         floor[i] = integrity_report.is_honeypot or not eligibility_report.is_eligible
@@ -937,17 +924,22 @@ _SKILL_MATCH_GATE_BREADTH_EXPONENT: Final[float] = 2.0
 
 
 def _skill_match_value(
-    cells: Mapping[str, FeatureCell], *, breadth_exponent: float = 1.0
+    cells: Mapping[str, FeatureCell],
+    *,
+    breadth_exponent: float = 1.0,
+    ids: tuple[str, ...] = _SKILL_MATCH_IDS,
 ) -> float:
     """Breadth-weighted mean of the candidate's top-``_SKILL_MATCH_TOP_K``
-    (of nine) ``{group}.competency`` cells (Scoring's SKILL_MATCH raw).
+    (of ``ids``) ``{group}.competency`` cells (Scoring's SKILL_MATCH raw, when
+    called with the default nine-group ``ids``).
 
     Shared by ``_score_components`` (the scored component, default linear
-    breadth) and ``r4_gates`` (the eligibility gate input, which passes
-    ``_SKILL_MATCH_GATE_BREADTH_EXPONENT``) -- both read the identical
-    underlying top-K selection and noise floor, diverging only in how
-    sharply partial breadth is discounted, since the two callers ask
-    different questions (see ``_SKILL_MATCH_GATE_BREADTH_EXPONENT``'s
+    breadth over all nine groups) and ``r4_gates`` (which calls it twice: once
+    over all nine groups for the generic eligibility input, and once over
+    ``_NLP_IR_EXPOSURE_IDS`` for the CV/speech/robotics gate specifically) --
+    all three read the identical underlying top-K selection and noise floor,
+    diverging only in *which* groups are pooled and how sharply partial
+    breadth is discounted (see ``_SKILL_MATCH_GATE_BREADTH_EXPONENT``'s
     comment).
 
     A flat mean over all nine retr/rank/recsys/ir/nlp/llm/mle/mlops/eval
@@ -982,7 +974,7 @@ def _skill_match_value(
     the single-spike/partial-breadth pattern below the gate.
     """
     values = sorted(
-        (cells[fid].value for fid in _SKILL_MATCH_IDS if fid in cells), reverse=True
+        (cells[fid].value for fid in ids if fid in cells), reverse=True
     )
     if not values:
         return 0.0
@@ -1113,7 +1105,7 @@ def r8_submit(ctx: OnlineRunContext, ranking: Ranking) -> SubmissionReceipt:
             finding (no rejectable file is written).
     """
     validation_engine = ValidationEngine(expected_size=ranking.size)
-    report = validation_engine.validate(ranking)
+    report = validation_engine.validate_ranking(ranking)
     if not report.is_valid:
         hard = [f for f in report.findings if f.severity is Severity.HARD]
         raise SubmissionContractError(
