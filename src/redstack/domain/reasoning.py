@@ -1,7 +1,6 @@
-
-
 from __future__ import annotations
 
+import hashlib
 from typing import Final, Literal, final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -18,7 +17,18 @@ RankBand = Literal["top", "mid", "tail"]
 
 #: Bands that must carry at least one STRENGTH clause (§J.2).
 _STRENGTH_REQUIRED_BANDS: Final[frozenset[RankBand]] = frozenset({"top", "mid"})
-_CONCERN_PREFIX: Final[str] = "Concerns: "
+
+#: Concern-sentence lead-ins; picked deterministically from the clause
+#: fragments themselves (never randomness/wall-clock) so concern sentences
+#: don't all share the same bolted-on "Concerns: " skeleton (§J.5).
+_CONCERN_LEAD_INS: Final[tuple[str, ...]] = (
+    "That said,",
+    "On the downside,",
+    "Worth flagging:",
+    "The main caveat:",
+    "Set against that,",
+    "Less convincingly,",
+)
 
 
 @final
@@ -45,26 +55,60 @@ class CandidateReasoning(BaseModel):
     rank_band: RankBand
 
     @staticmethod
+    def _trim(fragment: str) -> str:
+        """Strip a clause fragment's own terminal punctuation.
+
+        Builders author each fragment as a free-standing mid-sentence clause
+        (often itself ending in ``.``); stripping that before joining several
+        clauses with ``"; "`` is what keeps the final rendering from showing
+        ``".; "`` mid-sentence or ``".."`` once the one closing period for the
+        whole sentence is appended (§J.5).
+        """
+        return fragment.strip().rstrip(" .;,")
+
+    @staticmethod
+    def _capitalize(sentence: str) -> str:
+        if not sentence:
+            return sentence
+        return sentence[0].upper() + sentence[1:]
+
+    @staticmethod
     def render(clauses: tuple[ReasoningClause, ...]) -> str:
         """Deterministically render an ordered clause set into ≤2 sentences.
 
-        Positive (STRENGTH/CONTEXT) fragments fold into one sentence; CONCERN
-        fragments fold into a second. Purely a function of clause order and
-        content — never randomness or templated name insertion (§J.5).
+        Positive (STRENGTH/CONTEXT) fragments fold into one semicolon-joined
+        sentence; CONCERN fragments fold into a second, introduced by a
+        lead-in chosen deterministically from the clause fragments themselves
+        (never randomness, never the wall clock, never a templated name
+        insertion) so concern sentences don't all share one bolted-on
+        skeleton. Each fragment's own terminal punctuation is trimmed before
+        joining, and each of the (at most two) sentences gets exactly one
+        leading capital and one trailing period (§J.5).
         """
         positives = [
-            c.fragment
+            CandidateReasoning._trim(c.fragment)
             for c in clauses
             if c.polarity is not ReasoningPolarity.CONCERN
         ]
         concerns = [
-            c.fragment for c in clauses if c.polarity is ReasoningPolarity.CONCERN
+            CandidateReasoning._trim(c.fragment)
+            for c in clauses
+            if c.polarity is ReasoningPolarity.CONCERN
         ]
         sentences: list[str] = []
         if positives:
-            sentences.append("; ".join(positives) + ".")
+            joined = "; ".join(positives)
+            sentences.append(CandidateReasoning._capitalize(joined) + ".")
         if concerns:
-            sentences.append(_CONCERN_PREFIX + "; ".join(concerns) + ".")
+            lead_in = _CONCERN_LEAD_INS[
+                int.from_bytes(
+                    hashlib.sha256("||".join(concerns).encode("utf-8")).digest()[:8],
+                    "big",
+                )
+                % len(_CONCERN_LEAD_INS)
+            ]
+            joined = f"{lead_in} " + "; ".join(concerns)
+            sentences.append(CandidateReasoning._capitalize(joined) + ".")
         return " ".join(sentences)
 
     @classmethod
@@ -87,9 +131,7 @@ class CandidateReasoning(BaseModel):
     def _stage4_invariants(self) -> CandidateReasoning:
         # §J.5 — rendered is the deterministic render of the ordered clauses.
         if self.rendered != self.render(self.clauses):
-            raise ValueError(
-                "rendered must equal the deterministic render of clauses"
-            )
+            raise ValueError("rendered must equal the deterministic render of clauses")
         # §J.3 — at least one clause connects to a JD requirement.
         if not any(c.jd_link is not None for c in self.clauses):
             raise ValueError("at least one clause must carry a non-null jd_link")
