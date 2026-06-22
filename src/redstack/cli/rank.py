@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import time
 from pathlib import Path
 from typing import Any, cast
 
@@ -11,6 +12,7 @@ import typer
 from redstack.config.determinism import apply_determinism
 from redstack.config.loader import ConfigLoadError, load_config
 from redstack.config.schema import Profile, RunMode
+from redstack.observability.timing import format_duration
 
 __all__: tuple[str, ...] = ("rank",)
 
@@ -51,6 +53,7 @@ def rank(
     ),
 ) -> None:
     """Run the online R0-R9 ranking pass: submission.csv + run_report.json."""
+    cumulative_started = time.perf_counter()
     configs_root = _resolve_configs_root(config)
     profile_enum = Profile(profile) if profile else None
     try:
@@ -67,6 +70,7 @@ def rank(
 
     output = output.resolve()
     report_path = output.with_name("run_report.json")
+    pass_started = time.perf_counter()
     result = run_online_rank(
         resolved,
         input_path=input.resolve(),
@@ -74,6 +78,8 @@ def rank(
         report_path=report_path,
         participant_id=participant_id,
     )
+    pass_elapsed = time.perf_counter() - pass_started
+    cumulative_elapsed = time.perf_counter() - cumulative_started
 
     typer.echo(
         "online rank complete: "
@@ -81,6 +87,10 @@ def rank(
         f"honeypot_rate_top100={result.honeypot_rate_top100:.4f} "
         f"within_budget={result.within_budget} "
         f"peak_rss_mb={result.peak_rss_mb:.1f}"
+    )
+    typer.echo(f"online pass duration:   {format_duration(pass_elapsed)} (MM:SS.ms)")
+    typer.echo(
+        f"cumulative wall-clock:  {format_duration(cumulative_elapsed)} (MM:SS.ms)"
     )
     if not result.within_budget:
         raise typer.Exit(code=1)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import time
 from pathlib import Path
 from typing import Any, cast
 
@@ -12,6 +13,7 @@ import yaml
 from redstack.config.determinism import apply_determinism
 from redstack.config.loader import ConfigLoadError, load_config
 from redstack.config.schema import Profile, RunMode
+from redstack.observability.timing import format_duration
 
 __all__: tuple[str, ...] = ("build",)
 
@@ -88,6 +90,7 @@ def build(
     ),
 ) -> None:
     """Run the offline O0-O18 build: artifacts/ + MANIFEST.json."""
+    cumulative_started = time.perf_counter()
     configs_root = _resolve_configs_root(config)
     profile_enum = Profile(profile) if profile else None
     try:
@@ -102,6 +105,7 @@ def build(
     compose = importlib.import_module("redstack.pipelines.offline.compose")
 
     force_ids = tuple(s.strip() for s in force.split(",")) if force else None
+    pass_started = time.perf_counter()
     if golden_labels:
         run_offline_build = cast("Any", compose.run_offline_build)
         report = run_offline_build(
@@ -123,12 +127,18 @@ def build(
             neutral_prior=neutral_prior,
             force=force_ids,
         )
+    pass_elapsed = time.perf_counter() - pass_started
+    cumulative_elapsed = time.perf_counter() - cumulative_started
 
     typer.echo(
         "offline build complete: "
         f"executed={len(report.executed)} "
         f"skipped={len(report.skipped)} "
         f"failed={len(report.failed)}"
+    )
+    typer.echo(f"offline pass duration:  {format_duration(pass_elapsed)} (MM:SS.ms)")
+    typer.echo(
+        f"cumulative wall-clock:  {format_duration(cumulative_elapsed)} (MM:SS.ms)"
     )
     if report.failed:
         raise typer.Exit(code=1)

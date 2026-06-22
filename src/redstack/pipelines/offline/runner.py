@@ -162,12 +162,15 @@ class OfflinePipelineRunner:
         continue_on_error: If ``True``, a *non-critical* stage failure is
             flagged and the build continues; a critical failure always aborts.
         clock: Injected monotonic clock for stage timing (audit only).
+            Defaults to ``time.perf_counter``, the highest-resolution monotonic
+            clock available, consistent with :class:`~redstack.observability
+            .timing.StageTimer` and the online pipeline's per-stage timing.
     """
 
     graph: OfflineExecutionGraph
     registry: OfflineArtifactRegistry
     continue_on_error: bool = False
-    clock: MonotonicClock = time.monotonic
+    clock: MonotonicClock = time.perf_counter
 
     # ------------------------------------------------------------------ #
     # Staleness                                                          #

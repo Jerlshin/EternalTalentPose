@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import gc
-import resource
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -11,6 +10,7 @@ from typing import final
 
 from redstack.config.determinism import DeterminismPolicy, pin_determinism
 from redstack.domain.errors import ArtifactContractError
+from redstack.observability.timing import sample_peak_rss_mb
 from redstack.pipelines.online import stages
 from redstack.ports.artifact_store import ArtifactStorePort
 from redstack.ports.candidate_source import CandidateSourcePort
@@ -138,14 +138,15 @@ class _StageClock:
 
 
 def _peak_rss_mb() -> float:
-    """Peak resident set size in MiB (Linux ``ru_maxrss`` is KiB).
+    """Peak resident set size in MiB, on whichever platform this runs on.
 
     Pure of any wall clock; reads the OS-reported high-water mark so R9's budget
-    block can record ``peak_rss_mb`` without sampling. The online sandbox is Linux
-    (KiB), the assumed unit here.
+    block can record ``peak_rss_mb`` without sampling. Delegates to the shared
+    cross-platform reader (POSIX ``resource`` or Windows ``ctypes``/``psapi``) so
+    this never assumes a Linux-only sandbox (CLAUDE.md §1: cross-platform
+    execution stability).
     """
-    raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    return round(raw / 1024.0, 3)
+    return round(sample_peak_rss_mb(), 3)
 
 
 class OnlinePipeline:

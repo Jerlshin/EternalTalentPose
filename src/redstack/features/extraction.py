@@ -50,6 +50,7 @@ __all__: tuple[str, ...] = (
     "build_credibility_profile",
     "build_logistics_profile",
     "extract_row",
+    "extract_row_with_base_cells",
     "fold_semantic",
 )
 
@@ -503,13 +504,18 @@ def _simple_groups(
 # --------------------------------------------------------------------------- #
 # Full per-candidate cell assembly + the R2/R3 public entry points.           #
 # --------------------------------------------------------------------------- #
-def build_cells(
-    raw: RawCandidate, *, as_of: date, semantic: Mapping[str, Similarity]
-) -> dict[str, FeatureCell]:
-    """Assemble every one of the 145 feature cells for one candidate.
+def _build_base_cells(raw: RawCandidate, *, as_of: date) -> dict[str, FeatureCell]:
+    """Assemble the subset of cells that never read ``semantic`` similarities.
+
+    Career/pvs/geography/education/``_simple_groups``/signals/honeypot are all
+    pure functions of ``(raw, as_of)`` alone -- their output is identical
+    whether called from the R2 placeholder pass (``semantic={}``) or the R3
+    resolved pass. A caller that runs both passes (online R2->R3) computes this
+    once and feeds it to both :func:`extract_row_with_base_cells` and
+    :func:`fold_semantic` instead of re-deriving it a second time.
 
     Order matters: ``career.*``/``pvs.*`` run first because ``_simple_groups``
-    and the competency/latent layers reuse their cells.
+    reuses their cells.
     """
     cells: dict[str, FeatureCell] = {}
     cells.update(dict(career.extract_career(raw, as_of=as_of)))
@@ -519,11 +525,36 @@ def build_cells(
     cells.update(_normalize(geography.extract_geography(raw, logistics).items()))
     cells.update(_normalize(education.extract_education(raw, as_of).items()))
     cells.update(_simple_groups(raw, cells))
-    cells.update(dict(extract_skills(raw, semantic=semantic, lexicon=_LEXICON)))
     cells.update(dict(signals.extract(raw, as_of=as_of)))
     cells.update(dict(honeypot.extract(raw, as_of=as_of)))
+    return cells
+
+
+def _fold_skills_and_latents(
+    base_cells: Mapping[str, FeatureCell],
+    raw: RawCandidate,
+    *,
+    semantic: Mapping[str, Similarity],
+) -> dict[str, FeatureCell]:
+    """Layer the semantic-dependent skill-competency + ``jd.*`` latent cells onto
+    a copy of ``base_cells``.
+
+    ``extract_skills`` is the only extractor that reads ``semantic`` directly;
+    ``latents.extract`` runs last because its ``jd.*`` cells (also semantic-
+    dependent, via the competency cells) read the full accumulated map.
+    """
+    cells = dict(base_cells)
+    cells.update(dict(extract_skills(raw, semantic=semantic, lexicon=_LEXICON)))
     cells.update(dict(latents.extract(cells)))
     return cells
+
+
+def build_cells(
+    raw: RawCandidate, *, as_of: date, semantic: Mapping[str, Similarity]
+) -> dict[str, FeatureCell]:
+    """Assemble every one of the 145 feature cells for one candidate."""
+    base_cells = _build_base_cells(raw, as_of=as_of)
+    return _fold_skills_and_latents(base_cells, raw, semantic=semantic)
 
 
 def _assemble(
@@ -565,9 +596,26 @@ def _assemble(
 def extract_row(
     raw: RawCandidate, registry: FeatureRegistry, *, as_of: date
 ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
- 
+
     cells = build_cells(raw, as_of=as_of, semantic={})
     return _assemble(cells, registry)
+
+
+def extract_row_with_base_cells(
+    raw: RawCandidate, registry: FeatureRegistry, *, as_of: date
+) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32], dict[str, FeatureCell]]:
+    """Like :func:`extract_row`, but also returns the semantic-independent base
+    cells (see :func:`_build_base_cells`).
+
+    For a caller that will later call :func:`fold_semantic` on the same
+    candidate (the online R2->R3 path), passing the returned ``base_cells``
+    through lets R3 skip re-deriving career/geography/education/signals/
+    honeypot a second time.
+    """
+    base_cells = _build_base_cells(raw, as_of=as_of)
+    cells = _fold_skills_and_latents(base_cells, raw, semantic={})
+    values, confidence = _assemble(cells, registry)
+    return values, confidence, base_cells
 
 
 def fold_semantic(
@@ -575,20 +623,24 @@ def fold_semantic(
     confidence: npt.NDArray[np.float32],
     raw: RawCandidate,
     registry: FeatureRegistry,
+    base_cells: Mapping[str, FeatureCell],
     *,
-    as_of: date,
     semantic: Mapping[str, Similarity],
 ) -> dict[str, FeatureCell]:
     """Recompute the semantic-dependent cells of ``row``/``confidence`` in place (R3).
 
-    Re-derives the full cell set with the now-resolved ``semantic`` similarity
-    map and overwrites only the competency ``.semantic``/``.competency`` cells
-    and the ``jd.*`` latents (the only cells whose value depends on
-    ``semantic``); every other index is untouched. Returns the full cell map
-    it just built so the caller (R3) doesn't have to re-run ``build_cells`` a
-    second time to get the per-candidate cell map it also needs.
+    Takes the ``base_cells`` already computed by R2's
+    :func:`extract_row_with_base_cells` instead of rebuilding the full 145-cell
+    set from scratch -- only ``extract_skills`` and the ``jd.*`` latents that sit
+    on top of it actually read ``semantic``, so the career/geography/education/
+    signals/honeypot extractors are not re-run here. Overwrites only the
+    competency ``.semantic``/``.competency`` (etc., whole-group) cells and the
+    ``jd.*`` latents in ``row``/``confidence``; every other index is untouched.
+    Returns the full cell map it just built so the caller (R3) doesn't have to
+    re-run anything a second time to get the per-candidate cell map it also
+    needs.
     """
-    full_cells = build_cells(raw, as_of=as_of, semantic=semantic)
+    full_cells = _fold_skills_and_latents(base_cells, raw, semantic=semantic)
     conf_sum: dict[str, float] = {}
     conf_count: dict[str, float] = {}
     for definition in registry.definitions:

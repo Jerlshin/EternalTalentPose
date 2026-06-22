@@ -67,7 +67,7 @@ from redstack.features.extraction import (
     build_career_profile,
     build_credibility_profile,
     build_logistics_profile,
-    extract_row,
+    extract_row_with_base_cells,
     fold_semantic,
 )
 from redstack.features.layout import GROUP_ORDER
@@ -584,6 +584,11 @@ class FeaturedSet:
     cqv: npt.NDArray[np.float32]
     confidence: npt.NDArray[np.float32]
     representations: tuple[CandidateRepresentation, ...]
+    #: The semantic-independent cell subset per candidate (career/geography/
+    #: education/signals/honeypot/etc.), cached so R3's ``fold_semantic`` can
+    #: skip re-deriving them with a now-resolved (but otherwise irrelevant to
+    #: them) ``semantic`` map.
+    base_cells: tuple[Mapping[str, FeatureCell], ...]
     #: ids already certain to be hard-blocked on career/credibility alone
     #: (``EligibilityEngine.evaluate_structural``) -> their fired findings.
     #: R3 reads this to skip the vector-store lookup/onnx fallback for them;
@@ -606,17 +611,21 @@ def r2_features(
     cqv = np.zeros((n, registry.dim), dtype=np.float32)
     confidence = np.zeros((n, len(registry.groups)), dtype=np.float32)
     reps: list[CandidateRepresentation] = []
+    base_cells: list[Mapping[str, FeatureCell]] = []
     structural_findings: dict[CandidateId, tuple[EligibilityFinding, ...]] = {}
 
     for i, cand in enumerate(ingested):
-        # ``extract_row`` builds the placeholder (semantic={}) cell map itself
-        # internally — R3's ``fold_semantic`` is what needs the *resolved*
-        # cell map, and it builds + returns that one. Building a placeholder
-        # cell map here too would just be the same ``build_cells`` call run
-        # twice with identical arguments, discarded either way.
-        row, conf_row = extract_row(cand.raw, registry, as_of=ctx.as_of)
+        # ``extract_row_with_base_cells`` builds the placeholder (semantic={})
+        # cell map itself internally and also hands back the semantic-
+        # independent subset of it — R3's ``fold_semantic`` reuses that subset
+        # instead of re-deriving career/geography/education/signals/honeypot a
+        # second time once the real ``semantic`` map is resolved.
+        row, conf_row, row_base_cells = extract_row_with_base_cells(
+            cand.raw, registry, as_of=ctx.as_of
+        )
         cqv[i] = row
         confidence[i] = conf_row
+        base_cells.append(row_base_cells)
         career = build_career_profile(cand.raw, as_of=ctx.as_of)
         credibility = build_credibility_profile(cand.raw)
         findings = eligibility_engine.evaluate_structural(
@@ -637,6 +646,7 @@ def r2_features(
         cqv=cqv,
         confidence=confidence,
         representations=tuple(reps),
+        base_cells=tuple(base_cells),
         structural_findings=structural_findings,
     )
 
@@ -717,11 +727,16 @@ def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
         }
         row = cqv[i]
         conf_row = confidence[i]
-        # ``fold_semantic`` already builds the resolved cell map internally to
-        # fold it into the row/confidence arrays — reuse that return instead
-        # of calling ``build_cells`` a second time with the same arguments.
+        # ``fold_semantic`` folds the resolved cell map into the row/confidence
+        # arrays and returns it — reusing R2's cached ``base_cells`` instead of
+        # re-deriving career/geography/education/signals/honeypot a second time.
         full_cells = fold_semantic(
-            row, conf_row, cand.raw, registry, as_of=ctx.as_of, semantic=similarity_map
+            row,
+            conf_row,
+            cand.raw,
+            registry,
+            featured.base_cells[i],
+            semantic=similarity_map,
         )
         cells_list.append(full_cells)
         reps.append(
