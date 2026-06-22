@@ -97,10 +97,17 @@ class PackagingStage(OfflineStage):
         Returns ``key -> {path, sha256, bytes, schema_version, kind}``. Artifacts
         absent on disk are skipped here; required-set completeness is asserted
         separately so the error names exactly the missing required keys.
+        ``post_packaging`` specs (e.g. ``reproducibility_report``) are skipped
+        unconditionally: that stage runs after this one and its content names
+        the manifest this method is computing, so any hash captured here would
+        be stale the moment O18 writes the real file — never entering it into
+        the manifest is what keeps the online ``verify_all`` sweep honest.
         """
         entries: dict[str, dict[str, object]] = {}
         root = ctx.artifacts_root.resolve()
         for spec in self.registry.specs:
+            if spec.post_packaging:
+                continue
             path = (root / spec.relative_path).resolve()
             if root not in path.parents and path != root:
                 msg = f"artifact {spec.key!r} path escapes artifacts_root"

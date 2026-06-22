@@ -17,9 +17,9 @@
         "weighted": 0.06004201818261079
       },
       "semantic_fit": {
-        "raw": 0.5999370813369751,
+        "raw": 0.5999372601509094,
         "weight": 0.3,
-        "weighted": 0.1799811244010925
+        "weighted": 0.17998117804527283
       },
       "career_fit": {
         "raw": 0.830158001294329,
@@ -42,9 +42,9 @@
         "weighted": 0.017028985507246377
       },
       "archetype_fit": {
-        "raw": 0.5051009058952332,
+        "raw": 0.5051009654998779,
         "weight": 0.03,
-        "weighted": 0.015153027176856994
+        "weighted": 0.015153028964996337
       }
     },
     "competency": {
@@ -213,9 +213,9 @@
         "weighted": 0.020000000000000004
       },
       "archetype_fit": {
-        "raw": 0.5830342173576355,
+        "raw": 0.5830340385437012,
         "weight": 0.03,
-        "weighted": 0.017491026520729064
+        "weighted": 0.017491021156311036
       }
     },
     "competency": {
@@ -354,9 +354,9 @@
         "weighted": 0.05973024739721338
       },
       "semantic_fit": {
-        "raw": 0.5939873456954956,
+        "raw": 0.5939874649047852,
         "weight": 0.3,
-        "weighted": 0.17819620370864866
+        "weighted": 0.17819623947143554
       },
       "career_fit": {
         "raw": 0.8324846880454615,
@@ -379,9 +379,9 @@
         "weighted": 0.011397058823529413
       },
       "archetype_fit": {
-        "raw": 0.5307173132896423,
+        "raw": 0.5307174324989319,
         "weight": 0.03,
-        "weighted": 0.01592151939868927
+        "weighted": 0.015921522974967958
       }
     },
     "competency": {
@@ -690,9 +690,9 @@
         "weighted": 0.0841628743547048
       },
       "semantic_fit": {
-        "raw": 0.603172242641449,
+        "raw": 0.6031723022460938,
         "weight": 0.3,
-        "weighted": 0.18095167279243468
+        "weighted": 0.18095169067382813
       },
       "career_fit": {
         "raw": 0.5352642725474868,
@@ -859,9 +859,9 @@
         "weighted": 0.06103380626194473
       },
       "semantic_fit": {
-        "raw": 0.5765963792800903,
+        "raw": 0.5765964984893799,
         "weight": 0.3,
-        "weighted": 0.1729789137840271
+        "weighted": 0.17297894954681395
       },
       "career_fit": {
         "raw": 0.8350202925515685,
@@ -1024,9 +1024,9 @@
         "weighted": 0.032407407407407406
       },
       "semantic_fit": {
-        "raw": 0.592757523059845,
+        "raw": 0.5927575826644897,
         "weight": 0.3,
-        "weighted": 0.17782725691795348
+        "weighted": 0.17782727479934693
       },
       "career_fit": {
         "raw": 0.6517482088785492,
@@ -1187,9 +1187,9 @@
         "weighted": 0.05175509207109582
       },
       "semantic_fit": {
-        "raw": 0.5887950658798218,
+        "raw": 0.5887951254844666,
         "weight": 0.3,
-        "weighted": 0.17663851976394654
+        "weighted": 0.17663853764533996
       },
       "career_fit": {
         "raw": 0.712687099007951,
@@ -1212,9 +1212,9 @@
         "weighted": 0.03016064257028113
       },
       "archetype_fit": {
-        "raw": 0.5024969577789307,
+        "raw": 0.5024968981742859,
         "weight": 0.03,
-        "weighted": 0.01507490873336792
+        "weighted": 0.015074906945228577
       }
     },
     "competency": {
@@ -1374,9 +1374,9 @@
         "weighted": 0.010674603174603175
       },
       "archetype_fit": {
-        "raw": 0.5126237273216248,
+        "raw": 0.5126237869262695,
         "weight": 0.03,
-        "weighted": 0.015378711819648743
+        "weighted": 0.015378713607788086
       }
     },
     "competency": {
@@ -1514,9 +1514,9 @@
         "weighted": 0.027777777777777776
       },
       "semantic_fit": {
-        "raw": 0.5943392515182495,
+        "raw": 0.5943393707275391,
         "weight": 0.3,
-        "weighted": 0.17830177545547485
+        "weighted": 0.17830181121826172
       },
       "career_fit": {
         "raw": 0.7298117073072825,
@@ -1677,9 +1677,9 @@
         "weighted": 0.021405836940607936
       },
       "semantic_fit": {
-        "raw": 0.5944811105728149,
+        "raw": 0.5944809913635254,
         "weight": 0.3,
-        "weighted": 0.17834433317184448
+        "weighted": 0.1783442974090576
       },
       "career_fit": {
         "raw": 0.6169872673617888,
@@ -1838,9 +1838,9 @@
         "weighted": 0.03637104666954861
       },
       "semantic_fit": {
-        "raw": 0.5855129361152649,
+        "raw": 0.5855130553245544,
         "weight": 0.3,
-        "weighted": 0.17565388083457947
+        "weighted": 0.17565391659736632
       },
       "career_fit": {
         "raw": 0.7206633922672949,
@@ -2164,9 +2164,9 @@
         "weighted": 0.025178010739497242
       },
       "semantic_fit": {
-        "raw": 0.6171150803565979,
+        "raw": 0.6171152591705322,
         "weight": 0.3,
-        "weighted": 0.18513452410697936
+        "weighted": 0.18513457775115966
       },
       "career_fit": {
         "raw": 0.75,
@@ -2333,9 +2333,9 @@
         "weighted": 0.05488278361147956
       },
       "semantic_fit": {
-        "raw": 0.6088773608207703,
+        "raw": 0.6088774800300598,
         "weight": 0.3,
-        "weighted": 0.18266320824623108
+        "weighted": 0.18266324400901793
       },
       "career_fit": {
         "raw": 0.43957532633587604,
@@ -2358,9 +2358,9 @@
         "weighted": 0.03295725554944047
       },
       "archetype_fit": {
-        "raw": 0.5408917665481567,
+        "raw": 0.5408916473388672,
         "weight": 0.03,
-        "weighted": 0.0162267529964447
+        "weighted": 0.016226749420166015
       }
     },
     "competency": {
@@ -2687,9 +2687,9 @@
         "weighted": 0.015482695810564662
       },
       "archetype_fit": {
-        "raw": 0.538874626159668,
+        "raw": 0.5388746857643127,
         "weight": 0.03,
-        "weighted": 0.016166238784790038
+        "weighted": 0.016166240572929383
       }
     },
     "competency": {
@@ -2822,9 +2822,9 @@
         "weighted": 0.07576691658274833
       },
       "semantic_fit": {
-        "raw": 0.5851501226425171,
+        "raw": 0.5851502418518066,
         "weight": 0.3,
-        "weighted": 0.17554503679275513
+        "weighted": 0.175545072555542
       },
       "career_fit": {
         "raw": 0.5159467883002937,
@@ -2847,9 +2847,9 @@
         "weighted": 0.011894736842105263
       },
       "archetype_fit": {
-        "raw": 0.5023853182792664,
+        "raw": 0.5023853778839111,
         "weight": 0.03,
-        "weighted": 0.01507155954837799
+        "weighted": 0.015071561336517334
       }
     },
     "competency": {
@@ -3022,9 +3022,9 @@
         "weighted": 0.02025089605734767
       },
       "archetype_fit": {
-        "raw": 0.5453025698661804,
+        "raw": 0.5453026294708252,
         "weight": 0.03,
-        "weighted": 0.016359077095985414
+        "weighted": 0.016359078884124755
       }
     },
     "competency": {
@@ -3158,9 +3158,9 @@
         "weighted": 0.054529106832809836
       },
       "semantic_fit": {
-        "raw": 0.5887191295623779,
+        "raw": 0.5887192487716675,
         "weight": 0.3,
-        "weighted": 0.17661573886871337
+        "weighted": 0.17661577463150024
       },
       "career_fit": {
         "raw": 0.746685960903971,
@@ -3183,9 +3183,9 @@
         "weighted": 0.014444444444444447
       },
       "archetype_fit": {
-        "raw": 0.5142557621002197,
+        "raw": 0.514255702495575,
         "weight": 0.03,
-        "weighted": 0.015427672863006591
+        "weighted": 0.015427671074867248
       }
     },
     "competency": {
@@ -3322,9 +3322,9 @@
         "weighted": 0.04249379001828669
       },
       "semantic_fit": {
-        "raw": 0.5704721808433533,
+        "raw": 0.570472240447998,
         "weight": 0.3,
-        "weighted": 0.17114165425300598
+        "weighted": 0.1711416721343994
       },
       "career_fit": {
         "raw": 0.44188301260869167,
@@ -3347,9 +3347,9 @@
         "weighted": 0.020412186379928313
       },
       "archetype_fit": {
-        "raw": 0.5482705235481262,
+        "raw": 0.5482706427574158,
         "weight": 0.03,
-        "weighted": 0.016448115706443785
+        "weighted": 0.01644811928272247
       }
     },
     "competency": {
@@ -3489,9 +3489,9 @@
         "weighted": 0.06439327623111388
       },
       "semantic_fit": {
-        "raw": 0.5952914357185364,
+        "raw": 0.5952914953231812,
         "weight": 0.3,
-        "weighted": 0.1785874307155609
+        "weighted": 0.17858744859695433
       },
       "career_fit": {
         "raw": 0.9824983656658393,
@@ -3679,9 +3679,9 @@
         "weighted": 0.025995670995670996
       },
       "archetype_fit": {
-        "raw": 0.5022294521331787,
+        "raw": 0.5022295117378235,
         "weight": 0.03,
-        "weighted": 0.01506688356399536
+        "weighted": 0.015066885352134704
       }
     },
     "competency": {
@@ -3843,9 +3843,9 @@
         "weighted": 0.019116161616161618
       },
       "archetype_fit": {
-        "raw": 0.5079026818275452,
+        "raw": 0.5079026222229004,
         "weight": 0.03,
-        "weighted": 0.015237080454826354
+        "weighted": 0.01523707866668701
       }
     },
     "competency": {
@@ -3987,9 +3987,9 @@
         "weighted": 0.023741561035706887
       },
       "semantic_fit": {
-        "raw": 0.601485013961792,
+        "raw": 0.6014851331710815,
         "weight": 0.3,
-        "weighted": 0.18044550418853758
+        "weighted": 0.18044553995132445
       },
       "career_fit": {
         "raw": 0.8375820509915941,
@@ -4153,9 +4153,9 @@
         "weighted": 0.06103612332210063
       },
       "semantic_fit": {
-        "raw": 0.5850377678871155,
+        "raw": 0.5850377082824707,
         "weight": 0.3,
-        "weighted": 0.17551133036613464
+        "weighted": 0.1755113124847412
       },
       "career_fit": {
         "raw": 0.40896667217516525,
@@ -4178,9 +4178,9 @@
         "weighted": 0.016666666666666666
       },
       "archetype_fit": {
-        "raw": 0.5163288712501526,
+        "raw": 0.5163289308547974,
         "weight": 0.03,
-        "weighted": 0.015489866137504577
+        "weighted": 0.01548986792564392
       }
     },
     "competency": {
@@ -4319,9 +4319,9 @@
         "weighted": 0.06677001357495266
       },
       "semantic_fit": {
-        "raw": 0.5661036968231201,
+        "raw": 0.5661037564277649,
         "weight": 0.3,
-        "weighted": 0.16983110904693602
+        "weighted": 0.16983112692832947
       },
       "career_fit": {
         "raw": 0.351125671314581,
@@ -4344,9 +4344,9 @@
         "weighted": 0.02380187416331995
       },
       "archetype_fit": {
-        "raw": 0.5013542175292969,
+        "raw": 0.5013541579246521,
         "weight": 0.03,
-        "weighted": 0.015040626525878906
+        "weighted": 0.015040624737739563
       }
     },
     "competency": {
@@ -4483,9 +4483,9 @@
         "weighted": 0.0724202214922804
       },
       "semantic_fit": {
-        "raw": 0.5833377242088318,
+        "raw": 0.5833378434181213,
         "weight": 0.3,
-        "weighted": 0.17500131726264953
+        "weighted": 0.1750013530254364
       },
       "career_fit": {
         "raw": 0.6346870976914705,
@@ -4508,9 +4508,9 @@
         "weighted": 0.018144863266814484
       },
       "archetype_fit": {
-        "raw": 0.5036662817001343,
+        "raw": 0.503666341304779,
         "weight": 0.03,
-        "weighted": 0.015109988451004027
+        "weighted": 0.01510999023914337
       }
     },
     "competency": {
@@ -4648,9 +4648,9 @@
         "weighted": 0.0814888193423607
       },
       "semantic_fit": {
-        "raw": 0.5909566879272461,
+        "raw": 0.5909567475318909,
         "weight": 0.3,
-        "weighted": 0.17728700637817382
+        "weighted": 0.17728702425956724
       },
       "career_fit": {
         "raw": 0.5320293720316948,
@@ -4820,9 +4820,9 @@
         "weighted": 0.02661028682721724
       },
       "semantic_fit": {
-        "raw": 0.5864781141281128,
+        "raw": 0.5864782333374023,
         "weight": 0.3,
-        "weighted": 0.17594343423843384
+        "weighted": 0.1759434700012207
       },
       "career_fit": {
         "raw": 0.41546487678572874,
@@ -4845,9 +4845,9 @@
         "weighted": 0.005860433604336044
       },
       "archetype_fit": {
-        "raw": 0.5148115158081055,
+        "raw": 0.5148115754127502,
         "weight": 0.03,
-        "weighted": 0.015444345474243164
+        "weighted": 0.015444347262382507
       }
     },
     "competency": {
@@ -4989,9 +4989,9 @@
         "weighted": 0.04116243278405981
       },
       "semantic_fit": {
-        "raw": 0.5729069113731384,
+        "raw": 0.5729069709777832,
         "weight": 0.3,
-        "weighted": 0.17187207341194152
+        "weighted": 0.17187209129333494
       },
       "career_fit": {
         "raw": 0.8376941086880576,
@@ -5014,9 +5014,9 @@
         "weighted": 0.00809968847352025
       },
       "archetype_fit": {
-        "raw": 0.5004644989967346,
+        "raw": 0.5004644393920898,
         "weight": 0.03,
-        "weighted": 0.015013934969902039
+        "weighted": 0.015013933181762695
       }
     },
     "competency": {
@@ -5155,9 +5155,9 @@
         "weighted": 0.02681166926394545
       },
       "semantic_fit": {
-        "raw": 0.5755878686904907,
+        "raw": 0.5755879878997803,
         "weight": 0.3,
-        "weighted": 0.17267636060714722
+        "weighted": 0.17267639636993407
       },
       "career_fit": {
         "raw": 0.572000848410326,
@@ -5180,9 +5180,9 @@
         "weighted": 0.014718076285240465
       },
       "archetype_fit": {
-        "raw": 0.553866446018219,
+        "raw": 0.5538665056228638,
         "weight": 0.03,
-        "weighted": 0.01661599338054657
+        "weighted": 0.016615995168685914
       }
     },
     "competency": {
@@ -5318,9 +5318,9 @@
         "weighted": 0.0396506451036664
       },
       "semantic_fit": {
-        "raw": 0.5776069164276123,
+        "raw": 0.5776070356369019,
         "weight": 0.3,
-        "weighted": 0.17328207492828368
+        "weighted": 0.17328211069107055
       },
       "career_fit": {
         "raw": 0.3421020633460598,
@@ -5482,9 +5482,9 @@
         "weighted": 0.02959921840329729
       },
       "semantic_fit": {
-        "raw": 0.6000264883041382,
+        "raw": 0.6000266075134277,
         "weight": 0.3,
-        "weighted": 0.18000794649124144
+        "weighted": 0.1800079822540283
       },
       "career_fit": {
         "raw": 0.3560991876788931,
@@ -5507,9 +5507,9 @@
         "weighted": 0.012450704225352112
       },
       "archetype_fit": {
-        "raw": 0.5193734765052795,
+        "raw": 0.5193734169006348,
         "weight": 0.03,
-        "weighted": 0.015581204295158385
+        "weighted": 0.015581202507019042
       }
     },
     "competency": {
@@ -5628,7 +5628,7 @@
       ]
     },
     "risk_badges": [],
-    "reasoning": "strong semantic fit (0.600026) against the JD anchors; career trajectory aligned with the role (0.356099); experience squarely in the target band (0.636672)."
+    "reasoning": "strong semantic fit (0.600027) against the JD anchors; career trajectory aligned with the role (0.356099); experience squarely in the target band (0.636672)."
   },
   {
     "rank": 35,
@@ -5673,9 +5673,9 @@
         "weighted": 0.032408174537420606
       },
       "archetype_fit": {
-        "raw": 0.5664441585540771,
+        "raw": 0.5664442777633667,
         "weight": 0.03,
-        "weighted": 0.016993324756622314
+        "weighted": 0.016993328332901
       }
     },
     "competency": {
@@ -5817,9 +5817,9 @@
         "weighted": 0.02461327203915369
       },
       "semantic_fit": {
-        "raw": 0.641485869884491,
+        "raw": 0.6414859294891357,
         "weight": 0.3,
-        "weighted": 0.1924457609653473
+        "weighted": 0.19244577884674072
       },
       "career_fit": {
         "raw": 0.4311758801069232,
@@ -5981,9 +5981,9 @@
         "weighted": 0.04114881598346117
       },
       "semantic_fit": {
-        "raw": 0.5897977352142334,
+        "raw": 0.589797854423523,
         "weight": 0.3,
-        "weighted": 0.17693932056427
+        "weighted": 0.17693935632705687
       },
       "career_fit": {
         "raw": 0.5159467883002937,
@@ -6142,9 +6142,9 @@
         "weighted": 0.030621178789591974
       },
       "semantic_fit": {
-        "raw": 0.5694116353988647,
+        "raw": 0.56941157579422,
         "weight": 0.3,
-        "weighted": 0.17082349061965943
+        "weighted": 0.17082347273826598
       },
       "career_fit": {
         "raw": 0.5950069836740464,
@@ -6167,9 +6167,9 @@
         "weighted": 0.008854166666666668
       },
       "archetype_fit": {
-        "raw": 0.5455839037895203,
+        "raw": 0.5455840229988098,
         "weight": 0.03,
-        "weighted": 0.016367517113685608
+        "weighted": 0.016367520689964294
       }
     },
     "competency": {
@@ -6310,9 +6310,9 @@
         "weighted": 0.02314814814814815
       },
       "semantic_fit": {
-        "raw": 0.6040918827056885,
+        "raw": 0.604092001914978,
         "weight": 0.3,
-        "weighted": 0.18122756481170654
+        "weighted": 0.1812276005744934
       },
       "career_fit": {
         "raw": 0.48214216325308135,
@@ -6476,9 +6476,9 @@
         "weighted": 0.047717706266913656
       },
       "semantic_fit": {
-        "raw": 0.5620876550674438,
+        "raw": 0.5620877742767334,
         "weight": 0.3,
-        "weighted": 0.16862629652023314
+        "weighted": 0.16862633228302001
       },
       "career_fit": {
         "raw": 0.29999999999999993,
@@ -6634,9 +6634,9 @@
         "weighted": 0.036988000879657625
       },
       "semantic_fit": {
-        "raw": 0.5714908242225647,
+        "raw": 0.5714908838272095,
         "weight": 0.3,
-        "weighted": 0.1714472472667694
+        "weighted": 0.17144726514816283
       },
       "career_fit": {
         "raw": 0.32345428772322454,
@@ -6659,9 +6659,9 @@
         "weighted": 0.008471544715447156
       },
       "archetype_fit": {
-        "raw": 0.5114336609840393,
+        "raw": 0.5114337205886841,
         "weight": 0.03,
-        "weighted": 0.015343009829521179
+        "weighted": 0.015343011617660522
       }
     },
     "competency": {
@@ -6800,9 +6800,9 @@
         "weighted": 0.05631712843924112
       },
       "semantic_fit": {
-        "raw": 0.5854315757751465,
+        "raw": 0.585431694984436,
         "weight": 0.3,
-        "weighted": 0.17562947273254395
+        "weighted": 0.1756295084953308
       },
       "career_fit": {
         "raw": 0.8361809182580275,
@@ -6825,9 +6825,9 @@
         "weighted": 0.017978352595853973
       },
       "archetype_fit": {
-        "raw": 0.5136983394622803,
+        "raw": 0.513698399066925,
         "weight": 0.03,
-        "weighted": 0.015410950183868408
+        "weighted": 0.015410951972007751
       }
     },
     "competency": {
@@ -6965,9 +6965,9 @@
         "weighted": 0.04434817664322685
       },
       "semantic_fit": {
-        "raw": 0.6085798740386963,
+        "raw": 0.6085801124572754,
         "weight": 0.3,
-        "weighted": 0.18257396221160888
+        "weighted": 0.18257403373718262
       },
       "career_fit": {
         "raw": 0.8142130685041895,
@@ -6990,9 +6990,9 @@
         "weighted": 0.019263721552878182
       },
       "archetype_fit": {
-        "raw": 0.5210846662521362,
+        "raw": 0.521084725856781,
         "weight": 0.03,
-        "weighted": 0.015632539987564087
+        "weighted": 0.01563254177570343
       }
     },
     "competency": {
@@ -7160,9 +7160,9 @@
         "weighted": 0.013025641025641025
       },
       "archetype_fit": {
-        "raw": 0.5383381843566895,
+        "raw": 0.5383381247520447,
         "weight": 0.03,
-        "weighted": 0.016150145530700682
+        "weighted": 0.01615014374256134
       }
     },
     "competency": {
@@ -7302,9 +7302,9 @@
         "weighted": 0.046705399278777315
       },
       "semantic_fit": {
-        "raw": 0.5585089921951294,
+        "raw": 0.558509111404419,
         "weight": 0.3,
-        "weighted": 0.1675526976585388
+        "weighted": 0.16755273342132568
       },
       "career_fit": {
         "raw": 0.5891620579347092,
@@ -7327,9 +7327,9 @@
         "weighted": 0.02508169934640523
       },
       "archetype_fit": {
-        "raw": 0.5276666879653931,
+        "raw": 0.5276666283607483,
         "weight": 0.03,
-        "weighted": 0.01583000063896179
+        "weighted": 0.01582999885082245
       }
     },
     "competency": {
@@ -7460,9 +7460,9 @@
         "weighted": 0.06272897351577587
       },
       "semantic_fit": {
-        "raw": 0.6016343235969543,
+        "raw": 0.6016343832015991,
         "weight": 0.3,
-        "weighted": 0.1804902970790863
+        "weighted": 0.18049031496047974
       },
       "career_fit": {
         "raw": 0.7513468088604134,
@@ -7651,9 +7651,9 @@
         "weighted": 0.005814354727398206
       },
       "archetype_fit": {
-        "raw": 0.5221170783042908,
+        "raw": 0.5221171379089355,
         "weight": 0.03,
-        "weighted": 0.015663512349128723
+        "weighted": 0.015663514137268065
       }
     },
     "competency": {
@@ -7783,9 +7783,9 @@
         "weighted": 0.034999842719215433
       },
       "semantic_fit": {
-        "raw": 0.5854661464691162,
+        "raw": 0.585466206073761,
         "weight": 0.3,
-        "weighted": 0.17563984394073487
+        "weighted": 0.1756398618221283
       },
       "career_fit": {
         "raw": 0.13742140224515673,
@@ -7808,9 +7808,9 @@
         "weighted": 0.011250000000000001
       },
       "archetype_fit": {
-        "raw": 0.5117090344429016,
+        "raw": 0.5117089748382568,
         "weight": 0.03,
-        "weighted": 0.015351271033287048
+        "weighted": 0.015351269245147705
       }
     },
     "competency": {
@@ -7940,9 +7940,9 @@
         "weighted": 0.062147370786071764
       },
       "semantic_fit": {
-        "raw": 0.6062818765640259,
+        "raw": 0.606282114982605,
         "weight": 0.3,
-        "weighted": 0.18188456296920777
+        "weighted": 0.18188463449478148
       },
       "career_fit": {
         "raw": 0.5790807694685118,
@@ -7965,9 +7965,9 @@
         "weighted": 0.016583982990786676
       },
       "archetype_fit": {
-        "raw": 0.5200536251068115,
+        "raw": 0.5200535655021667,
         "weight": 0.03,
-        "weighted": 0.015601608753204346
+        "weighted": 0.015601606965065002
       }
     },
     "competency": {
@@ -8105,9 +8105,9 @@
         "weighted": 0.040718430360402375
       },
       "semantic_fit": {
-        "raw": 0.5660368204116821,
+        "raw": 0.5660368800163269,
         "weight": 0.3,
-        "weighted": 0.16981104612350464
+        "weighted": 0.16981106400489807
       },
       "career_fit": {
         "raw": 0.720282662374635,
@@ -8130,9 +8130,9 @@
         "weighted": 0.011772151898734179
       },
       "archetype_fit": {
-        "raw": 0.5010836124420166,
+        "raw": 0.501083493232727,
         "weight": 0.03,
-        "weighted": 0.015032508373260497
+        "weighted": 0.01503250479698181
       }
     },
     "competency": {
@@ -8269,9 +8269,9 @@
         "weighted": 0.03983332026402919
       },
       "semantic_fit": {
-        "raw": 0.5748491287231445,
+        "raw": 0.5748492479324341,
         "weight": 0.3,
-        "weighted": 0.17245473861694335
+        "weighted": 0.17245477437973022
       },
       "career_fit": {
         "raw": 0.3,
@@ -8294,9 +8294,9 @@
         "weighted": 0.006507936507936509
       },
       "archetype_fit": {
-        "raw": 0.5068368315696716,
+        "raw": 0.5068367719650269,
         "weight": 0.03,
-        "weighted": 0.015205104947090148
+        "weighted": 0.015205103158950805
       }
     },
     "competency": {
@@ -8435,9 +8435,9 @@
         "weighted": 0.041617630509287254
       },
       "semantic_fit": {
-        "raw": 0.5641466379165649,
+        "raw": 0.5641467571258545,
         "weight": 0.3,
-        "weighted": 0.16924399137496948
+        "weighted": 0.16924402713775635
       },
       "career_fit": {
         "raw": 0.7459583158786001,
@@ -8460,9 +8460,9 @@
         "weighted": 0.014409722222222221
       },
       "archetype_fit": {
-        "raw": 0.5554729104042053,
+        "raw": 0.5554728507995605,
         "weight": 0.03,
-        "weighted": 0.01666418731212616
+        "weighted": 0.016664185523986817
       }
     },
     "competency": {
@@ -8600,9 +8600,9 @@
         "weighted": 0.07131586281374523
       },
       "semantic_fit": {
-        "raw": 0.5681753754615784,
+        "raw": 0.5681754946708679,
         "weight": 0.3,
-        "weighted": 0.1704526126384735
+        "weighted": 0.17045264840126037
       },
       "career_fit": {
         "raw": 0.5006309012210745,
@@ -8766,9 +8766,9 @@
         "weighted": 0.043397736006201205
       },
       "semantic_fit": {
-        "raw": 0.5468624830245972,
+        "raw": 0.5468626022338867,
         "weight": 0.3,
-        "weighted": 0.16405874490737915
+        "weighted": 0.16405878067016602
       },
       "career_fit": {
         "raw": 0.5809955498013931,
@@ -8908,7 +8908,7 @@
       ]
     },
     "risk_badges": [],
-    "reasoning": "strong semantic fit (0.546862) against the JD anchors; career trajectory aligned with the role (0.580996); experience squarely in the target band (0.644707)."
+    "reasoning": "strong semantic fit (0.546863) against the JD anchors; career trajectory aligned with the role (0.580996); experience squarely in the target band (0.644707)."
   },
   {
     "rank": 55,
@@ -8928,9 +8928,9 @@
         "weighted": 0.07168111535206657
       },
       "semantic_fit": {
-        "raw": 0.5795665979385376,
+        "raw": 0.5795667171478271,
         "weight": 0.3,
-        "weighted": 0.17386997938156126
+        "weighted": 0.17387001514434813
       },
       "career_fit": {
         "raw": 0.3686153201327258,
@@ -8953,9 +8953,9 @@
         "weighted": 0.01546786546786547
       },
       "archetype_fit": {
-        "raw": 0.5071821212768555,
+        "raw": 0.5071821808815002,
         "weight": 0.03,
-        "weighted": 0.015215463638305664
+        "weighted": 0.015215465426445007
       }
     },
     "competency": {
@@ -9120,9 +9120,9 @@
         "weighted": 0.02070707070707071
       },
       "archetype_fit": {
-        "raw": 0.5251162052154541,
+        "raw": 0.5251161456108093,
         "weight": 0.03,
-        "weighted": 0.015753486156463624
+        "weighted": 0.01575348436832428
       }
     },
     "competency": {
@@ -9262,9 +9262,9 @@
         "weighted": 0.053039489627860224
       },
       "semantic_fit": {
-        "raw": 0.586200475692749,
+        "raw": 0.5862005352973938,
         "weight": 0.3,
-        "weighted": 0.1758601427078247
+        "weighted": 0.17586016058921813
       },
       "career_fit": {
         "raw": 0.5159467883002937,
@@ -9402,7 +9402,7 @@
       ]
     },
     "risk_badges": [],
-    "reasoning": "strong semantic fit (0.586200) against the JD anchors; career trajectory aligned with the role (0.515947); corroborated skill match (0.212158) to the role's core competencies."
+    "reasoning": "strong semantic fit (0.586201) against the JD anchors; career trajectory aligned with the role (0.515947); corroborated skill match (0.212158) to the role's core competencies."
   },
   {
     "rank": 58,
@@ -9447,9 +9447,9 @@
         "weighted": 0.025252525252525256
       },
       "archetype_fit": {
-        "raw": 0.6576906442642212,
+        "raw": 0.6576908230781555,
         "weight": 0.03,
-        "weighted": 0.019730719327926634
+        "weighted": 0.019730724692344666
       }
     },
     "competency": {
@@ -9584,9 +9584,9 @@
         "weighted": 0.05020333407729325
       },
       "semantic_fit": {
-        "raw": 0.5875478386878967,
+        "raw": 0.5875478982925415,
         "weight": 0.3,
-        "weighted": 0.17626435160636902
+        "weighted": 0.17626436948776245
       },
       "career_fit": {
         "raw": 0.31423368580969696,
@@ -9744,9 +9744,9 @@
         "weighted": 0.06926292779847229
       },
       "semantic_fit": {
-        "raw": 0.5563477277755737,
+        "raw": 0.5563478469848633,
         "weight": 0.3,
-        "weighted": 0.1669043183326721
+        "weighted": 0.16690435409545898
       },
       "career_fit": {
         "raw": 0.9484274545139693,
@@ -9769,9 +9769,9 @@
         "weighted": 0.01713520749665328
       },
       "archetype_fit": {
-        "raw": 0.5315597653388977,
+        "raw": 0.5315598249435425,
         "weight": 0.03,
-        "weighted": 0.01594679296016693
+        "weighted": 0.015946794748306275
       }
     },
     "competency": {
@@ -9906,9 +9906,9 @@
         "weighted": 0.0505079356562094
       },
       "semantic_fit": {
-        "raw": 0.5740829110145569,
+        "raw": 0.5740830302238464,
         "weight": 0.3,
-        "weighted": 0.17222487330436706
+        "weighted": 0.17222490906715393
       },
       "career_fit": {
         "raw": 0.8454806195515769,
@@ -9931,9 +9931,9 @@
         "weighted": 0.014632665452337582
       },
       "archetype_fit": {
-        "raw": 0.5617721080780029,
+        "raw": 0.5617719888687134,
         "weight": 0.03,
-        "weighted": 0.016853163242340086
+        "weighted": 0.0168531596660614
       }
     },
     "competency": {
@@ -10075,9 +10075,9 @@
         "weighted": 0.05771197060702782
       },
       "semantic_fit": {
-        "raw": 0.5900611877441406,
+        "raw": 0.5900612473487854,
         "weight": 0.3,
-        "weighted": 0.17701835632324217
+        "weighted": 0.17701837420463562
       },
       "career_fit": {
         "raw": 0.8410512721256959,
@@ -10100,9 +10100,9 @@
         "weighted": 0.014101144333702473
       },
       "archetype_fit": {
-        "raw": 0.5046237707138062,
+        "raw": 0.5046238303184509,
         "weight": 0.03,
-        "weighted": 0.015138713121414184
+        "weighted": 0.015138714909553527
       }
     },
     "competency": {
@@ -10238,9 +10238,9 @@
         "weighted": 0.034328993689368134
       },
       "semantic_fit": {
-        "raw": 0.5888316631317139,
+        "raw": 0.5888317823410034,
         "weight": 0.3,
-        "weighted": 0.17664949893951415
+        "weighted": 0.17664953470230102
       },
       "career_fit": {
         "raw": 0.3118284019938624,
@@ -10263,9 +10263,9 @@
         "weighted": 0.006178861788617887
       },
       "archetype_fit": {
-        "raw": 0.5130531191825867,
+        "raw": 0.5130531787872314,
         "weight": 0.03,
-        "weighted": 0.0153915935754776
+        "weighted": 0.015391595363616943
       }
     },
     "competency": {
@@ -10398,9 +10398,9 @@
         "weighted": 0.03558838117846072
       },
       "semantic_fit": {
-        "raw": 0.584616482257843,
+        "raw": 0.5846166014671326,
         "weight": 0.3,
-        "weighted": 0.1753849446773529
+        "weighted": 0.17538498044013975
       },
       "career_fit": {
         "raw": 0.5527655836995202,
@@ -10423,9 +10423,9 @@
         "weighted": 0.01
       },
       "archetype_fit": {
-        "raw": 0.506551206111908,
+        "raw": 0.5065513253211975,
         "weight": 0.03,
-        "weighted": 0.015196536183357237
+        "weighted": 0.015196539759635926
       }
     },
     "competency": {
@@ -10541,7 +10541,7 @@
       ]
     },
     "risk_badges": [],
-    "reasoning": "strong semantic fit (0.584616) against the JD anchors; career trajectory aligned with the role (0.552766); experience squarely in the target band (0.574403)."
+    "reasoning": "strong semantic fit (0.584617) against the JD anchors; career trajectory aligned with the role (0.552766); experience squarely in the target band (0.574403)."
   },
   {
     "rank": 65,
@@ -10729,9 +10729,9 @@
         "weighted": 0.07068920320767651
       },
       "semantic_fit": {
-        "raw": 0.6036731004714966,
+        "raw": 0.6036732196807861,
         "weight": 0.3,
-        "weighted": 0.18110193014144896
+        "weighted": 0.18110196590423583
       },
       "career_fit": {
         "raw": 0.6847575502237047,
@@ -10895,9 +10895,9 @@
         "weighted": 0.028331759770277836
       },
       "semantic_fit": {
-        "raw": 0.568770170211792,
+        "raw": 0.5687702298164368,
         "weight": 0.3,
-        "weighted": 0.1706310510635376
+        "weighted": 0.17063106894493102
       },
       "career_fit": {
         "raw": 0.3,
@@ -11057,9 +11057,9 @@
         "weighted": 0.06740726857190546
       },
       "semantic_fit": {
-        "raw": 0.5932202935218811,
+        "raw": 0.5932204723358154,
         "weight": 0.3,
-        "weighted": 0.17796608805656433
+        "weighted": 0.17796614170074462
       },
       "career_fit": {
         "raw": 0.6146573162002994,
@@ -11082,9 +11082,9 @@
         "weighted": 0.010193548387096775
       },
       "archetype_fit": {
-        "raw": 0.5196416974067688,
+        "raw": 0.5196415781974792,
         "weight": 0.03,
-        "weighted": 0.015589250922203063
+        "weighted": 0.015589247345924376
       }
     },
     "competency": {
@@ -11220,9 +11220,9 @@
         "weighted": 0.029952495461177023
       },
       "semantic_fit": {
-        "raw": 0.5565020442008972,
+        "raw": 0.556502103805542,
         "weight": 0.3,
-        "weighted": 0.16695061326026917
+        "weighted": 0.1669506311416626
       },
       "career_fit": {
         "raw": 0.25,
@@ -11245,9 +11245,9 @@
         "weighted": 0.021957671957671957
       },
       "archetype_fit": {
-        "raw": 0.5131369233131409,
+        "raw": 0.5131369829177856,
         "weight": 0.03,
-        "weighted": 0.015394107699394225
+        "weighted": 0.015394109487533569
       }
     },
     "competency": {
@@ -11413,9 +11413,9 @@
         "weighted": 0.027152263374485598
       },
       "archetype_fit": {
-        "raw": 0.531650960445404,
+        "raw": 0.5316511392593384,
         "weight": 0.03,
-        "weighted": 0.01594952881336212
+        "weighted": 0.01594953417778015
       }
     },
     "competency": {
@@ -11580,9 +11580,9 @@
         "weighted": 0.01173583221775993
       },
       "archetype_fit": {
-        "raw": 0.5022830963134766,
+        "raw": 0.5022831559181213,
         "weight": 0.03,
-        "weighted": 0.015068492889404296
+        "weighted": 0.01506849467754364
       }
     },
     "competency": {
@@ -11723,9 +11723,9 @@
         "weighted": 0.03836233365894546
       },
       "semantic_fit": {
-        "raw": 0.5992165207862854,
+        "raw": 0.5992164611816406,
         "weight": 0.3,
-        "weighted": 0.17976495623588562
+        "weighted": 0.17976493835449217
       },
       "career_fit": {
         "raw": 0.8049263417371821,
@@ -11871,7 +11871,7 @@
     "risk_badges": [
       "[🐥 DABBLER_PATTERN:retr]"
     ],
-    "reasoning": "strong semantic fit (0.599217) against the JD anchors; career trajectory aligned with the role (0.804926); experience squarely in the target band (0.636319)."
+    "reasoning": "strong semantic fit (0.599216) against the JD anchors; career trajectory aligned with the role (0.804926); experience squarely in the target band (0.636319)."
   },
   {
     "rank": 73,
@@ -11916,9 +11916,9 @@
         "weighted": 0.02182859187690106
       },
       "archetype_fit": {
-        "raw": 0.5118240118026733,
+        "raw": 0.5118240714073181,
         "weight": 0.03,
-        "weighted": 0.0153547203540802
+        "weighted": 0.015354722142219543
       }
     },
     "competency": {
@@ -12058,9 +12058,9 @@
         "weighted": 0.05382459159057623
       },
       "semantic_fit": {
-        "raw": 0.6287323832511902,
+        "raw": 0.6287325024604797,
         "weight": 0.3,
-        "weighted": 0.18861971497535704
+        "weighted": 0.1886197507381439
       },
       "career_fit": {
         "raw": 0.6782302005495251,
@@ -12202,7 +12202,7 @@
       ]
     },
     "risk_badges": [],
-    "reasoning": "strong semantic fit (0.628732) against the JD anchors; career trajectory aligned with the role (0.678230); corroborated skill match (0.215298) to the role's core competencies."
+    "reasoning": "strong semantic fit (0.628733) against the JD anchors; career trajectory aligned with the role (0.678230); corroborated skill match (0.215298) to the role's core competencies."
   },
   {
     "rank": 75,
@@ -12222,9 +12222,9 @@
         "weighted": 0.02838500452471973
       },
       "semantic_fit": {
-        "raw": 0.6304506063461304,
+        "raw": 0.6304507851600647,
         "weight": 0.3,
-        "weighted": 0.1891351819038391
+        "weighted": 0.1891352355480194
       },
       "career_fit": {
         "raw": 0.7576895523201874,
@@ -12384,9 +12384,9 @@
         "weighted": 0.050982255001925575
       },
       "semantic_fit": {
-        "raw": 0.5412163734436035,
+        "raw": 0.5412163138389587,
         "weight": 0.3,
-        "weighted": 0.16236491203308104
+        "weighted": 0.16236489415168762
       },
       "career_fit": {
         "raw": 0.7593690896802285,
@@ -12409,9 +12409,9 @@
         "weighted": 0.010211640211640213
       },
       "archetype_fit": {
-        "raw": 0.5527909994125366,
+        "raw": 0.5527909398078918,
         "weight": 0.03,
-        "weighted": 0.0165837299823761
+        "weighted": 0.016583728194236754
       }
     },
     "competency": {
@@ -12547,9 +12547,9 @@
         "weighted": 0.04278690799878369
       },
       "semantic_fit": {
-        "raw": 0.6051442623138428,
+        "raw": 0.6051443219184875,
         "weight": 0.3,
-        "weighted": 0.18154327869415282
+        "weighted": 0.18154329657554627
       },
       "career_fit": {
         "raw": 0.7416029674497229,
@@ -12712,9 +12712,9 @@
         "weighted": 0.039426110401600496
       },
       "semantic_fit": {
-        "raw": 0.6089153289794922,
+        "raw": 0.6089155077934265,
         "weight": 0.3,
-        "weighted": 0.18267459869384764
+        "weighted": 0.18267465233802796
       },
       "career_fit": {
         "raw": 0.6801834752169011,
@@ -12855,7 +12855,7 @@
     "risk_badges": [
       "[🐥 DABBLER_PATTERN:ir]"
     ],
-    "reasoning": "strong semantic fit (0.608915) against the JD anchors; career trajectory aligned with the role (0.680183); experience squarely in the target band (0.527409)."
+    "reasoning": "strong semantic fit (0.608916) against the JD anchors; career trajectory aligned with the role (0.680183); experience squarely in the target band (0.527409)."
   },
   {
     "rank": 79,
@@ -12900,9 +12900,9 @@
         "weighted": 0.01122956645344705
       },
       "archetype_fit": {
-        "raw": 0.5590937733650208,
+        "raw": 0.5590936541557312,
         "weight": 0.03,
-        "weighted": 0.01677281320095062
+        "weighted": 0.016772809624671935
       }
     },
     "competency": {
@@ -13042,9 +13042,9 @@
         "weighted": 0.034737802820294164
       },
       "semantic_fit": {
-        "raw": 0.5965819954872131,
+        "raw": 0.5965820550918579,
         "weight": 0.3,
-        "weighted": 0.17897459864616394
+        "weighted": 0.17897461652755736
       },
       "career_fit": {
         "raw": 0.8294059661102167,
@@ -13067,9 +13067,9 @@
         "weighted": 0.007070707070707071
       },
       "archetype_fit": {
-        "raw": 0.5304202437400818,
+        "raw": 0.5304203033447266,
         "weight": 0.03,
-        "weighted": 0.015912607312202454
+        "weighted": 0.015912609100341795
       }
     },
     "competency": {
@@ -13205,9 +13205,9 @@
         "weighted": 0.03472222222222222
       },
       "semantic_fit": {
-        "raw": 0.5593605637550354,
+        "raw": 0.5593608021736145,
         "weight": 0.3,
-        "weighted": 0.16780816912651061
+        "weighted": 0.16780824065208436
       },
       "career_fit": {
         "raw": 0.6796451169104081,
@@ -13230,9 +13230,9 @@
         "weighted": 0.019949494949494953
       },
       "archetype_fit": {
-        "raw": 0.5487101674079895,
+        "raw": 0.5487101078033447,
         "weight": 0.03,
-        "weighted": 0.016461305022239685
+        "weighted": 0.01646130323410034
       }
     },
     "competency": {
@@ -13368,9 +13368,9 @@
         "weighted": 0.019015286118156918
       },
       "semantic_fit": {
-        "raw": 0.6017429828643799,
+        "raw": 0.6017430424690247,
         "weight": 0.3,
-        "weighted": 0.18052289485931397
+        "weighted": 0.1805229127407074
       },
       "career_fit": {
         "raw": 0.6412259282669415,
@@ -13533,9 +13533,9 @@
         "weighted": 0.06555283780138231
       },
       "semantic_fit": {
-        "raw": 0.6044141054153442,
+        "raw": 0.6044142246246338,
         "weight": 0.3,
-        "weighted": 0.18132423162460326
+        "weighted": 0.18132426738739013
       },
       "career_fit": {
         "raw": 0.4407581414794806,
@@ -13558,9 +13558,9 @@
         "weighted": 0.028921568627450985
       },
       "archetype_fit": {
-        "raw": 0.5625205039978027,
+        "raw": 0.562520444393158,
         "weight": 0.03,
-        "weighted": 0.01687561511993408
+        "weighted": 0.01687561333179474
       }
     },
     "competency": {
@@ -13727,9 +13727,9 @@
         "weighted": 0.010014430014430016
       },
       "archetype_fit": {
-        "raw": 0.5074371695518494,
+        "raw": 0.5074371099472046,
         "weight": 0.03,
-        "weighted": 0.01522311508655548
+        "weighted": 0.015223113298416137
       }
     },
     "competency": {
@@ -13871,9 +13871,9 @@
         "weighted": 0.03971922573077852
       },
       "semantic_fit": {
-        "raw": 0.6001021265983582,
+        "raw": 0.6001021862030029,
         "weight": 0.3,
-        "weighted": 0.18003063797950744
+        "weighted": 0.18003065586090086
       },
       "career_fit": {
         "raw": 0.5918943105702825,
@@ -13896,9 +13896,9 @@
         "weighted": 0.016071428571428573
       },
       "archetype_fit": {
-        "raw": 0.5428602695465088,
+        "raw": 0.542860209941864,
         "weight": 0.03,
-        "weighted": 0.016285808086395265
+        "weighted": 0.01628580629825592
       }
     },
     "competency": {
@@ -14055,9 +14055,9 @@
         "weighted": 0.009015715467328371
       },
       "archetype_fit": {
-        "raw": 0.5379891395568848,
+        "raw": 0.53798907995224,
         "weight": 0.03,
-        "weighted": 0.016139674186706542
+        "weighted": 0.0161396723985672
       }
     },
     "competency": {
@@ -14340,7 +14340,7 @@
   },
   {
     "rank": 88,
-    "score": 0.380682,
+    "score": 0.380681,
     "candidate_id": "CAND_0011327",
     "name": "Pranav Krishnan",
     "current_title": "AI Research Engineer",
@@ -14381,9 +14381,9 @@
         "weighted": 0.012437810945273632
       },
       "archetype_fit": {
-        "raw": 0.5688960552215576,
+        "raw": 0.5688959956169128,
         "weight": 0.03,
-        "weighted": 0.01706688165664673
+        "weighted": 0.017066879868507384
       }
     },
     "competency": {
@@ -14519,9 +14519,9 @@
         "weighted": 0.043403555039106055
       },
       "semantic_fit": {
-        "raw": 0.5475103259086609,
+        "raw": 0.5475103855133057,
         "weight": 0.3,
-        "weighted": 0.16425309777259825
+        "weighted": 0.1642531156539917
       },
       "career_fit": {
         "raw": 0.81016049193288,
@@ -14544,9 +14544,9 @@
         "weighted": 0.008884913536076327
       },
       "archetype_fit": {
-        "raw": 0.5202367305755615,
+        "raw": 0.5202366709709167,
         "weight": 0.03,
-        "weighted": 0.015607101917266846
+        "weighted": 0.015607100129127503
       }
     },
     "competency": {
@@ -14684,9 +14684,9 @@
         "weighted": 0.03472222222222222
       },
       "semantic_fit": {
-        "raw": 0.5804135203361511,
+        "raw": 0.5804136395454407,
         "weight": 0.3,
-        "weighted": 0.17412405610084533
+        "weighted": 0.1741240918636322
       },
       "career_fit": {
         "raw": 0.8258044907773208,
@@ -14709,9 +14709,9 @@
         "weighted": 0.0164021164021164
       },
       "archetype_fit": {
-        "raw": 0.5309314131736755,
+        "raw": 0.5309314727783203,
         "weight": 0.03,
-        "weighted": 0.015927942395210264
+        "weighted": 0.01592794418334961
       }
     },
     "competency": {
@@ -14847,9 +14847,9 @@
         "weighted": 0.02008928163392955
       },
       "semantic_fit": {
-        "raw": 0.605345606803894,
+        "raw": 0.6053457260131836,
         "weight": 0.3,
-        "weighted": 0.1816036820411682
+        "weighted": 0.18160371780395507
       },
       "career_fit": {
         "raw": 0.837886257618007,
@@ -15012,9 +15012,9 @@
         "weighted": 0.04850803922045474
       },
       "semantic_fit": {
-        "raw": 0.6027565002441406,
+        "raw": 0.6027564406394958,
         "weight": 0.3,
-        "weighted": 0.18082695007324218
+        "weighted": 0.18082693219184875
       },
       "career_fit": {
         "raw": 0.42796524628724986,
@@ -15037,9 +15037,9 @@
         "weighted": 0.013512413512413514
       },
       "archetype_fit": {
-        "raw": 0.5211149454116821,
+        "raw": 0.5211148262023926,
         "weight": 0.03,
-        "weighted": 0.015633448362350463
+        "weighted": 0.015633444786071777
       }
     },
     "competency": {
@@ -15154,7 +15154,7 @@
     "risk_badges": [
       "[🐥 DABBLER_PATTERN:nlp]"
     ],
-    "reasoning": "strong semantic fit (0.602757) against the JD anchors; career trajectory aligned with the role (0.427965); experience squarely in the target band (0.608161)."
+    "reasoning": "strong semantic fit (0.602756) against the JD anchors; career trajectory aligned with the role (0.427965); experience squarely in the target band (0.608161)."
   },
   {
     "rank": 93,
@@ -15174,9 +15174,9 @@
         "weighted": 0.04455959867976133
       },
       "semantic_fit": {
-        "raw": 0.593908965587616,
+        "raw": 0.5939089059829712,
         "weight": 0.3,
-        "weighted": 0.17817268967628477
+        "weighted": 0.17817267179489135
       },
       "career_fit": {
         "raw": 0.8615073211535055,
@@ -15199,9 +15199,9 @@
         "weighted": 0.01193548387096774
       },
       "archetype_fit": {
-        "raw": 0.5698128342628479,
+        "raw": 0.5698127746582031,
         "weight": 0.03,
-        "weighted": 0.017094385027885437
+        "weighted": 0.017094383239746092
       }
     },
     "competency": {
@@ -15339,9 +15339,9 @@
         "weighted": 0.04324467559089474
       },
       "semantic_fit": {
-        "raw": 0.5642446875572205,
+        "raw": 0.5642447471618652,
         "weight": 0.3,
-        "weighted": 0.16927340626716614
+        "weighted": 0.16927342414855956
       },
       "career_fit": {
         "raw": 0.61650507564487,
@@ -15364,9 +15364,9 @@
         "weighted": 0.007792207792207792
       },
       "archetype_fit": {
-        "raw": 0.5635138750076294,
+        "raw": 0.5635137557983398,
         "weight": 0.03,
-        "weighted": 0.016905416250228882
+        "weighted": 0.016905412673950196
       }
     },
     "competency": {
@@ -15507,9 +15507,9 @@
         "weighted": 0.03472222222222222
       },
       "semantic_fit": {
-        "raw": 0.5974221229553223,
+        "raw": 0.5974222421646118,
         "weight": 0.3,
-        "weighted": 0.17922663688659668
+        "weighted": 0.17922667264938355
       },
       "career_fit": {
         "raw": 0.7645640726649416,
@@ -15532,9 +15532,9 @@
         "weighted": 0.024966124661246616
       },
       "archetype_fit": {
-        "raw": 0.5377950072288513,
+        "raw": 0.5377950668334961,
         "weight": 0.03,
-        "weighted": 0.016133850216865538
+        "weighted": 0.016133852005004883
       }
     },
     "competency": {
@@ -15670,9 +15670,9 @@
         "weighted": 0.08221254334154661
       },
       "semantic_fit": {
-        "raw": 0.5981806516647339,
+        "raw": 0.5981807708740234,
         "weight": 0.3,
-        "weighted": 0.17945419549942015
+        "weighted": 0.17945423126220703
       },
       "career_fit": {
         "raw": 0.8226036498429281,
@@ -15838,9 +15838,9 @@
         "weighted": 0.029395049742560478
       },
       "semantic_fit": {
-        "raw": 0.5918596982955933,
+        "raw": 0.5918598175048828,
         "weight": 0.3,
-        "weighted": 0.17755790948867797
+        "weighted": 0.17755794525146484
       },
       "career_fit": {
         "raw": 0.6285497476962353,
@@ -16002,9 +16002,9 @@
         "weighted": 0.029612321244310957
       },
       "semantic_fit": {
-        "raw": 0.5861788988113403,
+        "raw": 0.5861788392066956,
         "weight": 0.3,
-        "weighted": 0.1758536696434021
+        "weighted": 0.17585365176200865
       },
       "career_fit": {
         "raw": 0.4242376727514029,
@@ -16027,9 +16027,9 @@
         "weighted": 0.024242424242424246
       },
       "archetype_fit": {
-        "raw": 0.5809764862060547,
+        "raw": 0.5809764266014099,
         "weight": 0.03,
-        "weighted": 0.01742929458618164
+        "weighted": 0.017429292798042298
       }
     },
     "competency": {
@@ -16165,9 +16165,9 @@
         "weighted": 0.02660135070258099
       },
       "semantic_fit": {
-        "raw": 0.5777843594551086,
+        "raw": 0.5777842402458191,
         "weight": 0.3,
-        "weighted": 0.1733353078365326
+        "weighted": 0.17333527207374572
       },
       "career_fit": {
         "raw": 0.8150865664633662,
@@ -16190,9 +16190,9 @@
         "weighted": 0.00761843790012804
       },
       "archetype_fit": {
-        "raw": 0.6664218902587891,
+        "raw": 0.6664217710494995,
         "weight": 0.03,
-        "weighted": 0.01999265670776367
+        "weighted": 0.019992653131484985
       }
     },
     "competency": {
@@ -16330,9 +16330,9 @@
         "weighted": 0.048120154106172076
       },
       "semantic_fit": {
-        "raw": 0.5918896794319153,
+        "raw": 0.5918897390365601,
         "weight": 0.3,
-        "weighted": 0.17756690382957457
+        "weighted": 0.17756692171096802
       },
       "career_fit": {
         "raw": 0.9151550907009776,
@@ -16355,9 +16355,9 @@
         "weighted": 0.007998661311914323
       },
       "archetype_fit": {
-        "raw": 0.5226795673370361,
+        "raw": 0.5226796269416809,
         "weight": 0.03,
-        "weighted": 0.015680387020111083
+        "weighted": 0.01568038880825043
       }
     },
     "competency": {

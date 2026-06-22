@@ -32,7 +32,7 @@ CAND_0078492,30,0.446617,strong semantic fit (0.586478) against the JD anchors; 
 CAND_0011687,31,0.446195,strong semantic fit (0.572907) against the JD anchors; career trajectory aligned with the role (0.837694); experience squarely in the target band (0.644707).
 CAND_0022274,32,0.445573,strong semantic fit (0.575588) against the JD anchors; career trajectory aligned with the role (0.572001); experience squarely in the target band (0.587364).
 CAND_0050454,33,0.445515,strong semantic fit (0.577607) against the JD anchors; career trajectory aligned with the role (0.342102); experience squarely in the target band (0.636319).
-CAND_0033179,34,0.444721,strong semantic fit (0.600026) against the JD anchors; career trajectory aligned with the role (0.356099); experience squarely in the target band (0.636672).
+CAND_0033179,34,0.444721,strong semantic fit (0.600027) against the JD anchors; career trajectory aligned with the role (0.356099); experience squarely in the target band (0.636672).
 CAND_0080051,35,0.444300,strong semantic fit (0.568176) against the JD anchors; career trajectory aligned with the role (0.415682); experience squarely in the target band (0.605131). Concerns: frequent sub-18-month role changes.
 CAND_0027723,36,0.444202,strong semantic fit (0.641486) against the JD anchors; career trajectory aligned with the role (0.431176); experience squarely in the target band (0.572349).
 CAND_0087630,37,0.443942,strong semantic fit (0.589798) against the JD anchors; career trajectory aligned with the role (0.515947); experience squarely in the target band (0.649270).
@@ -52,17 +52,17 @@ CAND_0053695,50,0.427753,strong semantic fit (0.566037) against the JD anchors; 
 CAND_0037566,51,0.427459,strong semantic fit (0.574849) against the JD anchors; career trajectory aligned with the role (0.300000); experience squarely in the target band (0.636672).
 CAND_0025640,52,0.420569,strong semantic fit (0.564147) against the JD anchors; career trajectory aligned with the role (0.745958); experience squarely in the target band (0.609098).
 CAND_0030031,53,0.420008,strong semantic fit (0.568175) against the JD anchors; career trajectory aligned with the role (0.500631); corroborated skill match (0.285263) to the role's core competencies.
-CAND_0065878,54,0.419834,strong semantic fit (0.546862) against the JD anchors; career trajectory aligned with the role (0.580996); experience squarely in the target band (0.644707).
+CAND_0065878,54,0.419834,strong semantic fit (0.546863) against the JD anchors; career trajectory aligned with the role (0.580996); experience squarely in the target band (0.644707).
 CAND_0079387,55,0.419385,strong semantic fit (0.579567) against the JD anchors; career trajectory aligned with the role (0.368615); corroborated skill match (0.286724) to the role's core competencies.
 CAND_0080534,56,0.418675,strong semantic fit (0.576628) against the JD anchors; career trajectory aligned with the role (0.442268); experience squarely in the target band (0.552244). Concerns: frequent sub-18-month role changes.
-CAND_0009024,57,0.416002,strong semantic fit (0.586200) against the JD anchors; career trajectory aligned with the role (0.515947); corroborated skill match (0.212158) to the role's core competencies.
+CAND_0009024,57,0.416002,strong semantic fit (0.586201) against the JD anchors; career trajectory aligned with the role (0.515947); corroborated skill match (0.212158) to the role's core competencies.
 CAND_0073675,58,0.414474,strong semantic fit (0.558547) against the JD anchors; career trajectory aligned with the role (0.334926); experience squarely in the target band (0.628380).
 CAND_0040117,59,0.414383,strong semantic fit (0.587548) against the JD anchors; career trajectory aligned with the role (0.314234); experience squarely in the target band (0.628876).
 CAND_0036863,60,0.412898,career trajectory aligned with the role (0.948427); strong semantic fit (0.556348) against the JD anchors; corroborated skill match (0.277052) to the role's core competencies. Concerns: frequent sub-18-month role changes.
 CAND_0068964,61,0.412740,strong semantic fit (0.574083) against the JD anchors; career trajectory aligned with the role (0.845481); corroborated skill match (0.202032) to the role's core competencies. Concerns: frequent sub-18-month role changes.
 CAND_0006418,62,0.408773,strong semantic fit (0.590061) against the JD anchors; career trajectory aligned with the role (0.841051); corroborated skill match (0.230848) to the role's core competencies.
 CAND_0052682,63,0.408515,strong semantic fit (0.588832) against the JD anchors; career trajectory aligned with the role (0.311828); experience squarely in the target band (0.629358).
-CAND_0075439,64,0.404030,strong semantic fit (0.584616) against the JD anchors; career trajectory aligned with the role (0.552766); experience squarely in the target band (0.574403).
+CAND_0075439,64,0.404030,strong semantic fit (0.584617) against the JD anchors; career trajectory aligned with the role (0.552766); experience squarely in the target band (0.574403).
 CAND_0015528,65,0.398984,strong semantic fit (0.602899) against the JD anchors; career trajectory aligned with the role (0.447457); experience squarely in the target band (0.638294).
 CAND_0077337,66,0.397726,strong semantic fit (0.603673) against the JD anchors; career trajectory aligned with the role (0.684758); corroborated skill match (0.282757) to the role's core competencies. Concerns: frequent sub-18-month role changes.
 CAND_0036184,67,0.397416,strong semantic fit (0.568770) against the JD anchors; career trajectory aligned with the role (0.300000); experience squarely in the target band (0.619382).
@@ -70,13 +70,13 @@ CAND_0017590,68,0.395675,strong semantic fit (0.593220) against the JD anchors; 
 CAND_0020708,69,0.395627,strong semantic fit (0.556502) against the JD anchors; career trajectory aligned with the role (0.250000); experience squarely in the target band (0.572349).
 CAND_0058688,70,0.395114,strong semantic fit (0.626370) against the JD anchors; career trajectory aligned with the role (0.818245); experience squarely in the target band (0.635955). Concerns: based outside India without a sponsorship path.
 CAND_0041669,71,0.394665,strong semantic fit (0.581280) against the JD anchors; career trajectory aligned with the role (0.776728); corroborated skill match (0.233692) to the role's core competencies.
-CAND_0018549,72,0.394459,strong semantic fit (0.599217) against the JD anchors; career trajectory aligned with the role (0.804926); experience squarely in the target band (0.636319).
+CAND_0018549,72,0.394459,strong semantic fit (0.599216) against the JD anchors; career trajectory aligned with the role (0.804926); experience squarely in the target band (0.636319).
 CAND_0075574,73,0.394358,strong semantic fit (0.607677) against the JD anchors; career trajectory aligned with the role (0.710387); experience squarely in the target band (0.617208).
-CAND_0098846,74,0.393851,strong semantic fit (0.628732) against the JD anchors; career trajectory aligned with the role (0.678230); corroborated skill match (0.215298) to the role's core competencies.
+CAND_0098846,74,0.393851,strong semantic fit (0.628733) against the JD anchors; career trajectory aligned with the role (0.678230); corroborated skill match (0.215298) to the role's core competencies.
 CAND_0070333,75,0.393534,strong semantic fit (0.630451) against the JD anchors; career trajectory aligned with the role (0.757690); experience squarely in the target band (0.590484).
 CAND_0082086,76,0.392451,strong semantic fit (0.541216) against the JD anchors; career trajectory aligned with the role (0.759369); corroborated skill match (0.203929) to the role's core competencies.
 CAND_0006538,77,0.391200,strong semantic fit (0.605144) against the JD anchors; career trajectory aligned with the role (0.741603); experience squarely in the target band (0.610003).
-CAND_0048534,78,0.388814,strong semantic fit (0.608915) against the JD anchors; career trajectory aligned with the role (0.680183); experience squarely in the target band (0.527409).
+CAND_0048534,78,0.388814,strong semantic fit (0.608916) against the JD anchors; career trajectory aligned with the role (0.680183); experience squarely in the target band (0.527409).
 CAND_0006209,79,0.388281,strong semantic fit (0.596291) against the JD anchors; career trajectory aligned with the role (0.768190); experience squarely in the target band (0.555025).
 CAND_0084681,80,0.386574,strong semantic fit (0.596582) against the JD anchors; career trajectory aligned with the role (0.829406); experience squarely in the target band (0.531216).
 CAND_0067866,81,0.385921,strong semantic fit (0.559361) against the JD anchors; career trajectory aligned with the role (0.679645); experience squarely in the target band (0.628380).
@@ -86,11 +86,11 @@ CAND_0046525,84,0.385091,strong semantic fit (0.601440) against the JD anchors; 
 CAND_0060257,85,0.383732,strong semantic fit (0.600102) against the JD anchors; career trajectory aligned with the role (0.591894); experience squarely in the target band (0.617958).
 CAND_0012837,86,0.382973,strong semantic fit (0.655362) against the JD anchors; career trajectory aligned with the role (0.493600); experience squarely in the target band (0.628380).
 CAND_0034177,87,0.380854,strong semantic fit (0.568694) against the JD anchors; career trajectory aligned with the role (0.592268); experience squarely in the target band (0.546220).
-CAND_0011327,88,0.380682,strong semantic fit (0.583930) against the JD anchors; career trajectory aligned with the role (0.551316); experience squarely in the target band (0.621348). Concerns: frequent sub-18-month role changes.
+CAND_0011327,88,0.380681,strong semantic fit (0.583930) against the JD anchors; career trajectory aligned with the role (0.551316); experience squarely in the target band (0.621348). Concerns: frequent sub-18-month role changes.
 CAND_0042029,89,0.380019,strong semantic fit (0.547510) against the JD anchors; career trajectory aligned with the role (0.810160); experience squarely in the target band (0.635195).
 CAND_0017648,90,0.379223,strong semantic fit (0.580414) against the JD anchors; career trajectory aligned with the role (0.825804); experience squarely in the target band (0.557666). Concerns: notice period exceeds 30 days; frequent sub-18-month role changes.
 CAND_0038099,91,0.379216,strong semantic fit (0.605346) against the JD anchors; career trajectory aligned with the role (0.837886); experience squarely in the target band (0.607188). Concerns: notice period exceeds 30 days.
-CAND_0098952,92,0.378712,strong semantic fit (0.602757) against the JD anchors; career trajectory aligned with the role (0.427965); experience squarely in the target band (0.608161).
+CAND_0098952,92,0.378712,strong semantic fit (0.602756) against the JD anchors; career trajectory aligned with the role (0.427965); experience squarely in the target band (0.608161).
 CAND_0081321,93,0.378303,strong semantic fit (0.593909) against the JD anchors; career trajectory aligned with the role (0.861507); experience squarely in the target band (0.606179). Concerns: notice period exceeds 30 days.
 CAND_0024203,94,0.378048,strong semantic fit (0.564245) against the JD anchors; career trajectory aligned with the role (0.616505); experience squarely in the target band (0.576364). Concerns: frequent sub-18-month role changes.
 CAND_0081053,95,0.377870,strong semantic fit (0.597422) against the JD anchors; career trajectory aligned with the role (0.764564); experience squarely in the target band (0.607188). Concerns: notice period exceeds 30 days.

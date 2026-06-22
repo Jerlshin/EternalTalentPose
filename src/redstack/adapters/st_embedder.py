@@ -27,6 +27,36 @@ _DEFAULT_BATCH_SIZE: Final[int] = 32
 _DEFAULT_OPSET: Final[int] = 17
 _PARITY_FLOOR: Final[float] = 0.999
 
+#: Explicit override for auto device selection (build-time only; never read by
+#: anything under pipelines.online). Unset means "auto-detect".
+_DEVICE_ENV_VAR: Final[str] = "REDSTACK_OFFLINE_DEVICE"
+_VALID_DEVICES: Final[frozenset[str]] = frozenset({"cpu", "mps", "cuda"})
+
+
+def _select_device(torch_module: _Torch) -> str:
+    """Resolve the offline encode device: override, else best available accelerator.
+
+    Priority: an explicit ``REDSTACK_OFFLINE_DEVICE`` env override, then CUDA, then
+    Apple MPS, else CPU. This picks the device for ``encode`` only —
+    ``export_onnx`` always traces on CPU regardless of this choice (Adapters §4).
+
+    Raises:
+        EmbeddingError: the env override names a device outside ``_VALID_DEVICES``.
+    """
+    override = os.environ.get(_DEVICE_ENV_VAR, "").strip().lower()
+    if override:
+        if override not in _VALID_DEVICES:
+            raise EmbeddingError(
+                f"{_DEVICE_ENV_VAR}={override!r} must be one of "
+                f"{sorted(_VALID_DEVICES)}"
+            )
+        return override
+    if torch_module.cuda.is_available():
+        return "cuda"
+    if torch_module.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
 
 def _guard_offline_only() -> None:
     """Raise if an online execution marker is set (import + construction guard).
@@ -87,9 +117,13 @@ class _HfTokenizer(Protocol):
     def backend_tokenizer(self) -> _FastTokenizerHandle: ...
 
 
+class _TorchModule(Protocol):
+    def to(self, device: str) -> _TorchModule: ...
+
+
 class _Pooling(Protocol):
     @property
-    def auto_model(self) -> object: ...
+    def auto_model(self) -> _TorchModule: ...
 
 
 class _TorchOnnx(Protocol):
@@ -108,10 +142,23 @@ class _TorchOnnx(Protocol):
     ) -> None: ...
 
 
+class _TorchAccelerator(Protocol):
+    def is_available(self) -> bool: ...
+
+
+class _TorchBackends(Protocol):
+    @property
+    def mps(self) -> _TorchAccelerator: ...
+
+
 class _Torch(Protocol):
     def set_num_threads(self, n: int) -> None: ...
     @property
     def onnx(self) -> _TorchOnnx: ...
+    @property
+    def cuda(self) -> _TorchAccelerator: ...
+    @property
+    def backends(self) -> _TorchBackends: ...
 
 
 class _OrtSession(Protocol):
@@ -128,14 +175,22 @@ class SentenceTransformerEmbeddingAdapter:
     ``encode`` and exports the onnx twin with parity verification.
     """
 
-    __slots__ = ("_model_id", "_dim", "_normalize", "_batch_size", "_model", "_torch")
+    __slots__ = (
+        "_batch_size",
+        "_device",
+        "_dim",
+        "_model",
+        "_model_id",
+        "_normalize",
+        "_torch",
+    )
 
     def __init__(
         self,
         model_id: str,
         *,
         revision: str | None = None,
-        device: str = "cpu",
+        device: str = "auto",
         torch_num_threads: int = 1,
         normalize: bool = True,
         batch_size: int = _DEFAULT_BATCH_SIZE,
@@ -146,15 +201,22 @@ class SentenceTransformerEmbeddingAdapter:
         Args:
             model_id: The pinned sentence-transformers model id (provenance).
             revision: Pinned model revision for reproducibility.
-            device: Compute device (``"cpu"`` for deterministic builds).
-            torch_num_threads: Pinned torch thread count.
+            device: Compute device for :meth:`encode` — ``"auto"`` (default)
+                detects CUDA, then Apple MPS, then falls back to CPU; an explicit
+                ``"cpu"``/``"mps"``/``"cuda"`` pins that device. ``"auto"`` is
+                itself overridable via the ``REDSTACK_OFFLINE_DEVICE`` env var.
+                :meth:`export_onnx` always traces on CPU regardless of this value
+                (Adapters §4) — the device choice only affects encode throughput,
+                never the exported artifact's correctness.
+            torch_num_threads: Pinned torch thread count (CPU path only).
             normalize: Apply L2 normalization to outputs (fixed contract).
             batch_size: Default encode batch size.
             dim: Optional dimensionality override; otherwise read from the model.
 
         Raises:
             RuntimeError: an online marker is set.
-            EmbeddingError: the model could not be loaded.
+            EmbeddingError: the model could not be loaded, or an explicit
+                ``REDSTACK_OFFLINE_DEVICE`` override names an unknown device.
         """
         _guard_offline_only()
         os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -162,10 +224,15 @@ class SentenceTransformerEmbeddingAdapter:
 
         try:
             torch_module = cast("_Torch", importlib.import_module("torch"))
+            resolved_device = (
+                _select_device(torch_module) if device == "auto" else device
+            )
             torch_module.set_num_threads(torch_num_threads)
             st_module = importlib.import_module("sentence_transformers")
             transformer_cls = st_module.SentenceTransformer
-            loaded = transformer_cls(model_id, revision=revision, device=device)
+            loaded = transformer_cls(
+                model_id, revision=revision, device=resolved_device
+            )
         except (ImportError, OSError, ValueError, RuntimeError) as exc:
             raise EmbeddingError(
                 f"cannot load sentence-transformers model {model_id!r}: {exc}"
@@ -177,6 +244,7 @@ class SentenceTransformerEmbeddingAdapter:
         self._model_id: Final[str] = model_id
         self._normalize: Final[bool] = normalize
         self._batch_size: Final[int] = batch_size
+        self._device: Final[str] = resolved_device
         self._dim: Final[int] = (
             dim if dim is not None else int(model.get_sentence_embedding_dimension())
         )
@@ -193,6 +261,15 @@ class SentenceTransformerEmbeddingAdapter:
     def model_id(self) -> str:
         """The stable model identifier for provenance."""
         return self._model_id
+
+    @property
+    def device(self) -> str:
+        """The resolved compute device used by ``encode`` (``cpu``/``mps``/``cuda``).
+
+        Build provenance only (Adapters §4 device policy) — ``export_onnx``
+        always traces on CPU regardless of this value.
+        """
+        return self._device
 
     @property
     def opset(self) -> int:
@@ -295,25 +372,34 @@ class SentenceTransformerEmbeddingAdapter:
             input_ids = tokens["input_ids"]
             attention_mask = tokens["attention_mask"]
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            self._torch.onnx.export(
-                transformer,
-                (input_ids, attention_mask),
-                str(output_path),
-                input_names=["input_ids", "attention_mask"],
-                output_names=["last_hidden_state"],
-                dynamic_axes={
-                    "input_ids": {0: "batch", 1: "sequence"},
-                    "attention_mask": {0: "batch", 1: "sequence"},
-                    "last_hidden_state": {0: "batch", 1: "sequence"},
-                },
-                opset_version=opset,
-                do_constant_folding=True,
-                # Force the legacy TorchScript-based exporter: the dynamic_axes
-                # kwarg above is that exporter's API, and the newer dynamo=True
-                # default (torch>=2.5) requires an additional `onnxscript`
-                # dependency this offline build does not declare.
-                dynamo=False,
-            )
+            # torch.onnx.export traces most reliably off a CPU-resident model
+            # (the tokenizer's "pt" tensors are already CPU); this is a fixed
+            # small-sample trace, not the encode throughput path, so it is
+            # always pinned to CPU regardless of self._device and restored
+            # afterward so a later encode() still runs on the configured device.
+            transformer.to("cpu")
+            try:
+                self._torch.onnx.export(
+                    transformer,
+                    (input_ids, attention_mask),
+                    str(output_path),
+                    input_names=["input_ids", "attention_mask"],
+                    output_names=["last_hidden_state"],
+                    dynamic_axes={
+                        "input_ids": {0: "batch", 1: "sequence"},
+                        "attention_mask": {0: "batch", 1: "sequence"},
+                        "last_hidden_state": {0: "batch", 1: "sequence"},
+                    },
+                    opset_version=opset,
+                    do_constant_folding=True,
+                    # Force the legacy TorchScript-based exporter: the dynamic_axes
+                    # kwarg above is that exporter's API, and the newer dynamo=True
+                    # default (torch>=2.5) requires an additional `onnxscript`
+                    # dependency this offline build does not declare.
+                    dynamo=False,
+                )
+            finally:
+                transformer.to(self._device)
         except Exception as exc:  # torch/transformers raise bare exceptions
             raise EmbeddingError(f"onnx export failed: {exc}") from exc
 
@@ -375,10 +461,11 @@ class SentenceTransformerEmbeddingAdapter:
 
 
 if TYPE_CHECKING:
-    from redstack.ports.embedding import EmbeddingModelPort
+    from redstack.ports.embedding import DeviceReporting, EmbeddingModelPort
 
     # Compile-time structural conformance to the frozen port surface.
     _PORT_CONFORMANCE: type[EmbeddingModelPort] = SentenceTransformerEmbeddingAdapter
+    _DEVICE_CONFORMANCE: type[DeviceReporting] = SentenceTransformerEmbeddingAdapter
 
 
 __all__: tuple[str, ...] = ("SentenceTransformerEmbeddingAdapter",)

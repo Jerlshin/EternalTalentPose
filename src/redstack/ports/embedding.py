@@ -20,6 +20,20 @@ class EmbeddingModelPort(Protocol):
 
 
 @runtime_checkable
+class DeviceReporting(Protocol):
+    """Optional offline-only capability: report the compute device used for encode.
+
+    Implemented by the sentence-transformers offline adapter for build provenance
+    (which accelerator produced ``candidate_vectors``/``anchor_vectors``). Absent
+    on the online onnx adapter, which is always CPU under the Online Containment
+    Rule and so has nothing to report.
+    """
+
+    @property
+    def device(self) -> str: ...
+
+
+@runtime_checkable
 class OnnxExportCapable(Protocol):
     """Offline-only ONNX export + parity capability (Adapters §4).
 

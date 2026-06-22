@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedStack &mdash; Top-100 Candidate Triage Dashboard</title>
+<style>
+
+:root[data-theme="dark"]{
+  --bg:#0d1117; --bg-panel:#151b23; --bg-elevated:#1c2530; --bg-hover:#212b38;
+  --border:#2a3441; --text:#e6edf3; --text-dim:#8b98a9; --text-faint:#5b6878;
+  --accent:#34d399; --accent-dim:#1f5f48; --amber:#fbbf24; --amber-dim:#5c4a1a;
+  --crimson:#f87171; --crimson-dim:#5c2424; --blue:#60a5fa; --blue-dim:#1e3a5c;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -8px rgba(0,0,0,.5);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.4);
+  --glass-bg:rgba(21,27,35,.68); --glass-border:rgba(255,255,255,.06);
+  --glow-1:rgba(52,211,153,.07); --glow-2:rgba(96,165,250,.06);
+  --chip-clear-bg:#0f2e22; --chip-clear-fg:#5eead4;
+  --chip-soft-bg:#3a2c0d; --chip-soft-fg:#fcd34d;
+  --chip-dabbler-bg:#3a300d; --chip-dabbler-fg:#fde68a;
+  --chip-ghost-bg:#3a1414; --chip-ghost-fg:#fca5a5;
+  --chip-hard-bg:#4a1212; --chip-hard-fg:#fecaca;
+}
+:root[data-theme="light"]{
+  --bg:#f3f5f8; --bg-panel:#ffffff; --bg-elevated:#f7f9fb; --bg-hover:#eef2f6;
+  --border:#dce2e8; --text:#161c24; --text-dim:#4a5568; --text-faint:#8896a6;
+  --accent:#059669; --accent-dim:#d1fae5; --amber:#b45309; --amber-dim:#fef3c7;
+  --crimson:#b91c1c; --crimson-dim:#fee2e2; --blue:#1d4ed8; --blue-dim:#dbeafe;
+  --shadow:0 1px 2px rgba(20,30,50,.05), 0 10px 24px -8px rgba(20,30,50,.14);
+  --shadow-sm:0 1px 3px rgba(20,30,50,.08);
+  --glass-bg:rgba(255,255,255,.66); --glass-border:rgba(20,30,50,.05);
+  --glow-1:rgba(5,150,105,.05); --glow-2:rgba(29,78,216,.05);
+  --chip-clear-bg:#d1fae5; --chip-clear-fg:#065f46;
+  --chip-soft-bg:#fef3c7; --chip-soft-fg:#92400e;
+  --chip-dabbler-bg:#fef9c3; --chip-dabbler-fg:#854d0e;
+  --chip-ghost-bg:#fee2e2; --chip-ghost-fg:#991b1b;
+  --chip-hard-bg:#fecaca; --chip-hard-fg:#7f1d1d;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+html{scrollbar-width:thin; scrollbar-color:var(--border) var(--bg);}
+::-webkit-scrollbar{width:11px; height:11px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border); border-radius:6px; border:2px solid var(--bg);}
+::-webkit-scrollbar-thumb:hover{background:var(--text-faint);}
+body{
+  background:
+    radial-gradient(1100px 560px at 8% -8%, var(--glow-1), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, var(--glow-2), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+code{font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,monospace; font-size:.92em;}
+a{color:var(--blue);}
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 28px; background:var(--glass-bg); backdrop-filter:blur(16px) saturate(180%);
+  -webkit-backdrop-filter:blur(16px) saturate(180%);
+  border-bottom:1px solid var(--glass-border);
+  position:sticky; top:0; z-index:50; box-shadow:var(--shadow);
+}
+.topbar h1{margin:0; font-size:19px; font-weight:700; letter-spacing:-.01em;}
+.topbar h1 span{color:var(--text-dim); font-weight:500; margin-left:8px;}
+.subtitle{margin:4px 0 0; font-size:12px; color:var(--text-faint);}
+.btn-ghost{
+  background:var(--bg-elevated); color:var(--text); border:1px solid var(--border);
+  border-radius:8px; padding:8px 14px; font-size:13px; cursor:pointer; transition:.15s;
+}
+.btn-ghost:hover{background:var(--bg-hover);}
+
+main{max-width:1320px; margin:0 auto; padding:24px 28px 60px;}
+
+/* ---------- KPI cards ---------- */
+.kpi-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(195px,1fr)); gap:14px; margin-bottom:24px;
+}
+.kpi-card{
+  background:var(--glass-bg); backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  border:1px solid var(--glass-border); border-left:4px solid var(--accent-card,var(--blue));
+  border-radius:10px; padding:16px 18px; box-shadow:var(--shadow); transition:transform .18s ease, box-shadow .18s ease;
+}
+.kpi-card:hover{transform:translateY(-2px); box-shadow:var(--shadow), 0 0 0 1px var(--accent-card,var(--blue)) inset;}
+.kpi-card .kpi-label{font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-faint); font-weight:600;}
+.kpi-card .kpi-value{font-size:28px; font-weight:700; margin:6px 0 2px; letter-spacing:-.02em;}
+.kpi-card .kpi-value small{font-size:14px; color:var(--text-dim); font-weight:500;}
+.kpi-card .kpi-sub{font-size:12px; color:var(--text-dim);}
+.kpi-card.status-good{--accent-card:var(--accent);}
+.kpi-card.status-warn{--accent-card:var(--amber);}
+.kpi-card.status-bad{--accent-card:var(--crimson);}
+.kpi-card.status-info{--accent-card:var(--blue);}
+
+/* ---------- panels ---------- */
+.panel{
+  background:var(--glass-bg); backdrop-filter:blur(14px) saturate(160%); -webkit-backdrop-filter:blur(14px) saturate(160%);
+  border:1px solid var(--glass-border); border-radius:12px;
+  padding:20px 22px; margin-bottom:22px; box-shadow:var(--shadow);
+}
+.panel h2{margin:0 0 14px; font-size:15px; font-weight:700;}
+.panel h2 .hint{font-size:11.5px; color:var(--text-faint); font-weight:500; margin-left:8px;}
+
+/* ---------- gate histogram ---------- */
+.gate-row{display:flex; align-items:center; gap:12px; padding:6px 0;}
+.gate-label{width:300px; flex:0 0 300px; font-size:12.5px; color:var(--text-dim);}
+.gate-label code{color:var(--text);}
+.gate-bar-track{flex:1; background:var(--bg-elevated); border-radius:5px; height:18px; overflow:hidden; position:relative;}
+.gate-bar-fill{height:100%; border-radius:5px; transition:width .4s ease;}
+.gate-value{width:130px; flex:0 0 130px; text-align:right; font-size:12px; color:var(--text-dim); font-variant-numeric:tabular-nums;}
+
+/* ---------- controls ---------- */
+.controls-bar{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px;}
+#search-input{
+  flex:1 1 280px; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text);
+  border-radius:8px; padding:9px 12px; font-size:13.5px; outline:none;
+}
+#search-input:focus{border-color:var(--blue);}
+.filter-badges{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{
+  border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-dim);
+  border-radius:999px; padding:7px 13px; font-size:12.5px; cursor:pointer; white-space:nowrap; transition:.15s;
+}
+.chip:hover{background:var(--bg-hover);}
+.chip.active{background:var(--blue-dim); color:var(--blue); border-color:var(--blue);}
+.chip.active.chip-clear{background:var(--chip-clear-bg); color:var(--chip-clear-fg); border-color:transparent;}
+.chip.active.chip-dabbler{background:var(--chip-dabbler-bg); color:var(--chip-dabbler-fg); border-color:transparent;}
+.chip.active.chip-ghost{background:var(--chip-ghost-bg); color:var(--chip-ghost-fg); border-color:transparent;}
+.chip.active.chip-soft{background:var(--chip-soft-bg); color:var(--chip-soft-fg); border-color:transparent;}
+.result-count{margin-left:auto; font-size:12px; color:var(--text-faint); white-space:nowrap;}
+
+/* ---------- quick filter (YOE band) ---------- */
+.quick-filter{
+  display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--text-dim);
+  background:var(--bg-elevated); border:1px solid var(--border); border-radius:999px; padding:5px 6px 5px 12px;
+}
+.quick-filter .qf-label{white-space:nowrap; font-weight:600;}
+.quick-filter input[type=number]{
+  width:46px; background:transparent; border:none; color:var(--text); font-size:12.5px;
+  text-align:center; outline:none;
+}
+.quick-filter .qf-sep{color:var(--text-faint);}
+.quick-filter .chip{padding:5px 11px;}
+
+/* ---------- table ---------- */
+.triage-table{width:100%; border-collapse:collapse;}
+.triage-table thead th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint);
+  border-bottom:1px solid var(--border); padding:8px 10px; position:sticky; top:65px; background:var(--bg-panel); z-index:5;
+}
+.triage-table .col-rank,.triage-table .col-score,.triage-table .col-yoe{text-align:right;}
+.triage-table tbody tr.row{border-bottom:1px solid var(--border); cursor:pointer; transition:background .12s ease, box-shadow .15s ease;}
+.triage-table tbody tr.row:hover{background:var(--bg-hover); box-shadow:inset 3px 0 0 var(--accent);}
+.triage-table td{padding:10px 10px; vertical-align:top; font-size:13px;}
+.triage-table .col-expand{width:28px; text-align:center;}
+.chevron{display:inline-flex; align-items:center; transition:transform .18s cubic-bezier(.4,0,.2,1), color .15s; color:var(--text-faint);}
+.chevron svg{display:block;}
+.row:hover .chevron{color:var(--accent);}
+.row.expanded .chevron{transform:rotate(90deg); color:var(--accent);}
+.cell-rank{font-weight:700; color:var(--text-dim);}
+.cell-score{font-weight:700; font-variant-numeric:tabular-nums;}
+.candidate-cell{display:flex; align-items:flex-start; gap:10px;}
+.avatar{
+  width:32px; height:32px; border-radius:8px; background:var(--blue-dim); color:var(--blue);
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex:0 0 32px;
+}
+.candidate-name{font-weight:600;}
+.candidate-id{color:var(--text-faint); font-size:11.5px; display:flex; align-items:center; gap:5px;}
+.copy-id-btn{
+  background:none; border:none; color:var(--text-faint); cursor:pointer; padding:2px;
+  border-radius:5px; display:inline-flex; align-items:center; transition:.15s;
+}
+.copy-id-btn:hover{color:var(--accent); background:var(--bg-hover); transform:scale(1.15);}
+.copy-id-btn.copied{color:var(--accent);}
+.copy-id-btn svg{display:block;}
+.role-title{font-weight:600;}
+.role-company{color:var(--text-dim);}
+.role-loc{color:var(--text-faint); font-size:11.5px;}
+.competency-mini{font-size:11.5px; color:var(--text-dim); line-height:1.6;}
+.competency-mini b{color:var(--text);}
+.skill-match-line{margin-top:3px; font-weight:700; color:var(--accent); font-size:12px;}
+.logistics-mini{font-size:11.5px; color:var(--text-dim); line-height:1.6;}
+.logistics-mini .tag{color:var(--text);}
+.risk-cell{display:flex; flex-wrap:wrap; gap:5px; max-width:230px;}
+.badge{
+  font-size:10.5px; border-radius:999px; padding:3px 9px; font-weight:700; white-space:nowrap;
+  letter-spacing:.01em; box-shadow:0 1px 2px rgba(0,0,0,.12); display:inline-flex; align-items:center;
+}
+.badge-clear{background:var(--chip-clear-bg); color:var(--chip-clear-fg);}
+.badge-soft{background:var(--chip-soft-bg); color:var(--chip-soft-fg);}
+.badge-dabbler{background:var(--chip-dabbler-bg); color:var(--chip-dabbler-fg);}
+.badge-ghost{background:var(--chip-ghost-bg); color:var(--chip-ghost-fg);}
+.badge-hard{background:var(--chip-hard-bg); color:var(--chip-hard-fg);}
+
+/* ---------- detail panel ---------- */
+tr.detail-row td{padding:0; border-bottom:1px solid var(--border);}
+.detail-wrap{background:var(--bg-elevated); padding:18px 22px 22px; animation:fadeSlideIn .22s ease;}
+@keyframes fadeSlideIn{from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:translateY(0);}}
+.tabs{display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px; flex-wrap:wrap;}
+.tab-btn{
+  background:none; border:none; color:var(--text-dim); padding:8px 14px; font-size:12.5px; font-weight:600;
+  cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .15s, border-color .15s;
+}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent); border-bottom-color:var(--accent);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.detail-grid{display:grid; grid-template-columns:2fr 1fr; gap:22px;}
+.detail-section h4{margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint);}
+.profile-summary{font-size:13px; color:var(--text); line-height:1.65; margin:0 0 14px;}
+.kv-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px 16px; font-size:12.5px;}
+.kv-grid div b{color:var(--text-dim); font-weight:600; display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; margin-bottom:1px;}
+
+.timeline{border-left:2px solid var(--border); margin-left:6px;}
+.timeline-item{position:relative; padding:0 0 18px 20px;}
+.timeline-item::before{content:""; position:absolute; left:-6px; top:3px; width:10px; height:10px; border-radius:50%; background:var(--blue); border:2px solid var(--bg-elevated);}
+.timeline-item.current::before{background:var(--accent);}
+.timeline-head{font-weight:700; font-size:13px;}
+.timeline-meta{font-size:11.5px; color:var(--text-faint); margin:2px 0 6px;}
+.timeline-desc{font-size:12.5px; color:var(--text-dim); line-height:1.6;}
+.current-pill{font-size:10px; background:var(--chip-clear-bg); color:var(--chip-clear-fg); border-radius:5px; padding:1px 6px; margin-left:6px; font-weight:700;}
+
+table.mini-table{width:100%; border-collapse:collapse; font-size:12px;}
+table.mini-table th{text-align:left; color:var(--text-faint); font-weight:600; text-transform:uppercase; font-size:10.5px; letter-spacing:.03em; padding:5px 8px; border-bottom:1px solid var(--border);}
+table.mini-table td{padding:6px 8px; border-bottom:1px solid var(--border); vertical-align:top;}
+table.mini-table tr.top3 td:first-child{color:var(--accent); font-weight:700;}
+.bar-cell{display:flex; align-items:center; gap:6px;}
+.bar-track{flex:1; height:6px; background:var(--bg-panel); border-radius:3px; overflow:hidden;}
+.bar-fill{height:100%; background:var(--blue); border-radius:3px;}
+.tok{display:inline-block; background:var(--bg-panel); border:1px solid var(--border); border-radius:5px; padding:1px 6px; font-size:10.5px; margin:1px 2px 0 0; color:var(--text-dim);}
+
+.risk-list{list-style:none; margin:0; padding:0;}
+.risk-list li{display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(--border);}
+.risk-list li:last-child{border-bottom:none;}
+.risk-icon{flex:0 0 auto; font-size:15px;}
+.risk-text b{display:block; font-size:12.5px; margin-bottom:2px;}
+.risk-text span{font-size:12px; color:var(--text-dim);}
+.all-clear{color:var(--accent); font-weight:700; font-size:13px;}
+
+blockquote.reasoning{
+  margin:0; padding:14px 18px; background:var(--bg-panel); border-left:3px solid var(--accent);
+  border-radius:8px; font-style:italic; color:var(--text); font-size:13px; line-height:1.65;
+}
+.reasoning-badges{margin-top:12px; display:flex; flex-wrap:wrap; gap:6px;}
+
+.cred-block{margin-bottom:16px;}
+.cred-item{font-size:12.5px; padding:6px 0; border-bottom:1px solid var(--border);}
+.cred-item:last-child{border-bottom:none;}
+.cred-item b{display:block;}
+.cred-item span{color:var(--text-dim); font-size:11.5px;}
+.empty-note{color:var(--text-faint); font-size:12px; font-style:italic;}
+
+footer{text-align:center; color:var(--text-faint); font-size:11.5px; padding:20px 0 40px;}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div>
+    <h1>RedStack <span>Top-100 Candidate Triage</span></h1>
+    <p class="subtitle" id="run-meta-line">loading run metadata&hellip;</p>
+  </div>
+  <button id="theme-toggle" class="btn-ghost" type="button">&#9788; Light mode</button>
+</header>
+
+<main>
+  <section class="kpi-grid" id="kpi-grid"></section>
+
+  <section class="panel">
+    <h2>Hard-Gate Fired Rates <span class="hint">full pool &middot; N = 100,000 &middot; source: run_report.json</span></h2>
+    <div id="gate-chart"></div>
+  </section>
+
+  <section class="panel">
+    <div class="controls-bar">
+      <input id="search-input" type="text" placeholder="Filter by name, title, company, location, or matched skill token&hellip;" autocomplete="off">
+      <div class="filter-badges" id="filter-badges">
+        <button class="chip chip-all active" data-filter="all">All</button>
+        <button class="chip chip-clear" data-filter="clear">&#9989; Clear Only</button>
+        <button class="chip chip-soft" data-filter="title_chaser">&#9888; Title-Chasers</button>
+        <button class="chip chip-dabbler" data-filter="dabbler">&#129371; Dabblers</button>
+        <button class="chip chip-ghost" data-filter="ghost">&#128123; Ghost Penalty</button>
+        <button class="chip chip-soft" data-filter="notice_over_30">&#8987; Notice &gt; 30d</button>
+        <button class="chip chip-soft" data-filter="outside_india">&#127760; Outside India</button>
+      </div>
+      <div class="quick-filter" id="quick-filter">
+        <span class="qf-label">&#127919; YOE band</span>
+        <input type="number" id="yoe-min" min="0" max="60" step="0.1" value="6" aria-label="Minimum years of experience">
+        <span class="qf-sep">&ndash;</span>
+        <input type="number" id="yoe-max" min="0" max="60" step="0.1" value="8" aria-label="Maximum years of experience">
+        <button class="chip" data-filter="yoe_band" id="yoe-band-toggle" title="Highlight only candidates inside this YOE band">Apply</button>
+      </div>
+      <div class="result-count" id="result-count"></div>
+    </div>
+
+    <table class="triage-table" id="triage-table">
+      <thead>
+        <tr>
+          <th class="col-expand"></th>
+          <th class="col-rank">Rank</th>
+          <th class="col-score">Score</th>
+          <th class="col-candidate">Candidate</th>
+          <th class="col-role">Title @ Company</th>
+          <th class="col-yoe">YOE</th>
+          <th class="col-competency">Top-3 Competency</th>
+          <th class="col-logistics">Logistics</th>
+          <th class="col-risk">Risk / Gate Alerts</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  Generated offline from <code>debug_top100_lean.json</code> + <code>data/raw/candidates.jsonl</code> + <code>run_report.json</code>. Single self-contained file &mdash; no external scripts, styles, or network calls.
+</footer>
+
+<script type="application/json" id="candidate-data">__DATA_JSON__</script>
+<script>
+(function () {
+  "use strict";
+
+  // ----------------------------------------------------------------
+  // 1. LOAD DATA -- the JSON island above is the entire data source.
+  // ----------------------------------------------------------------
+  var DATA = JSON.parse(document.getElementById("candidate-data").textContent);
+  var CANDIDATES = DATA.candidates;
+  var GROUP_LABELS = DATA.group_labels;
+  var COMPONENT_LABELS = DATA.component_labels;
+
+  // Risk-badge text -> { icon, cssClass } used by both the grid cell and the detail panel.
+  function badgeStyle(level) {
+    switch (level) {
+      case "hard": return { icon: "⛔", cls: "badge-hard" };
+      case "soft": return { icon: "⚠", cls: "badge-soft" };
+      case "dabbler": return { icon: "🐥", cls: "badge-dabbler" };
+      case "ghost": return { icon: "👻", cls: "badge-ghost" };
+      default: return { icon: "✅", cls: "badge-clear" };
+    }
+  }
+
+  function fmtPct(x) { return (x * 100).toFixed(0) + "%"; }
+  function fmt3(x) { return Number(x).toFixed(3); }
+  function fmt6(x) { return Number(x).toFixed(6); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function initials(name) {
+    return name.split(/\s+/).map(function (p) { return p[0]; }).slice(0, 2).join("").toUpperCase();
+  }
+
+  // ----------------------------------------------------------------
+  // 2. KPI CARDS
+  // ----------------------------------------------------------------
+  function renderKpis() {
+    var k = DATA.kpis;
+    var cards = [
+      { label: "Full Pool Size", value: k.pool_size.toLocaleString(), sub: "candidates scored end-to-end", status: "info" },
+      { label: "Top-10 Avg YOE", value: k.avg_yoe_top10 + "y", sub: "years of experience, cohort average", status: "info" },
+      { label: "Honeypots Caught", value: k.honeypot_count + " / " + k.cohort_size, sub: "verified via IntegrityEngine", status: k.honeypot_count === 0 ? "good" : "bad" },
+      { label: "Hard-Blocked Leaking", value: k.hard_blocked_count + " / " + k.cohort_size, sub: "should always be 0", status: k.hard_blocked_count === 0 ? "good" : "bad" },
+      { label: "Dabbler Pattern Flagged", value: k.dabbler_count + " / " + k.cohort_size, sub: "in_career = 0, trust ≥ 0.5 on a top-3 group", status: "warn" },
+      { label: "Ghost-Profile Penalty", value: k.ghost_count + " / " + k.cohort_size, sub: "behavioral_multiplier < 0.85", status: "warn" }
+    ];
+    var html = cards.map(function (c) {
+      return '<div class="kpi-card status-' + c.status + '">' +
+        '<div class="kpi-label">' + esc(c.label) + '</div>' +
+        '<div class="kpi-value">' + c.value + '</div>' +
+        '<div class="kpi-sub">' + esc(c.sub) + '</div></div>';
+    }).join("");
+    document.getElementById("kpi-grid").innerHTML = html;
+
+    var rm = DATA.run_meta;
+    document.getElementById("run-meta-line").textContent =
+      "Run " + rm.run_id + " · " + rm.code_version + " · manifest " + rm.manifest_hash +
+      " · budget honored: " + (rm.reproducible ? "yes" : "no");
+  }
+
+  // ----------------------------------------------------------------
+  // 3. GATE HISTOGRAM (full pool, pure div bars, no chart library)
+  // ----------------------------------------------------------------
+  function renderGateChart() {
+    var gates = DATA.gates;
+    var maxPct = Math.max.apply(null, gates.map(function (g) { return g.pct; }));
+    var html = gates.map(function (g) {
+      var color = g.pct > 50 ? "var(--crimson)" : g.pct > 20 ? "var(--amber)" : "var(--blue)";
+      var widthPct = (g.pct / maxPct) * 100;
+      return '<div class="gate-row">' +
+        '<div class="gate-label"><code>' + esc(g.code) + '</code><br>' + esc(g.label) + '</div>' +
+        '<div class="gate-bar-track"><div class="gate-bar-fill" style="width:' + widthPct.toFixed(2) + '%;background:' + color + ';"></div></div>' +
+        '<div class="gate-value">' + g.fired.toLocaleString() + ' &middot; ' + g.pct.toFixed(2) + '%</div>' +
+        '</div>';
+    }).join("");
+    document.getElementById("gate-chart").innerHTML = html;
+  }
+
+  // ----------------------------------------------------------------
+  // 4. TRIAGE TABLE -- rows are built once; detail panels are built
+  //    lazily on first expand and then cached on the DOM node.
+  // ----------------------------------------------------------------
+  function topCompetencyHtml(c) {
+    var groups = c.competency.groups;
+    return c.competency.top3_groups.map(function (key) {
+      var g = groups[key];
+      var toks = (g.matched_tokens || []).join(",");
+      return "<b>" + esc(key) + "</b>=" + fmt3(g.competency) + " [" + esc(toks) + "]";
+    }).join("<br>") + '<div class="skill-match-line">skill_match=' + fmt6(c.competency.skill_match) + "</div>";
+  }
+
+  function logisticsHtml(c) {
+    var lg = c.logistics, bh = c.behavioral;
+    return '<span class="tag">' + esc(lg.location_fit) + "</span> / " + esc(lg.notice_fit) + "<br>" +
+      "notice " + lg.notice_period_days + "d<br>" +
+      "resp " + fmtPct(bh.response_rate) + " (" + esc(bh.responsiveness_status) + ")";
+  }
+
+  function riskCellHtml(c) {
+    if (c.flags.clear) return '<span class="badge badge-clear">✅ CLEAR</span>';
+    return c.risk_items.map(function (r) {
+      var st = badgeStyle(r.level);
+      return '<span class="badge ' + st.cls + '" title="' + esc(r.desc) + '">' + st.icon + " " + esc(r.code) + "</span>";
+    }).join("");
+  }
+
+  var CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l6 5-6 5"></path></svg>';
+  var COPY_ICON_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5.5" y="5.5" width="8" height="8" rx="1.6"></rect><path d="M3 10.2V3.6C3 2.7 3.7 2 4.6 2h6.2"></path></svg>';
+  var CHECK_ICON_SVG = '<svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 5"></path></svg>';
+
+  function fallbackCopyText(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) { /* clipboard unavailable, ignore */ }
+    document.body.removeChild(ta);
+  }
+
+  function copyCandidateId(id, btn) {
+    function onCopied() {
+      var prevHtml = btn.innerHTML, prevTitle = btn.title;
+      btn.innerHTML = CHECK_ICON_SVG;
+      btn.classList.add("copied");
+      btn.title = "Copied!";
+      setTimeout(function () {
+        btn.innerHTML = prevHtml;
+        btn.classList.remove("copied");
+        btn.title = prevTitle;
+      }, 1100);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(id).then(onCopied).catch(function () {
+        fallbackCopyText(id);
+        onCopied();
+      });
+    } else {
+      fallbackCopyText(id);
+      onCopied();
+    }
+  }
+
+  function buildRow(c) {
+    var tr = document.createElement("tr");
+    tr.className = "row";
+    tr.dataset.cid = c.candidate_id;
+    tr.innerHTML =
+      '<td class="col-expand"><span class="chevron">' + CHEVRON_SVG + '</span></td>' +
+      '<td class="cell-rank">' + c.rank + '</td>' +
+      '<td class="cell-score">' + fmt6(c.score) + '</td>' +
+      '<td><div class="candidate-cell"><div class="avatar">' + esc(initials(c.name)) + '</div>' +
+        '<div><div class="candidate-name">' + esc(c.name) + '</div>' +
+        '<div class="candidate-id"><code>' + esc(c.candidate_id) + '</code>' +
+        '<button class="copy-id-btn" type="button" data-cid="' + esc(c.candidate_id) + '" title="Copy candidate ID" aria-label="Copy candidate ID">' + COPY_ICON_SVG + '</button>' +
+        '</div></div></div></td>' +
+      '<td><div class="role-title">' + esc(c.current_title) + '</div>' +
+        '<div class="role-company">@ ' + esc(c.current_company) + '</div>' +
+        '<div class="role-loc">' + esc(c.location) + '</div></td>' +
+      '<td>' + c.yoe.toFixed(1) + '</td>' +
+      '<td><div class="competency-mini">' + topCompetencyHtml(c) + '</div></td>' +
+      '<td><div class="logistics-mini">' + logisticsHtml(c) + '</div></td>' +
+      '<td><div class="risk-cell">' + riskCellHtml(c) + '</div></td>';
+
+    var detailTr = document.createElement("tr");
+    detailTr.className = "detail-row hidden";
+    var td = document.createElement("td");
+    td.colSpan = 9;
+    detailTr.appendChild(td);
+
+    tr.addEventListener("click", function () { toggleDetail(tr, detailTr); });
+
+    var copyBtn = tr.querySelector(".copy-id-btn");
+    copyBtn.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      copyCandidateId(c.candidate_id, copyBtn);
+    });
+
+    return [tr, detailTr];
+  }
+
+  function toggleDetail(tr, detailTr) {
+    var willOpen = detailTr.classList.contains("hidden");
+    detailTr.classList.toggle("hidden");
+    tr.classList.toggle("expanded", willOpen);
+    if (willOpen && !detailTr.dataset.built) {
+      var c = CANDIDATES_BY_ID[tr.dataset.cid];
+      detailTr.firstElementChild.innerHTML = buildDetailHtml(c);
+      wireTabs(detailTr.firstElementChild, c.candidate_id);
+      detailTr.dataset.built = "1";
+    }
+  }
+
+  // ---------- detail panel builders ----------
+  function overviewTabHtml(c) {
+    var p = c.profile, bh = c.behavioral, lg = c.logistics;
+    var comp = Object.keys(c.components).map(function (key) {
+      var item = c.components[key];
+      var pct = Math.round(item.raw * 100);
+      return '<tr><td>' + esc(COMPONENT_LABELS[key] || key) + '</td>' +
+        '<td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' + fmt3(item.raw) + '</td>' +
+        '<td>' + item.weight.toFixed(2) + '</td><td>' + fmt3(item.weighted) + '</td></tr>';
+    }).join("");
+    return '<div class="detail-grid">' +
+      '<div>' +
+        '<div class="detail-section"><h4>Profile Summary</h4>' +
+        '<p class="profile-summary">' + esc(p.summary || "(no summary on file)") + '</p>' +
+        '<div class="kv-grid">' +
+          '<div><b>Headline</b>' + esc(p.headline || "&mdash;") + '</div>' +
+          '<div><b>Location</b>' + esc(p.location) + ", " + esc(p.country) + '</div>' +
+          '<div><b>Company Size</b>' + esc(p.company_size || "&mdash;") + '</div>' +
+          '<div><b>Industry</b>' + esc(p.industry || "&mdash;") + '</div>' +
+        '</div></div>' +
+        '<div class="detail-section" style="margin-top:16px;"><h4>Score Composition (7 weighted components)</h4>' +
+        '<table class="mini-table"><thead><tr><th>Component</th><th>Raw</th><th>Weight</th><th>Weighted</th></tr></thead><tbody>' + comp + '</tbody></table></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="detail-section"><h4>Logistics & Availability</h4><div class="kv-grid">' +
+          '<div><b>Location Fit</b>' + esc(lg.location_fit) + '</div>' +
+          '<div><b>Notice Fit</b>' + esc(lg.notice_fit) + '</div>' +
+          '<div><b>Notice Period</b>' + lg.notice_period_days + ' days</div>' +
+          '<div><b>Logistics Mult.</b>' + fmt3(c.logistics_multiplier) + '</div>' +
+        '</div></div>' +
+        '<div class="detail-section" style="margin-top:16px;"><h4>Behavioral Signals</h4><div class="kv-grid">' +
+          '<div><b>Availability</b>' + esc(bh.availability_status) + '</div>' +
+          '<div><b>Responsiveness</b>' + esc(bh.responsiveness_status) + '</div>' +
+          '<div><b>Response Rate</b>' + fmtPct(bh.response_rate) + '</div>' +
+          '<div><b>GitHub Activity</b>' + bh.github_activity_score + '</div>' +
+          '<div><b>Behavioral Mult.</b>' + fmt3(c.behavioral_multiplier) + '</div>' +
+          '<div><b>Expected Salary</b>' + bh.expected_salary_min_max[0] + '&ndash;' + bh.expected_salary_min_max[1] + ' LPA</div>' +
+        '</div></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function experienceTabHtml(c) {
+    if (!c.career_history.length) return '<p class="empty-note">No career history on file.</p>';
+    var items = c.career_history.map(function (ch) {
+      var end = ch.is_current ? '<span class="current-pill">CURRENT</span>' : esc(ch.end_date || "?");
+      return '<div class="timeline-item' + (ch.is_current ? " current" : "") + '">' +
+        '<div class="timeline-head">' + esc(ch.title) + ' @ ' + esc(ch.company) + end + '</div>' +
+        '<div class="timeline-meta">' + esc(ch.start_date || "?") + ' &rarr; ' + (ch.is_current ? "present" : esc(ch.end_date || "?")) +
+          ' &middot; ' + ch.duration_months + ' months &middot; ' + esc(ch.industry || "") + ' &middot; ' + esc(ch.company_size || "") + ' employees</div>' +
+        '<div class="timeline-desc">' + esc(ch.description || "") + '</div></div>';
+    }).join("");
+    return '<div class="timeline">' + items + '</div>';
+  }
+
+  function competencyTabHtml(c) {
+    var groups = c.competency.groups;
+    var top3 = c.competency.top3_groups;
+    var rows = Object.keys(groups).sort(function (a, b) { return groups[b].competency - groups[a].competency; }).map(function (key) {
+      var g = groups[key];
+      var isTop3 = top3.indexOf(key) !== -1;
+      var toks = (g.matched_tokens || []).map(function (t) { return '<span class="tok">' + esc(t) + '</span>'; }).join("");
+      return '<tr class="' + (isTop3 ? "top3" : "") + '">' +
+        '<td>' + esc(GROUP_LABELS[key] || key) + ' <code>' + esc(key) + '</code></td>' +
+        '<td>' + fmt3(g.trust) + '</td><td>' + fmt3(g.in_career) + '</td><td>' + fmt3(g.semantic) + '</td>' +
+        '<td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:' + Math.round(g.competency * 100) + '%"></div></div>' + fmt3(g.competency) + '</td>' +
+        '<td>' + (toks || '<span class="empty-note">none</span>') + '</td></tr>';
+    }).join("");
+    return '<table class="mini-table"><thead><tr><th>Skill Group</th><th>Trust</th><th>In-Career</th><th>Semantic</th><th>Competency</th><th>Matched Tokens</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+      '<p class="empty-note" style="margin-top:8px;">Rows highlighted in green are this candidate&rsquo;s top-3 contributing groups. &ldquo;In-Career&rdquo; = 0 with Trust &ge; 0.5 is the self-learner / dabbler signature.</p>';
+  }
+
+  function riskTabHtml(c) {
+    if (c.flags.clear && !c.risk_items.length) {
+      return '<p class="all-clear">✅ CLEAR &mdash; no hard blocks, soft penalties, dabbler patterns, or ghost-profile signals.</p>';
+    }
+    var items = c.risk_items.map(function (r) {
+      var st = badgeStyle(r.level);
+      return '<li><span class="risk-icon">' + st.icon + '</span><div class="risk-text"><b>' + esc(r.code) + '</b><span>' + esc(r.desc) + '</span></div></li>';
+    }).join("");
+    var integrityLine = c.integrity_gate_passed
+      ? '<p class="all-clear" style="margin-top:10px;">✅ IntegrityEngine: honeypot check passed.</p>'
+      : '<p style="color:var(--crimson);font-weight:700;margin-top:10px;">⛔ IntegrityEngine: HONEYPOT FLAG &mdash; this candidate should not appear in a clean pool.</p>';
+    return '<ul class="risk-list">' + items + '</ul>' + integrityLine;
+  }
+
+  function credentialsTabHtml(c) {
+    var edu = c.education_detail.length
+      ? c.education_detail.map(function (e) {
+          return '<div class="cred-item"><b>' + esc(e.degree) + ' &middot; ' + esc(e.field_of_study) + '</b>' +
+            '<span>' + esc(e.institution) + ' &middot; ' + e.start_year + '&ndash;' + e.end_year + ' &middot; ' + esc(e.grade || "") + ' &middot; ' + esc(e.tier) + '</span></div>';
+        }).join("")
+      : '<p class="empty-note">No education on file.</p>';
+    var certs = c.certifications.length
+      ? c.certifications.map(function (cert) {
+          return '<div class="cred-item"><b>' + esc(cert.name) + '</b><span>' + esc(cert.issuer) + ' &middot; ' + cert.year + '</span></div>';
+        }).join("")
+      : '<p class="empty-note">No certifications on file.</p>';
+    var langs = c.languages.length
+      ? c.languages.map(function (l) {
+          return '<div class="cred-item"><b>' + esc(l.language) + '</b><span>' + esc(l.proficiency) + '</span></div>';
+        }).join("")
+      : '<p class="empty-note">No languages on file.</p>';
+    var r = c.redrob;
+    var redrobKv = Object.keys(r).map(function (key) {
+      var val = r[key];
+      if (val && typeof val === "object" && !Array.isArray(val)) val = JSON.stringify(val);
+      return '<div><b>' + esc(key) + '</b>' + esc(String(val)) + '</div>';
+    }).join("");
+    return '<div class="detail-grid">' +
+      '<div>' +
+        '<div class="cred-block"><h4>Education</h4>' + edu + '</div>' +
+        '<div class="cred-block"><h4>Certifications</h4>' + certs + '</div>' +
+        '<div class="cred-block"><h4>Languages</h4>' + langs + '</div>' +
+      '</div>' +
+      '<div><div class="cred-block"><h4>Raw RedRob Platform Signals</h4><div class="kv-grid">' + redrobKv + '</div></div></div>' +
+    '</div>';
+  }
+
+  function reasoningTabHtml(c) {
+    var badges = c.risk_badges.map(function (b) { return '<span class="badge badge-soft">' + esc(b) + '</span>'; }).join("");
+    return '<blockquote class="reasoning">&ldquo;' + esc(c.reasoning) + '&rdquo;</blockquote>' +
+      (badges ? '<div class="reasoning-badges">' + badges + '</div>' : '');
+  }
+
+  function buildDetailHtml(c) {
+    return '<div class="detail-wrap">' +
+      '<div class="tabs" data-cid="' + esc(c.candidate_id) + '">' +
+        '<button class="tab-btn active" data-tab="overview">Overview</button>' +
+        '<button class="tab-btn" data-tab="experience">Experience Timeline</button>' +
+        '<button class="tab-btn" data-tab="competency">Competency Breakdown</button>' +
+        '<button class="tab-btn" data-tab="risk">Risk & Gate Signals</button>' +
+        '<button class="tab-btn" data-tab="credentials">Credentials</button>' +
+        '<button class="tab-btn" data-tab="reasoning">Model Reasoning</button>' +
+      '</div>' +
+      '<div class="tab-panel active" data-tab="overview">' + overviewTabHtml(c) + '</div>' +
+      '<div class="tab-panel" data-tab="experience">' + experienceTabHtml(c) + '</div>' +
+      '<div class="tab-panel" data-tab="competency">' + competencyTabHtml(c) + '</div>' +
+      '<div class="tab-panel" data-tab="risk">' + riskTabHtml(c) + '</div>' +
+      '<div class="tab-panel" data-tab="credentials">' + credentialsTabHtml(c) + '</div>' +
+      '<div class="tab-panel" data-tab="reasoning">' + reasoningTabHtml(c) + '</div>' +
+    '</div>';
+  }
+
+  function wireTabs(root, cid) {
+    var buttons = root.querySelectorAll(".tab-btn");
+    var panels = root.querySelectorAll(".tab-panel");
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function (ev) {
+        ev.stopPropagation(); // don't collapse the row when switching tabs
+        buttons.forEach(function (b) { b.classList.remove("active"); });
+        panels.forEach(function (p) { p.classList.remove("active"); });
+        btn.classList.add("active");
+        root.querySelector('.tab-panel[data-tab="' + btn.dataset.tab + '"]').classList.add("active");
+      });
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // 5. SEARCH + RISK FILTER BADGES
+  // ----------------------------------------------------------------
+  var CANDIDATES_BY_ID = {};
+  CANDIDATES.forEach(function (c) { CANDIDATES_BY_ID[c.candidate_id] = c; });
+
+  var activeFilters = { all: true };
+  var searchQuery = "";
+  var yoeMin = 6, yoeMax = 8;
+
+  function matches(c) {
+    if (searchQuery && c.search_blob.indexOf(searchQuery) === -1) return false;
+    if (activeFilters.all) return true;
+    var any = false;
+    if (activeFilters.clear && c.flags.clear) any = true;
+    if (activeFilters.title_chaser && c.flags.title_chaser) any = true;
+    if (activeFilters.dabbler && c.flags.dabbler) any = true;
+    if (activeFilters.ghost && c.flags.ghost) any = true;
+    if (activeFilters.notice_over_30 && c.flags.notice_over_30) any = true;
+    if (activeFilters.outside_india && c.flags.outside_india) any = true;
+    if (activeFilters.yoe_band && c.yoe >= yoeMin && c.yoe <= yoeMax) any = true;
+    return any;
+  }
+
+  function renderTable() {
+    var tbody = document.getElementById("table-body");
+    var visible = CANDIDATES.filter(matches);
+    tbody.innerHTML = "";
+    var frag = document.createDocumentFragment();
+    visible.forEach(function (c) {
+      var existing = ROW_CACHE[c.candidate_id];
+      var pair = existing || buildRow(c);
+      ROW_CACHE[c.candidate_id] = pair;
+      frag.appendChild(pair[0]);
+      frag.appendChild(pair[1]);
+    });
+    tbody.appendChild(frag);
+    document.getElementById("result-count").textContent = visible.length + " / " + CANDIDATES.length + " shown";
+  }
+  var ROW_CACHE = {};
+
+  function wireControls() {
+    var search = document.getElementById("search-input");
+    search.addEventListener("input", function () {
+      searchQuery = search.value.trim().toLowerCase();
+      renderTable();
+    });
+
+    var yoeMinInput = document.getElementById("yoe-min");
+    var yoeMaxInput = document.getElementById("yoe-max");
+    function syncYoeBand() {
+      yoeMin = parseFloat(yoeMinInput.value);
+      yoeMax = parseFloat(yoeMaxInput.value);
+      if (isNaN(yoeMin)) yoeMin = 0;
+      if (isNaN(yoeMax)) yoeMax = 60;
+      if (activeFilters.yoe_band) renderTable();
+    }
+    yoeMinInput.addEventListener("input", syncYoeBand);
+    yoeMaxInput.addEventListener("input", syncYoeBand);
+
+    var chips = document.querySelectorAll(".chip");
+    chips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        var f = chip.dataset.filter;
+        if (f === "all") {
+          activeFilters = { all: true };
+        } else {
+          delete activeFilters.all;
+          activeFilters[f] = !activeFilters[f];
+          if (!Object.keys(activeFilters).some(function (k) { return activeFilters[k]; })) {
+            activeFilters = { all: true };
+          }
+        }
+        chips.forEach(function (c) {
+          var key = c.dataset.filter;
+          c.classList.toggle("active", !!activeFilters[key]);
+        });
+        renderTable();
+      });
+    });
+  }
+
+  function wireTheme() {
+    var btn = document.getElementById("theme-toggle");
+    var root = document.documentElement;
+    var saved = null;
+    try { saved = localStorage.getItem("redstack-dashboard-theme"); } catch (e) { /* file:// storage may be blocked */ }
+    if (saved) root.setAttribute("data-theme", saved);
+    function syncLabel() {
+      var t = root.getAttribute("data-theme");
+      btn.innerHTML = t === "dark" ? "&#9788; Light mode" : "&#9789; Dark mode";
+    }
+    syncLabel();
+    btn.addEventListener("click", function () {
+      var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      try { localStorage.setItem("redstack-dashboard-theme", next); } catch (e) { /* ignore */ }
+      syncLabel();
+    });
+  }
+
+  // ----------------------------------------------------------------
+  // 6. BOOT
+  // ----------------------------------------------------------------
+  renderKpis();
+  renderGateChart();
+  wireControls();
+  wireTheme();
+  renderTable();
+})();
+</script>
+</body>
+</html>

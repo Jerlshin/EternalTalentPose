@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 import re
 import unicodedata
@@ -239,14 +240,17 @@ class LexiconDiscoveryStage(OfflineStage):
         """Increment symmetric co-occurrence counts for terms sharing a document.
 
         Bounded: only distinct terms per document contribute, and the graph is
-        pruned to top edges per term at emit time.
+        pruned to top edges per term at emit time. Uses ``itertools.combinations``
+        over the same sorted order the old nested-loop-with-slice used (avoids
+        reallocating an ``ordered[i+1:]`` slice on every outer step — this is a
+        100K-document hot loop) — verified to produce byte-identical counts.
         """
         ordered = sorted(unique)
-        for i, a in enumerate(ordered):
-            bucket = cooccurrence.setdefault(a, Counter())
-            for b in ordered[i + 1 :]:
-                bucket[b] += 1
-                cooccurrence.setdefault(b, Counter())[a] += 1
+        for a in ordered:
+            cooccurrence.setdefault(a, Counter())
+        for a, b in itertools.combinations(ordered, 2):
+            cooccurrence[a][b] += 1
+            cooccurrence[b][a] += 1
 
     @staticmethod
     def _update_ngrams(

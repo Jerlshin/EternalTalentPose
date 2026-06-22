@@ -22,7 +22,7 @@ from redstack.pipelines.offline.stages.normalization import (
     compose_embedding_document,
 )
 from redstack.ports._types import SourceMalformed, SourceOk
-from redstack.ports.embedding import OnnxExportCapable
+from redstack.ports.embedding import DeviceReporting, OnnxExportCapable
 
 __all__: tuple[str, ...] = (
     "CandidateEmbeddingStage",
@@ -61,6 +61,16 @@ def _l2_normalize(matrix: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
 
 class _EmbeddingStageBase(OfflineStage):
     """Shared batched-encode helpers for the O13 family."""
+
+    @staticmethod
+    def _device_label(ctx: OfflinePipelineContext) -> str:
+        """The encode device reported by the embedding model, or ``"unknown"``.
+
+        Build provenance only (Adapters §4 device policy) — never affects what
+        gets written, only what the stage records about how it was produced.
+        """
+        model = ctx.embedding_model
+        return model.device if isinstance(model, DeviceReporting) else "unknown"
 
     def _encode_batch(
         self, ctx: OfflinePipelineContext, texts: Sequence[str]
@@ -164,6 +174,7 @@ class CandidateEmbeddingStage(_EmbeddingStageBase):
             "dim": int(vectors.shape[1]),
             "model_id": ctx.embedding_model.model_id,
             "recipe_version": EMBEDDING_DOC_RECIPE_VERSION,
+            "device": self._device_label(ctx),
         }
         return StageResult(artifacts=(artifact,), metrics=metrics)
 
@@ -217,6 +228,7 @@ class AnchorEmbeddingStage(_EmbeddingStageBase):
             "anchor_count": len(anchor_ids),
             "dim": int(vectors.shape[1]) if vectors.shape[0] else ctx.embedding_model.dim,
             "anchor_ids": anchor_ids,
+            "device": self._device_label(ctx),
         }
         return StageResult(artifacts=(artifact,), metrics=metrics)
 
@@ -336,7 +348,11 @@ class CareerEmbeddingStage(_EmbeddingStageBase):
         )
         return StageResult(
             artifacts=(artifact,),
-            metrics={"encoded_roles": encoded, "dim": int(vectors.shape[1])},
+            metrics={
+                "encoded_roles": encoded,
+                "dim": int(vectors.shape[1]),
+                "device": self._device_label(ctx),
+            },
         )
 
     @staticmethod
@@ -413,6 +429,7 @@ class EmbeddingManifestStage(_EmbeddingStageBase):
             "opset": opset,
             "parity_cosine": round(parity_cosine, 6),
             "recipe": EMBEDDING_DOC_RECIPE_VERSION,
+            "device": self._device_label(ctx),
         }
         return StageResult(artifacts=tuple(artifacts), metrics=metrics)
 

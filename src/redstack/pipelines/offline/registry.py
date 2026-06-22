@@ -413,6 +413,15 @@ class ArtifactSpec:
         layout_bearing: Whether this artifact carries a ``layout_version`` that
             must agree across ``FeatureLayout``/``feature_manifest``/
             ``scoring_weights`` (Part 10 versioning rule).
+        post_packaging: Whether this artifact is produced by a stage that runs
+            *after* O17 packaging and whose content names the manifest O17 just
+            wrote (e.g. ``reproducibility_report``'s ``manifest_sha256`` field).
+            Such an artifact cannot be hashed into the very manifest it
+            describes without the hash going stale the next time the build
+            runs — O17 excludes ``post_packaging`` keys from its hash sweep so
+            they are never entered into ``MANIFEST.json``, and the online
+            ``ArtifactStorePort.verify_all`` (which checks every key *present*
+            in the manifest) never attempts to verify one.
     """
 
     key: str
@@ -424,6 +433,7 @@ class ArtifactSpec:
     validator: ArtifactValidator
     required_online: bool = False
     layout_bearing: bool = False
+    post_packaging: bool = False
 
     def validate(self, payload: Mapping[str, object]) -> ValidationOutcome:
         """Apply the validator to ``payload`` and return a structured outcome."""
@@ -739,6 +749,7 @@ _SPECS: Final[tuple[ArtifactSpec, ...]] = (
         schema_version="1.0",
         lineage=("O17",),
         validator=_v_reproducibility_report,
+        post_packaging=True,
     ),
 )
 
