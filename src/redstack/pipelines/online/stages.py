@@ -66,8 +66,7 @@ from redstack.features.extraction import (
     build_behavioral_profile,
     build_career_profile,
     build_credibility_profile,
-    build_logistics_profile,
-    extract_row_with_base_cells,
+    extract_row_with_base_cells_and_logistics,
     fold_semantic,
 )
 from redstack.features.layout import GROUP_ORDER
@@ -614,13 +613,14 @@ def r2_features(
     structural_findings: dict[CandidateId, tuple[EligibilityFinding, ...]] = {}
 
     for i, cand in enumerate(ingested):
-        # ``extract_row_with_base_cells`` builds the placeholder (semantic={})
-        # cell map itself internally and also hands back the semantic-
-        # independent subset of it — R3's ``fold_semantic`` reuses that subset
-        # instead of re-deriving career/geography/education/signals/honeypot a
-        # second time once the real ``semantic`` map is resolved.
-        row, conf_row, row_base_cells = extract_row_with_base_cells(
-            cand.raw, registry, as_of=ctx.as_of
+        # ``extract_row_with_base_cells_and_logistics`` builds the placeholder
+        # (semantic={}) cell map, hands back the semantic-independent subset
+        # for R3's ``fold_semantic`` reuse, and also returns the LogisticsProfile
+        # computed internally — avoiding a second ``build_logistics_profile`` call.
+        row, conf_row, row_base_cells, logistics = (
+            extract_row_with_base_cells_and_logistics(
+                cand.raw, registry, as_of=ctx.as_of
+            )
         )
         cqv[i] = row
         confidence[i] = conf_row
@@ -637,7 +637,7 @@ def r2_features(
                 career=career,
                 credibility=credibility,
                 behavioral=build_behavioral_profile(cand.raw, as_of=ctx.as_of),
-                logistics=build_logistics_profile(cand.raw),
+                logistics=logistics,
             )
         )
     return FeaturedSet(
@@ -717,9 +717,20 @@ def r3_semantic(ctx: OnlineRunContext, featured: FeaturedSet) -> SituatedSet:
     reps: list[CandidateRepresentation] = []
     cells_list: list[Mapping[str, FeatureCell]] = []
 
+    # Stack all candidate vectors into a single (N, dim) matrix so the engine
+    # can run one batched GEMM + archetype sweep instead of N individual calls.
+    # placeholder_vector is used for structurally-blocked skip_ids candidates.
+    all_vectors = np.vstack(
+        [
+            vector_by_id.get(cand.candidate_id, placeholder_vector)
+            for cand in featured.candidates
+        ]
+    ).astype(np.float32, copy=False)
+    all_semantics, all_archetypes = engine.batch_profiles_for(all_vectors)
+
     for i, cand in enumerate(featured.candidates):
-        vector = vector_by_id.get(cand.candidate_id, placeholder_vector)
-        semantic, archetype = engine.profile_for(vector, row_index=i)
+        semantic = all_semantics[i]
+        archetype = all_archetypes[i]
         similarity_map: Mapping[str, Similarity] = {
             str(anchor_id): sim
             for anchor_id, sim in semantic.anchor_similarities.items()

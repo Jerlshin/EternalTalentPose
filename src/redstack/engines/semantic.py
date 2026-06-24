@@ -230,6 +230,107 @@ class SemanticEngine:
             sims[anchor_id] = Similarity(_clamp_similarity(float(value)))
         return sims
 
+    def batch_profiles_for(
+        self,
+        matrix: FloatMatrix,
+    ) -> tuple[tuple[SemanticProfile, ...], tuple[ArchetypeAssignment, ...]]:
+        """Batch-compute semantic profiles and archetype assignments.
+
+        Replaces N individual :meth:`profile_for` calls with a single batched
+        ``compute`` pass (one GEMM + archetype distance sweep instead of N
+        individual GEMM + GEMV pairs).  Per-candidate anchor sims are still
+        computed via the same :meth:`_anchor_similarity_map` GEMV path as
+        :meth:`profile_for` to maintain bit-identical anchor cosine values.
+        Secondary archetypes are resolved in one ``argsort`` pass via
+        :meth:`_batch_secondary_archetypes`.
+        """
+        n = matrix.shape[0]
+        if n == 0:
+            return (), ()
+        dim = int(matrix.shape[1])
+        arrays = self.compute(matrix)
+        secondary_archetypes = self._batch_secondary_archetypes(
+            matrix, arrays.nearest_centroid_index
+        )
+        profiles: list[SemanticProfile] = []
+        assignments: list[ArchetypeAssignment] = []
+        for i in range(n):
+            anchor_sims = self._anchor_similarity_map(matrix[i])
+            best_idx = int(arrays.best_positive_index[i])
+            best_anchor: AnchorId | None = (
+                self._anchors.positive_ids[best_idx]
+                if self._anchors.positive_ids
+                else None
+            )
+            profiles.append(
+                SemanticProfile(
+                    anchor_similarities=anchor_sims,
+                    positive_fit=Similarity(float(arrays.positive_fit[i])),
+                    negative_fit=Similarity(float(arrays.negative_fit[i])),
+                    net_semantic_fit=UnitScore(clamp_unit(float(arrays.net_fit[i]))),
+                    best_positive_anchor=best_anchor,
+                    vector_ref=VectorRef(
+                        store_key=self._store_key,
+                        row_index=i,
+                        dim=dim,
+                    ),
+                )
+            )
+            a_idx = int(arrays.nearest_centroid_index[i])
+            archetype_id = self._archetypes.archetype_ids[a_idx]
+            assignments.append(
+                ArchetypeAssignment(
+                    archetype_id=archetype_id,
+                    distance=float(arrays.centroid_distance[i]),
+                    membership_confidence=UnitScore(
+                        clamp_unit(float(arrays.membership_confidence[i]))
+                    ),
+                    secondary_archetype=secondary_archetypes[i],
+                    label=self._archetypes.labels.get(archetype_id),
+                    is_target_archetype=(
+                        archetype_id in self._archetypes.target_archetypes
+                    ),
+                )
+            )
+        return tuple(profiles), tuple(assignments)
+
+    def _batch_secondary_archetypes(
+        self,
+        matrix: FloatMatrix,
+        primary_indices: npt.NDArray[np.int64],
+    ) -> tuple[ArchetypeId | None, ...]:
+        """One argsort pass over all N candidates to find secondary archetypes.
+
+        Uses the same squared-distance expansion as :meth:`_archetype_columns`
+        for consistency. ``secondary_archetype`` is informational only (not
+        used in scoring and not written to ``submission.csv``), so minor
+        float32 differences from the per-candidate subtraction path in
+        :meth:`_secondary_archetype` are acceptable.
+        """
+        centroids = self._archetypes.centroids
+        n = matrix.shape[0]
+        if centroids.shape[0] < 2:
+            none_list: list[ArchetypeId | None] = [None] * n
+            return tuple(none_list)
+        sq = (
+            (matrix * matrix).sum(axis=1, keepdims=True)
+            - 2.0 * (matrix @ centroids.T)
+            + (centroids * centroids).sum(axis=1)[np.newaxis, :]
+        )
+        dists = np.sqrt(np.maximum(sq, 0.0))
+        sorted_cols: npt.NDArray[np.intp] = np.argsort(dists, axis=1, kind="stable")
+        secondaries: list[ArchetypeId | None] = []
+        for i in range(n):
+            primary = int(primary_indices[i])
+            found: ArchetypeId | None = None
+            for idx_np in sorted_cols[i]:
+                idx = int(idx_np)
+                if idx != primary:
+                    found = self._archetypes.archetype_ids[idx]
+                    break
+            secondaries.append(found)
+        return tuple(secondaries)
+
     def _secondary_archetype(
         self, vector: FloatVector, *, primary_index: int
     ) -> ArchetypeId | None:

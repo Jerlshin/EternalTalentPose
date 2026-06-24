@@ -182,9 +182,22 @@ def _skill_index(raw: RawCandidate, name: str) -> int | None:
     return None
 
 
+# Per-explain call cache: avoids N model_dump calls across the O(1) set of
+# template builders that all call _dump for the same RawCandidate object.
+# Keyed by id(raw) (pointer identity); cleared at the start of each explain()
+# so stale entries from prior runs cannot accumulate across pipeline reuse.
+_raw_dump_cache: dict[int, Mapping[str, object]] = {}
+
+
 def _dump(raw: RawCandidate) -> Mapping[str, object]:
     """The plain JSON mapping ``mint`` resolves evidence paths against."""
-    return raw.model_dump(mode="json")
+    key = id(raw)
+    hit = _raw_dump_cache.get(key)
+    if hit is not None:
+        return hit
+    result: Mapping[str, object] = raw.model_dump(mode="json")
+    _raw_dump_cache[key] = result
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -2118,6 +2131,7 @@ class ReasoningEngine(BaseModel):
         representations: Mapping[CandidateId, CandidateRepresentation],
     ) -> Ranking:
         """Build reasoning for every ranked candidate; attach via copy-on-write."""
+        _raw_dump_cache.clear()
         reasoning_by_id: dict[CandidateId, CandidateReasoning] = {}
         for ranked in ranking.ordered:
             rep = representations.get(ranked.candidate_id)

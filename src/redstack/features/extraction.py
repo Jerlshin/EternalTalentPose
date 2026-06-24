@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import date
 from types import MappingProxyType
@@ -51,6 +52,7 @@ __all__: tuple[str, ...] = (
     "build_logistics_profile",
     "extract_row",
     "extract_row_with_base_cells",
+    "extract_row_with_base_cells_and_logistics",
     "fold_semantic",
 )
 
@@ -504,8 +506,11 @@ def _simple_groups(
 # --------------------------------------------------------------------------- #
 # Full per-candidate cell assembly + the R2/R3 public entry points.           #
 # --------------------------------------------------------------------------- #
-def _build_base_cells(raw: RawCandidate, *, as_of: date) -> dict[str, FeatureCell]:
-    """Assemble the subset of cells that never read ``semantic`` similarities.
+def _build_base_cells(
+    raw: RawCandidate, *, as_of: date
+) -> tuple[dict[str, FeatureCell], LogisticsProfile]:
+    """Assemble the semantic-independent base cells; return the ``LogisticsProfile``
+    computed during extraction so callers can reuse it without a second call.
 
     Career/pvs/geography/education/``_simple_groups``/signals/honeypot are all
     pure functions of ``(raw, as_of)`` alone -- their output is identical
@@ -527,7 +532,7 @@ def _build_base_cells(raw: RawCandidate, *, as_of: date) -> dict[str, FeatureCel
     cells.update(_simple_groups(raw, cells))
     cells.update(dict(signals.extract(raw, as_of=as_of)))
     cells.update(dict(honeypot.extract(raw, as_of=as_of)))
-    return cells
+    return cells, logistics
 
 
 def _fold_skills_and_latents(
@@ -553,7 +558,7 @@ def build_cells(
     raw: RawCandidate, *, as_of: date, semantic: Mapping[str, Similarity]
 ) -> dict[str, FeatureCell]:
     """Assemble every one of the 145 feature cells for one candidate."""
-    base_cells = _build_base_cells(raw, as_of=as_of)
+    base_cells, _logistics = _build_base_cells(raw, as_of=as_of)
     return _fold_skills_and_latents(base_cells, raw, semantic=semantic)
 
 
@@ -562,8 +567,8 @@ def _assemble(
 ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
     """Fold the assembled cells into the ``(D,)`` row + ``(G,)`` confidence row."""
     values = np.zeros(registry.dim, dtype=np.float32)
-    conf_sum: dict[str, float] = {}
-    conf_count: dict[str, float] = {}
+    conf_sum: defaultdict[str, float] = defaultdict(float)
+    conf_count: defaultdict[str, float] = defaultdict(float)
     for definition in registry.definitions:
         fid = str(definition.feature_id)
         found = cells.get(fid)
@@ -579,14 +584,14 @@ def _assemble(
             )
         values[int(definition.index)] = np.float32(value)
         group = definition.group
-        conf_sum[group] = conf_sum.get(group, 0.0) + float(found.confidence)
-        conf_count[group] = conf_count.get(group, 0.0) + 1.0
+        conf_sum[group] += float(found.confidence)
+        conf_count[group] += 1.0
 
     confidence = np.zeros(len(registry.groups), dtype=np.float32)
     for column, group in enumerate(registry.groups):
-        count = conf_count.get(group, 0.0)
+        count = conf_count[group]
         confidence[column] = (
-            np.float32(conf_sum.get(group, 0.0) / count) if count else 0.0
+            np.float32(conf_sum[group] / count) if count else np.float32(0.0)
         )
     values.setflags(write=False)
     confidence.setflags(write=False)
@@ -612,10 +617,32 @@ def extract_row_with_base_cells(
     through lets R3 skip re-deriving career/geography/education/signals/
     honeypot a second time.
     """
-    base_cells = _build_base_cells(raw, as_of=as_of)
+    base_cells, _logistics = _build_base_cells(raw, as_of=as_of)
     cells = _fold_skills_and_latents(base_cells, raw, semantic={})
     values, confidence = _assemble(cells, registry)
     return values, confidence, base_cells
+
+
+def extract_row_with_base_cells_and_logistics(
+    raw: RawCandidate, registry: FeatureRegistry, *, as_of: date
+) -> tuple[
+    npt.NDArray[np.float32],
+    npt.NDArray[np.float32],
+    dict[str, FeatureCell],
+    LogisticsProfile,
+]:
+    """Like :func:`extract_row_with_base_cells`, but also returns the
+    :class:`~redstack.domain.candidate.logistics.LogisticsProfile` computed
+    during base-cell extraction.
+
+    Avoids calling :func:`build_logistics_profile` a second time in callers
+    that need both the CQV row and the logistics profile for the same candidate
+    (the online R2 loop).
+    """
+    base_cells, logistics = _build_base_cells(raw, as_of=as_of)
+    cells = _fold_skills_and_latents(base_cells, raw, semantic={})
+    values, confidence = _assemble(cells, registry)
+    return values, confidence, base_cells, logistics
 
 
 def fold_semantic(
@@ -641,21 +668,19 @@ def fold_semantic(
     needs.
     """
     full_cells = _fold_skills_and_latents(base_cells, raw, semantic=semantic)
-    conf_sum: dict[str, float] = {}
-    conf_count: dict[str, float] = {}
+    conf_sum: defaultdict[str, float] = defaultdict(float)
+    conf_count: defaultdict[str, float] = defaultdict(float)
     for definition in registry.definitions:
         if definition.group not in _SEMANTIC_DEPENDENT_GROUPS:
             continue
         fid = str(definition.feature_id)
         found = full_cells[fid]
         row[int(definition.index)] = np.float32(float(found.value))
-        conf_sum[definition.group] = conf_sum.get(definition.group, 0.0) + float(
-            found.confidence
-        )
-        conf_count[definition.group] = conf_count.get(definition.group, 0.0) + 1.0
+        group = definition.group
+        conf_sum[group] += float(found.confidence)
+        conf_count[group] += 1.0
 
-    groups = list(registry.groups)
+    group_to_col: dict[str, int] = {g: col for col, g in enumerate(registry.groups)}
     for group, total in conf_sum.items():
-        column = groups.index(group)
-        confidence[column] = np.float32(total / conf_count[group])
+        confidence[group_to_col[group]] = np.float32(total / conf_count[group])
     return full_cells
