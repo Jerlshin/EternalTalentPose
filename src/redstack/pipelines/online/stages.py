@@ -152,7 +152,7 @@ _RANKING_SIZE: Final[int] = 100
 
 _DOMAIN_FIT_GROUP_WEIGHT: Final[Mapping[str, float]] = MappingProxyType(
     {
-        **{group: 3.0 for group in _COMPETENCY_GROUPS},
+        **dict.fromkeys(_COMPETENCY_GROUPS, 3.0),
         "career": 1.5,
         "pvs": 1.5,
         "cons": 1.5,
@@ -297,7 +297,6 @@ def r0_load(
         neutral_prior=_as_float(weights_json.get("neutral_prior", 0.5)),
     )
 
-   
     thr = artifact_store.load_json(ArtifactKey("integrity_thresholds"))
     flag_weights = _as_mapping(thr.get("risk_weights", {}))
     rules_catalog = artifact_store.load_json(ArtifactKey("integrity_rules"))
@@ -988,9 +987,7 @@ def _skill_match_value(
     slots clear a small noise floor leaves them untouched while collapsing
     the single-spike/partial-breadth pattern below the gate.
     """
-    values = sorted(
-        (cells[fid].value for fid in ids if fid in cells), reverse=True
-    )
+    values = sorted((cells[fid].value for fid in ids if fid in cells), reverse=True)
     if not values:
         return 0.0
     top = values[:_SKILL_MATCH_TOP_K]
@@ -1094,7 +1091,6 @@ def r7_reason(ctx: OnlineRunContext, ranking: Ranking, gated: GatedSet) -> Ranki
     Raises:
         ProvenanceError: a ranked candidate's representation is not hydrated.
     """
-    _ = ctx
     by_id: dict[CandidateId, CandidateRepresentation] = {
         rep.candidate_id: rep for rep in gated.representations
     }
@@ -1105,7 +1101,7 @@ def r7_reason(ctx: OnlineRunContext, ranking: Ranking, gated: GatedSet) -> Ranki
     ]
     if missing:
         raise ProvenanceError(f"representation not hydrated for: {missing[:5]}")
-    engine = ReasoningEngine()
+    engine = ReasoningEngine(as_of=ctx.as_of)
     return engine.explain(ranking, by_id)
 
 

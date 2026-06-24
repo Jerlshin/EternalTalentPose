@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Callable, Mapping
+from datetime import date
 from typing import Final, Literal, final
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from redstack.domain.candidate.eligibility import EligibilityFinding
 from redstack.domain.candidate.representation import CandidateRepresentation
@@ -15,7 +16,7 @@ from redstack.domain.enums import (
     ScoreComponent,
 )
 from redstack.domain.errors import ProvenanceError
-from redstack.domain.ids import CandidateId
+from redstack.domain.ids import AnchorId, CandidateId
 from redstack.domain.provenance import EvidenceRef
 from redstack.domain.ranking import RankedCandidate, Ranking
 from redstack.domain.reasoning import CandidateReasoning, ReasoningClause
@@ -36,6 +37,12 @@ _StrengthBuilder = Callable[
 _ConcernBuilder = Callable[
     [RawCandidate, CandidateRepresentation, EligibilityFinding, str],
     tuple[str, tuple[EvidenceRef, ...]],
+]
+# Latent builders receive the raw anchor cosine similarity (float) instead of
+# a ScoreComponentValue, because JD-latent reasoning is evidence-first.
+_LatentBuilder = Callable[
+    [RawCandidate, CandidateRepresentation, float, str],
+    tuple[str, tuple[EvidenceRef, ...]] | None,
 ]
 
 
@@ -317,7 +324,6 @@ def _semantic_fit_strength(
     semantic = representation.require_semantic()
     word = _bucket_word(seed, float(cv.raw))
     article = _article(word)
-    pct = _pct(float(cv.raw))
     evidence = list(cv.evidence)
     anchor = semantic.best_positive_anchor
     templates: tuple[str, ...]
@@ -329,63 +335,71 @@ def _semantic_fit_strength(
         )
         anchor_label = str(anchor).rsplit(".", maxsplit=1)[-1].replace("_", " ")
         templates = (
-            f"the profile's own language reads closest to our '{anchor_label}' "
-            f"anchor, {article} {word} semantic match ({pct}) against how this JD "
-            f"is actually phrased",
-            f"semantically this clusters tightest with the '{anchor_label}' "
-            f"anchor built from the JD text itself -- {pct} fit, {article} {word} "
-            f"signal on its own",
-            f"beyond keyword overlap, the wording of the profile tracks the "
-            f"'{anchor_label}' anchor most closely ({pct}), independent of "
-            f"which exact skills are listed",
-            f"vector-space alignment puts this profile nearest the "
-            f"'{anchor_label}' anchor at {pct} cosine similarity -- a read on "
-            f"how the candidate writes about their own work, not which "
-            f"buzzwords happen to appear in it",
-            f"the embedding geometry here is unambiguous: closest by a clear "
-            f"margin to '{anchor_label}' at {pct}, {article} {word} semantic "
-            f"signal that keyword matching alone would have missed entirely",
-            f"strip the explicit skills list away and the underlying language "
-            f"still gravitates toward '{anchor_label}' ({pct} fit) -- "
-            f"{article} {word} sign the role fit isn't just surface-level echo",
-            f"{pct} cosine alignment with the '{anchor_label}' anchor marks "
-            f"{article} {word} semantic case, the kind of fit that shows up in "
-            f"how a candidate frames their own experience rather than in a "
-            f"skills checklist",
-            f"the JD's own phrasing, captured as the '{anchor_label}' anchor, "
-            f"is what this profile's language sits closest to ({pct}) -- "
-            f"{article} {word} read on substantive rather than superficial "
-            f"alignment",
-            f"this profile doesn't just echo JD keywords -- its underlying "
-            f"phrasing converges on the '{anchor_label}' anchor at {pct}, "
-            f"{article} {word} signal in its own right",
-            f"semantic clustering places this candidate's narrative closest "
-            f"to '{anchor_label}' ({pct}), a vector-level corroboration that "
-            f"sits independently of the explicit skills section",
-            f"{article} {word} {pct} cosine read against the '{anchor_label}' "
-            f"anchor suggests the fit runs deeper than shared terminology -- "
-            f"it's there in how the role itself gets described",
-            f"the closest semantic neighbor to this profile's language is "
-            f"'{anchor_label}', at {pct} -- {article} {word} signal that "
-            f"complements, rather than duplicates, the skill-match score",
-            f"independent of the skills list, this profile's prose lands "
-            f"nearest '{anchor_label}' in vector space ({pct} similarity), "
-            f"{article} {word} corroborating signal for role fit",
+            f"beyond the skills list, how this candidate writes about their own "
+            f"work reads closest to the '{anchor_label}' theme this JD is "
+            f"actually hiring for -- a signal independent of which keywords "
+            f"happen to appear in the profile",
+            f"the language this candidate uses to describe their experience "
+            f"gravitates toward '{anchor_label}', which is the substantive "
+            f"framing the JD is built around -- {article} {word} read on "
+            f"genuine rather than surface-level alignment",
+            f"strip the skills section away and the underlying narrative still "
+            f"reads as '{anchor_label}' work -- the kind of alignment that "
+            f"keyword-matching alone would miss",
+            f"this candidate's own words about their career cluster around "
+            f"'{anchor_label}' -- the dominant technical theme in this JD -- "
+            f"not because they echoed it back, but because that's how they've "
+            f"framed their own work, {article} {word} sign of genuine fit",
+            f"the substance of how this candidate describes their work fits the "
+            f"'{anchor_label}' pattern in this JD, which gives the fit signal "
+            f"{article} {word} basis beyond a skills-keyword check",
+            f"how this candidate narrates their own experience -- the problems "
+            f"they describe, the work they emphasize -- lines up {word} with "
+            f"the '{anchor_label}' focus the JD is centered on",
+            f"looking past the listed skills, the conceptual framing this "
+            f"candidate uses for their work is '{anchor_label}'-oriented, "
+            f"which is exactly where this JD's signal sits -- {article} {word} "
+            f"read on substantive rather than keyword alignment",
+            f"the way this candidate talks about what they've built reads as "
+            f"'{anchor_label}' experience: not aspirational keyword listing, "
+            f"but {article} {word} natural description of their own work",
+            f"the narrative texture here -- how this candidate explains what "
+            f"they've done and why -- sits closest to the '{anchor_label}' "
+            f"framing the JD uses to describe the ideal candidate",
+            f"how this candidate describes the problems they've worked on reads "
+            f"as {article} {word} '{anchor_label}' orientation -- the kind of "
+            f"substantive signal that persists even when vocabulary choices differ",
+            f"this profile's language on its own work naturally gravitates to "
+            f"'{anchor_label}', suggesting real domain exposure rather than "
+            f"vocabulary borrowed from the job description -- {article} {word} "
+            f"independent corroboration of the skill-match read",
+            f"the conceptual framing this candidate uses for their career -- "
+            f"what they say they built and why -- lands on '{anchor_label}', "
+            f"the core technical area this JD is hiring for; "
+            f"{article} {word} signal, independently of whatever is listed in "
+            f"the skills section",
+            f"the dominant pattern in how this candidate talks about their "
+            f"career is '{anchor_label}': not a self-reported label, but "
+            f"{article} {word} reflection of how they actually narrate "
+            f"their own work history",
         )
     else:
         templates = (
-            f"the profile's language shows {article} {word} ({pct}) cosine fit "
-            f"against the JD anchors overall, without one anchor clearly dominating",
-            f"no single anchor dominates, but the aggregate cosine read across "
-            f"the full JD anchor set still comes in {article} {word} ({pct})",
-            f"semantic alignment here is diffuse rather than concentrated -- "
-            f"{article} {word} {pct} fit spread across the anchor set rather "
-            f"than anchored to one dominant theme",
-            f"the embedding signal is {word} on aggregate ({pct}) without a "
-            f"single anchor pulling clearly ahead of the rest",
-            f"taken as a whole, the profile's language sits at {article} "
-            f"{word} {pct} semantic fit against the JD's anchor set, evenly "
-            f"distributed rather than concentrated in one theme",
+            f"looking past the skills checklist, the way this candidate frames "
+            f"their own work covers the JD's domain broadly -- no single theme "
+            f"dominates, but the overall framing is {word} and on-target",
+            f"the language this candidate uses to describe their work spans the "
+            f"JD's technical territory evenly -- a diffuse but {word} fit that "
+            f"holds up across multiple areas rather than peaking in one",
+            f"how this candidate narrates their career touches the JD's key "
+            f"themes at multiple points without any one area standing out -- "
+            f"{article} {word} broad-coverage signal rather than a narrow spike",
+            f"this candidate's own description of their work draws on domain "
+            f"vocabulary that spans the JD's focus areas at a {word} level, "
+            f"even if no single area clearly dominates the read",
+            f"the narrative framing here maps across several of the JD's "
+            f"core areas rather than concentrating in one -- {article} {word} "
+            f"distributed fit, independently of the explicit skills list",
         )
     fragment = _pick(seed, templates)
     return fragment, tuple(evidence)
@@ -730,7 +744,7 @@ def _archetype_fit_strength(
     evidence = list(cv.evidence)
     archetype = representation.archetype
     label = archetype.label if archetype is not None and archetype.label else None
-    label_text = label.replace("_", " ") if label else "a target candidate"
+    label_text = label.replace("_", " ") if label else "the target candidate"
     if archetype is not None:
         evidence.append(
             make_evidence(
@@ -738,28 +752,31 @@ def _archetype_fit_strength(
             )
         )
     templates = (
-        f"clusters into the '{label_text}' archetype we discovered as one of "
-        f"the target profiles for this JD -- {article} {word} membership fit",
-        f"profile shape matches the '{label_text}' archetype cluster ({word} "
-        f"membership confidence), one of the patterns we went looking for",
-        f"this profile sits close to the '{label_text}' archetype centroid -- "
-        f"{article} {word} cluster-membership read that corroborates the "
-        f"component-level scores rather than just restating them",
-        f"unsupervised clustering independently placed this candidate inside "
-        f"the '{label_text}' archetype, one of the shapes we pre-identified "
-        f"as a target profile, with {article} {word} membership confidence",
-        f"beyond the individual component scores, this profile's overall "
-        f"shape lands inside the '{label_text}' archetype -- {article} {word} "
-        f"structural fit, not just a sum of independent signals",
-        f"the '{label_text}' archetype this candidate clusters into was "
-        f"flagged as a target pattern before any individual profile was "
-        f"scored against it, and the membership fit here reads {article} {word}",
-        f"pattern-matching against the discovered archetype space places this "
-        f"candidate inside '{label_text}' with {article} {word} confidence, "
-        f"reinforcing rather than duplicating the other component reads",
-        f"as a holistic shape rather than a checklist, this profile reads "
-        f"closest to '{label_text}' -- one of the archetypes this JD was "
-        f"calibrated against -- with {article} {word} cluster fit",
+        f"viewed as a career shape rather than a list of credentials, this "
+        f"reads as {article} {word} fit for the '{label_text}' profile this "
+        f"JD is built to attract",
+        f"the overall trajectory here -- not the individual skills, but the "
+        f"pattern of where this career has gone -- fits the '{label_text}' "
+        f"mold the JD describes; {article} {word} structural read",
+        f"putting the line items aside and looking at the career as a whole, "
+        f"it reads as {article} {word} '{label_text}' shape: the kind of "
+        f"profile this JD was written to hire",
+        f"career-shape analysis places this in the '{label_text}' pattern, "
+        f"which is the holistic target the JD is aimed at -- {article} {word} "
+        f"corroborating read that sits independently of any single line item",
+        f"the arc of this career has the structure of {article} '{label_text}' "
+        f"-- someone who has done this kind of work in real settings, not just "
+        f"described it -- a {word} structural match for what this JD needs",
+        f"at the pattern level rather than the checklist level, this reads as "
+        f"the '{label_text}' this JD is targeting: {article} {word} structural "
+        f"fit that reinforces the component-level signals rather than "
+        f"duplicating them",
+        f"the shape of this career, taken as a whole, is {article} {word} "
+        f"'{label_text}' read -- the kind of broad structural alignment that "
+        f"individual-component scores alone don't always surface",
+        f"this career has converged on the '{label_text}' pattern the JD is "
+        f"targeting -- which is harder to stage than a skills list and a "
+        f"stronger signal of genuine fit; {article} {word} read overall",
     )
     fragment = _pick(seed, templates)
     return fragment, tuple(evidence)
@@ -795,6 +812,1088 @@ _STRENGTH_BUILDERS: Final[Mapping[ScoreComponent, _StrengthBuilder]] = {
     ScoreComponent.EDUCATION_FIT: _education_fit_strength,
     ScoreComponent.CREDIBILITY: _credibility_strength,
     ScoreComponent.ARCHETYPE_FIT: _archetype_fit_strength,
+}
+
+
+# --------------------------------------------------------------------------- #
+# Behavioral signal synthesizers — translate the 23 redrob_signals into plain  #
+# hiring-relevant language.  These are standalone functions (not _StrengthBuilder  #
+# / _ConcernBuilder callables) because behavioral signals are multipliers, not  #
+# ScoreComponents, and have no EligibilityFinding to carry through.            #
+# --------------------------------------------------------------------------- #
+
+_BEHAVIORAL_STRENGTH_THRESHOLD_RESPONSE: Final[float] = 0.65
+_BEHAVIORAL_STRENGTH_THRESHOLD_GITHUB: Final[float] = 40.0
+_BEHAVIORAL_STRENGTH_INACTIVE_CUTOFF_DAYS: Final[int] = 50
+_BEHAVIORAL_CONCERN_INACTIVE_CUTOFF_DAYS: Final[int] = 90
+_BEHAVIORAL_CONCERN_RESPONSE_THRESHOLD: Final[float] = 0.22
+_BEHAVIORAL_STRENGTH_SAVES_THRESHOLD: Final[int] = 4
+
+# How weak the weakest selected component's raw score must be before a strong
+# behavioral clause is allowed to displace it (§ reasoning design §5).
+_BEHAVIORAL_DISPLACE_RAW_CEILING: Final[float] = 0.35
+
+
+def _behavioral_strength(
+    raw: RawCandidate,
+    candidate_id: CandidateId,
+    as_of: date,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Synthesize a hiring-relevant behavioral clause from redrob_signals.
+
+    Returns ``None`` when no signal clears the threshold for a meaningful
+    positive observation -- so the caller can skip it entirely rather than
+    emitting a generic or vacuous clause.
+    """
+    signals = raw.redrob_signals
+    days_inactive = max(0, (as_of - signals.last_active_date).days)
+    open_to_work = signals.open_to_work_flag
+    response_rate = float(signals.recruiter_response_rate)
+    github = float(signals.github_activity_score)
+    saves = int(signals.saved_by_recruiters_30d)
+
+    is_recent = days_inactive <= _BEHAVIORAL_STRENGTH_INACTIVE_CUTOFF_DAYS
+    high_response = response_rate >= _BEHAVIORAL_STRENGTH_THRESHOLD_RESPONSE
+    has_github = github >= _BEHAVIORAL_STRENGTH_THRESHOLD_GITHUB
+    notable_saves = saves >= _BEHAVIORAL_STRENGTH_SAVES_THRESHOLD
+
+    if not (open_to_work or is_recent or high_response or has_github or notable_saves):
+        return None
+
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = [
+        mint(dump, kind=EvidenceKind.SIGNAL, path="redrob_signals.open_to_work_flag"),
+        mint(dump, kind=EvidenceKind.SIGNAL, path="redrob_signals.last_active_date"),
+    ]
+    _sig = EvidenceKind.SIGNAL
+    if high_response:
+        evidence.append(
+            mint(dump, kind=_sig, path="redrob_signals.recruiter_response_rate")
+        )
+    if has_github:
+        evidence.append(
+            mint(dump, kind=_sig, path="redrob_signals.github_activity_score")
+        )
+    if notable_saves:
+        evidence.append(
+            mint(dump, kind=_sig, path="redrob_signals.saved_by_recruiters_30d")
+        )
+
+    response_pct = f"{round(response_rate * 100)}%"
+    github_score = int(github)
+    days_label = f"{days_inactive} days" if days_inactive > 0 else "today"
+
+    templates: tuple[str, ...]
+    if open_to_work and is_recent and high_response:
+        templates = (
+            f"marked open to work and last active {days_label} ago with a "
+            f"{response_pct} recruiter response rate -- the practical "
+            f"availability side here is clean",
+            f"open to work, active {days_label} ago, responds to {response_pct} "
+            f"of recruiter messages -- realistically available, not just "
+            f"theoretically so",
+            f"practical sourcing looks straightforward: open to work, seen "
+            f"{days_label} ago, {response_pct} of outreach gets a reply",
+            f"from a hiring-logistics standpoint, the signals are positive -- "
+            f"open to work, {days_label} since last login, {response_pct} "
+            f"recruiter response rate",
+            f"availability checks out clearly: open to work, active "
+            f"{days_label} ago, and a {response_pct} response rate that "
+            f"means most outreach gets answered",
+        )
+    elif open_to_work and is_recent:
+        templates = (
+            f"flagged open to work and last active {days_label} ago -- "
+            f"realistically in the market rather than passively listed",
+            f"open to work with a recent platform login ({days_label} ago) -- "
+            f"the availability side of this hire is not a question",
+            f"marked available and active {days_label} ago -- worth moving "
+            f"on quickly given the combination of profile quality and genuine "
+            f"market availability",
+            f"practical availability is clear: open to work, last seen "
+            f"{days_label} ago on the platform",
+        )
+    elif high_response and is_recent:
+        templates = (
+            f"responds to {response_pct} of recruiter messages and was last "
+            f"active {days_label} ago -- the sourcing side of this hire "
+            f"looks workable",
+            f"a {response_pct} recruiter response rate alongside recent "
+            f"activity ({days_label} ago) is a practical positive -- "
+            f"outreach is likely to land",
+            f"active {days_label} ago with a {response_pct} response rate "
+            f"to recruiter messages -- the reachability side here is "
+            f"stronger than average",
+        )
+    elif notable_saves and (is_recent or open_to_work):
+        templates = (
+            f"saved by {saves} recruiters in the past 30 days alongside "
+            f"open-to-work status -- market competition for this candidate "
+            f"is real and worth acting on",
+            f"{saves} recruiter saves in the last month signals active market "
+            f"demand; this candidate won't stay available indefinitely",
+            f"open to work and already on {saves} recruiters' shortlists in "
+            f"the last 30 days -- the market is paying attention here",
+        )
+    elif has_github and (is_recent or open_to_work or high_response):
+        templates = (
+            f"active GitHub presence ({github_score}/100) gives external "
+            f"validation of the technical work this profile claims -- not "
+            f"just self-reported",
+            f"GitHub activity score of {github_score}/100 suggests technical "
+            f"work visible outside a closed employer context -- relevant "
+            f"since the JD explicitly flags open-source contributions",
+            f"the JD specifically calls out open-source contributions; a "
+            f"{github_score}/100 GitHub activity score here is a "
+            f"concrete corroborating signal",
+        )
+    elif high_response:
+        templates = (
+            f"responds to {response_pct} of recruiter messages -- above the "
+            f"typical response rate and a positive sourcing signal",
+            f"a {response_pct} recruiter response rate means most outreach "
+            f"gets answered, regardless of whether they're actively "
+            f"looking right now",
+        )
+    else:
+        templates = (
+            f"platform signals are positive: active {days_label} ago, "
+            f"{response_pct} recruiter response rate",
+            f"recently active ({days_label} ago) with a {response_pct} "
+            f"recruiter response rate -- practical availability "
+            f"is not a concern here",
+        )
+
+    fragment = _pick(seed, templates)
+    return fragment, tuple(evidence)
+
+
+def _behavioral_concern(
+    raw: RawCandidate,
+    candidate_id: CandidateId,
+    as_of: date,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Synthesize a hiring-relevant behavioral concern from redrob_signals.
+
+    Returns ``None`` when signals don't justify adding a concern -- so the
+    caller can skip rather than emitting a weak or vacuous clause.
+    """
+    signals = raw.redrob_signals
+    days_inactive = max(0, (as_of - signals.last_active_date).days)
+    open_to_work = signals.open_to_work_flag
+    response_rate = float(signals.recruiter_response_rate)
+
+    inactive_long = days_inactive > _BEHAVIORAL_CONCERN_INACTIVE_CUTOFF_DAYS
+    low_response = response_rate < _BEHAVIORAL_CONCERN_RESPONSE_THRESHOLD
+    not_available = not open_to_work
+
+    if not ((inactive_long and not_available) or low_response):
+        return None
+
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = [
+        mint(dump, kind=EvidenceKind.SIGNAL, path="redrob_signals.last_active_date"),
+        mint(dump, kind=EvidenceKind.SIGNAL, path="redrob_signals.open_to_work_flag"),
+    ]
+    if low_response:
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.SIGNAL,
+                path="redrob_signals.recruiter_response_rate",
+            )
+        )
+
+    response_pct = f"{round(response_rate * 100)}%"
+    days_label = f"{days_inactive} days"
+
+    templates: tuple[str, ...]
+    if inactive_long and not_available and low_response:
+        templates = (
+            f"platform signals are a concern: inactive for {days_label}, "
+            f"not marked open to work, and only a {response_pct} recruiter "
+            f"response rate -- this candidate may not be in the market "
+            f"right now regardless of how the profile reads",
+            f"inactive for {days_label}, not flagged as available, and a "
+            f"{response_pct} recruiter response rate -- the practical "
+            f"reachability here is a real question before moving forward",
+            f"despite the profile quality, {days_label} of platform "
+            f"inactivity, no open-to-work flag, and a {response_pct} "
+            f"response rate together suggest this hire may be harder to "
+            f"close than it looks on paper",
+            f"a {response_pct} response rate alongside {days_label} of "
+            f"inactivity and no open-to-work status is a meaningful "
+            f"practical obstacle -- worth confirming actual availability "
+            f"before progressing",
+        )
+    elif inactive_long and not_available:
+        templates = (
+            f"not marked open to work and inactive for {days_label} -- "
+            f"a real question mark on whether they're actually in the "
+            f"market right now, independent of how the profile reads",
+            f"last platform login was {days_label} ago with no open-to-work "
+            f"flag -- availability is a genuine question to resolve before "
+            f"prioritizing this candidate",
+            f"{days_label} without a platform login, and not flagged as "
+            f"available -- worth a quick reachability check before "
+            f"moving this profile up the queue",
+            f"the skills read well, but {days_label} of inactivity and "
+            f"no open-to-work status is worth flagging as a practical "
+            f"availability concern, not a skills concern",
+        )
+    elif low_response:
+        templates = (
+            f"a {response_pct} recruiter response rate is the friction "
+            f"point here -- most cold outreach goes unanswered, which "
+            f"changes the sourcing approach needed",
+            f"{response_pct} response rate to recruiter messages -- a "
+            f"practical sourcing obstacle that warrants a warm intro "
+            f"or a different reach channel rather than cold outreach",
+            f"the {response_pct} recruiter response rate is worth noting: "
+            f"reachability may be lower than the profile quality would suggest",
+        )
+    else:
+        templates = (
+            f"last active {days_label} ago with open-to-work status off -- "
+            f"practical availability is less clear than the profile quality "
+            f"would otherwise suggest",
+        )
+
+    fragment = _pick(seed, templates)
+    return fragment, tuple(evidence)
+
+
+# --------------------------------------------------------------------------- #
+# JD-latent hiring-thesis architecture.                                       #
+#                                                                               #
+# The JD establishes a ranked evidence hierarchy for what constitutes a       #
+# strong hire.  Instead of asking "which ScoreComponent has the highest        #
+# weighted contribution?", the new _strength_clauses selects clauses by       #
+# asking "which JD positive latent does this candidate most clearly satisfy?" #
+#                                                                               #
+# Positive latents are checked in JD priority order; the first _MAX_STRENGTHS  #
+# that clear _POSITIVE_LATENT_THRESHOLD emit thesis clauses built from career  #
+# and skill evidence, not from ML score floats.  Negative latents with        #
+# sufficient anchor cosine add concern clauses after soft-penalty findings.   #
+# --------------------------------------------------------------------------- #
+
+_JD_POSITIVE_LATENT_PRIORITY: Final[tuple[str, ...]] = (
+    "jd.production_ml",  # 1 — shipped ML to real users
+    "jd.product_company",  # 2 — at a product company, not consulting/research
+    "jd.retrieval_ranking",  # 3 — core domain: ranking / retrieval / search
+    "jd.shipping_mentality",  # 4 — hands-on IC, not just researcher or manager
+    "jd.eval_framework",  # 5 — evaluation rigor (NDCG, MRR, MAP)
+    "jd.hybrid_retrieval",  # 6 — dense + sparse retrieval experience
+)
+_JD_NEGATIVE_LATENT_PRIORITY: Final[tuple[str, ...]] = (
+    "jd.pure_researcher",  # pure research, no production counterpart
+    "jd.consulting_only",  # consulting-heavy, limited product ownership
+    "jd.keyword_only",  # skill claims not corroborated by work evidence
+    "jd.framework_enthusiast",  # framework-only tooling, no system depth
+    "jd.inactive",  # not practically available (overlaps behavioral_concern)
+)
+# Minimum cosine to a positive jd.* anchor to emit a thesis strength clause.
+_POSITIVE_LATENT_THRESHOLD: Final[float] = 0.12
+# Minimum cosine to a negative jd.* anchor to add a latent concern clause.
+_NEGATIVE_LATENT_THRESHOLD: Final[float] = 0.10
+# Maps each positive jd.* latent to the nearest ScoreComponent for
+# ReasoningClause.jd_link continuity (the domain constraint requires
+# jd_link to be EligibilityCode | ScoreComponent | None).
+_LATENT_TO_JD_LINK: Final[Mapping[str, ScoreComponent]] = {
+    "jd.production_ml": ScoreComponent.CAREER_FIT,
+    "jd.product_company": ScoreComponent.CAREER_FIT,
+    "jd.retrieval_ranking": ScoreComponent.SEMANTIC_FIT,
+    "jd.shipping_mentality": ScoreComponent.CAREER_FIT,
+    "jd.eval_framework": ScoreComponent.SKILL_MATCH,
+    "jd.hybrid_retrieval": ScoreComponent.SEMANTIC_FIT,
+}
+
+# Evidence-scan lexicons (lowercase substring matching over position blobs).
+_PROD_SIGNAL_CUES: Final[tuple[str, ...]] = (
+    "production",
+    "in prod",
+    "deployed",
+    "serving",
+    "live traffic",
+    "at scale",
+    "latency",
+    "throughput",
+    "uptime",
+    "sla",
+    "ci/cd",
+    "monitoring",
+    "on-call",
+    "rollout",
+    "millions of",
+    "qps",
+    "p99",
+    "real users",
+    "live system",
+)
+_PRODUCT_ORG_CUES: Final[tuple[str, ...]] = (
+    "product",
+    "saas",
+    "platform",
+    "our app",
+    "our users",
+    "feature flag",
+    "a/b test",
+    "user base",
+    "mau",
+    "dau",
+    "consumer",
+    "in-house",
+    "proprietary",
+)
+_RETRIEVAL_DOMAIN_CUES: Final[tuple[str, ...]] = (
+    "retrieval",
+    "ranking",
+    "search engine",
+    "recommendation",
+    "recsys",
+    "information retrieval",
+    "faiss",
+    "elasticsearch",
+    "solr",
+    "lucene",
+    "bm25",
+    "colbert",
+    "dense retrieval",
+    "sparse retrieval",
+    "vector search",
+    "semantic search",
+    "ann",
+)
+_EVAL_EVIDENCE_CUES: Final[tuple[str, ...]] = (
+    "ndcg",
+    "mrr",
+    "map",
+    "p@",
+    "precision@",
+    "recall@",
+    "auc",
+    "offline eval",
+    "online eval",
+    "a/b test",
+    "evaluation framework",
+    "benchmark",
+    "offline metrics",
+)
+_HYBRID_RET_CUES: Final[tuple[str, ...]] = (
+    "hybrid",
+    "dense",
+    "sparse",
+    "bm25",
+    "faiss",
+    "colbert",
+    "dpr",
+    "bi-encoder",
+    "cross-encoder",
+    "reranker",
+    "two-stage",
+    "dense+sparse",
+)
+_HANDS_ON_CUES: Final[tuple[str, ...]] = (
+    "built",
+    "implemented",
+    "shipped",
+    "deployed",
+    "wrote",
+    "coded",
+    "developed",
+    "refactored",
+    "delivered",
+    "pull request",
+    "commit",
+    "open source",
+    "github",
+)
+_RESEARCH_ONLY_CUES: Final[tuple[str, ...]] = (
+    "research",
+    "published",
+    "publication",
+    "paper",
+    "phd",
+    "thesis",
+    "neurips",
+    "icml",
+    "acl",
+    "prototype only",
+    "proof of concept",
+)
+_CONSULTING_SIGNAL_CUES: Final[tuple[str, ...]] = (
+    "consulting",
+    "client",
+    "consultancy",
+    "system integrat",
+    "outsourc",
+    "managed services",
+    "staff augment",
+    "billable",
+)
+
+
+def _best_position_for_cues(raw: RawCandidate, cues: tuple[str, ...]) -> int | None:
+    """Index of the career_history position with the most cue hits; None if zero."""
+    best_idx: int | None = None
+    best_count = 0
+    for idx, pos in enumerate(raw.career_history):
+        blob = f"{pos.description} {pos.company} {pos.industry}".lower()
+        count = sum(1 for cue in cues if cue in blob)
+        if count > best_count:
+            best_count = count
+            best_idx = idx
+    return best_idx if best_count > 0 else None
+
+
+def _jd_production_ml_strength(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Production ML deployment: ML shipped to real users at scale."""
+    _ = representation
+    word = _bucket_word(seed, sim)
+    article = _article(word)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    idx = _best_position_for_cues(raw, _PROD_SIGNAL_CUES)
+    if idx is not None:
+        pos = raw.career_history[idx]
+        _ck = EvidenceKind.CAREER_FIELD
+        evidence.append(mint(dump, kind=_ck, path=f"career_history[{idx}].company"))
+        evidence.append(mint(dump, kind=_ck, path=f"career_history[{idx}].description"))
+        company = pos.company
+        templates = (
+            f"production ML track record at {company}: the work described "
+            f"goes beyond experimentation into live systems with real-user "
+            f"stakes -- {article} {word} signal for this role's primary bar",
+            f"at {company}, the engineering context reads as production ML -- "
+            f"deployed systems, live traffic, real operational constraints; "
+            f"{article} {word} answer to the JD's first-order requirement",
+            f"{company} shows up as a context where ML went to production, "
+            f"not just to a notebook -- the description puts this in "
+            f"{article} {word} tier for what the role is actually asking for",
+            f"the production ML bar this JD sets is cleared at {company}: "
+            f"the work described carries the fingerprints of live deployment, "
+            f"not prototype-and-hand-off",
+            f"shipping ML to real users is the hardest signal to fake on a "
+            f"resume, and {company}'s context makes {article} {word} case "
+            f"that this candidate has actually done it",
+            f"{article.capitalize()} {word} production ML signal from "
+            f"{company}: not just model training but live inference with "
+            f"the operational responsibility that comes with it",
+            f"the JD's primary bar is production ML; the {company} context "
+            f"in this profile clears it -- the work is framed in deployment "
+            f"terms, not research terms",
+        )
+    else:
+        if sim < _POSITIVE_LATENT_THRESHOLD:
+            return None
+        evidence.append(
+            make_evidence(
+                EvidenceKind.DERIVED,
+                "semantic.anchor.production_ml",
+                round(sim, 4),
+            )
+        )
+        templates = (
+            f"profile language suggests {article} {word} production-ML "
+            f"orientation -- the way work is described reads closer to "
+            f"deployed systems than to research or prototypes, even without "
+            f"explicit deployment language",
+            f"{word} alignment with the production-ML signal; the framing "
+            f"of this candidate's work suggests deployment experience, though "
+            f"the specific context could be described more explicitly",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+def _jd_product_company_strength(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Product company tenure: built for end users inside a product org."""
+    word = _bucket_word(seed, sim)
+    article = _article(word)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    career = representation.require_career()
+    product_positions = [p for p in career.positions if p.is_product_company]
+    if product_positions:
+        best = product_positions[0]  # positions are sorted by start_date desc
+        idx = _position_index(
+            raw,
+            company=best.company,
+            title=best.title,
+            start_date=best.start_date,
+        )
+        if idx is not None:
+            evidence.append(
+                mint(
+                    dump,
+                    kind=EvidenceKind.CAREER_FIELD,
+                    path=f"career_history[{idx}].company",
+                )
+            )
+            evidence.append(
+                mint(
+                    dump,
+                    kind=EvidenceKind.CAREER_FIELD,
+                    path=f"career_history[{idx}].industry",
+                )
+            )
+        else:
+            evidence.append(
+                make_evidence(
+                    EvidenceKind.DERIVED, "career.product_company", best.company
+                )
+            )
+        org_count = len(product_positions)
+        plural = "s" if org_count > 1 else ""
+        recently = "most recently" if org_count == 1 else "consistently"
+        templates = (
+            f"product-company background at {best.company} ({best.industry}) "
+            f"-- the JD explicitly screens for this context, and {article} "
+            f"{word} fraction of this career is product-company tenure",
+            f"{best.company} is {article} {word} product-company context; "
+            f"across {org_count} product role{plural} this person has built "
+            f"for end users rather than for clients",
+            f"{recently} at product companies -- {best.company} "
+            f"({best.industry}) is the kind of org this JD targets, and the "
+            f"tenure there is {article} {word} match for what's being asked",
+            f"the JD is written for someone who has shipped to end users "
+            f"inside a product company; {best.company} ({best.industry}) "
+            f"is exactly that context -- {article} {word} fit on this screen",
+            f"product-company tenure is one of this JD's core filters; "
+            f"{best.company} in {best.industry} clears it -- {article} "
+            f"{word} footing on the most important background requirement",
+            f"{best.company} ({best.industry}) is a product-company context; "
+            f"the career has spent {article} {word} portion of its time "
+            f"building for users, not billing clients",
+        )
+    else:
+        idx = _best_position_for_cues(raw, _PRODUCT_ORG_CUES)
+        if idx is not None:
+            evidence.append(
+                mint(
+                    dump,
+                    kind=EvidenceKind.CAREER_FIELD,
+                    path=f"career_history[{idx}].company",
+                )
+            )
+        else:
+            if sim < _POSITIVE_LATENT_THRESHOLD:
+                return None
+            evidence.append(
+                make_evidence(
+                    EvidenceKind.DERIVED,
+                    "semantic.anchor.product_company",
+                    round(sim, 4),
+                )
+            )
+        templates = (
+            f"profile suggests {article} {word} product-company orientation "
+            f"in how work is described, though explicit product-company "
+            f"markers are sparse in the history",
+            f"{word} alignment with the product-company signal -- work "
+            f"framing suggests user-facing product context even where the "
+            f"company classification isn't explicit",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+def _jd_retrieval_ranking_strength(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Core domain: ranking, retrieval, or search systems built and shipped."""
+    word = _bucket_word(seed, sim)
+    article = _article(word)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    semantic = representation.require_semantic()
+    pos_idx = _best_position_for_cues(raw, _RETRIEVAL_DOMAIN_CUES)
+    skill_idx: int | None = None
+    for i, sk in enumerate(raw.skills):
+        if any(
+            cue in sk.name.lower()
+            for cue in ("retriev", "rank", "search", "recsys", "recommend")
+        ):
+            skill_idx = i
+            break
+
+    if pos_idx is not None:
+        pos = raw.career_history[pos_idx]
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{pos_idx}].company",
+            )
+        )
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{pos_idx}].description",
+            )
+        )
+        company = pos.company
+        templates = (
+            f"retrieval and ranking domain depth is visible at {company}: "
+            f"the work described puts this squarely in the JD's core domain, "
+            f"not just adjacent to it -- {article} {word} signal",
+            f"{company} shows up as a retrieval/ranking context -- exactly "
+            f"the core domain this role requires; {article} {word} case "
+            f"for genuine domain depth rather than keyword proximity",
+            f"the JD hires for retrieval/ranking expertise built in "
+            f"production; {company} is where this candidate has done it -- "
+            f"{article} {word} and specific answer to the role's core ask",
+            f"domain match on retrieval/ranking: the {company} experience "
+            f"puts this in the JD's sweet spot rather than at the margins",
+            f"core domain evidence at {company} -- ranking and retrieval "
+            f"work in a production context; {article} {word} fit for this "
+            f"role's most specific technical requirement",
+        )
+    elif skill_idx is not None:
+        sk = raw.skills[skill_idx]
+        evidence.append(
+            mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{skill_idx}].name")
+        )
+        templates = (
+            f"retrieval/ranking domain expertise surfaces in the skills: "
+            f"{sk.name} -- {article} {word} match for the core domain "
+            f"this role is built around",
+            f"on the skills side, {sk.name} anchors this in the retrieval/"
+            f"ranking space the JD is targeting; {article} {word} alignment "
+            f"with the role's technical core",
+        )
+    else:
+        if sim < _POSITIVE_LATENT_THRESHOLD:
+            return None
+        anchor = semantic.best_positive_anchor
+        if anchor is not None:
+            evidence.append(
+                make_evidence(
+                    EvidenceKind.DERIVED, "semantic.best_positive_anchor", str(anchor)
+                )
+            )
+            anchor_label = str(anchor).rsplit(".", 1)[-1].replace("_", " ")
+        else:
+            evidence.append(
+                make_evidence(
+                    EvidenceKind.DERIVED,
+                    "semantic.anchor.retrieval_ranking",
+                    round(sim, 4),
+                )
+            )
+            anchor_label = "retrieval and ranking"
+        templates = (
+            f"profile language patterns suggest {article} {word} alignment "
+            f"with the '{anchor_label}' domain this role is built for, "
+            f"independently of what is in the skills section",
+            f"{word} semantic alignment with retrieval/ranking -- how this "
+            f"candidate describes their work gravitates toward this JD's "
+            f"core technical focus rather than toward adjacent areas",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+def _jd_shipping_mentality_strength(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Hands-on engineering execution: built and shipped, not just designed."""
+    _ = representation
+    word = _bucket_word(seed, sim)
+    article = _article(word)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    idx = _best_position_for_cues(raw, _HANDS_ON_CUES)
+    if idx is not None:
+        pos = raw.career_history[idx]
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{idx}].company",
+            )
+        )
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{idx}].description",
+            )
+        )
+        company = pos.company
+        templates = (
+            f"hands-on engineering at {company}: the description uses "
+            f"builder language -- shipped, built, deployed -- not just "
+            f"'oversaw' or 'designed'; {article} {word} IC execution "
+            f"signal for a role that needs exactly this",
+            f"at {company}, this person was writing code and shipping "
+            f"systems rather than directing or reviewing -- {article} {word} "
+            f"execution track record for a role that requires IC depth",
+            f"the work at {company} is described in the language of someone "
+            f"who built things themselves: {article} {word} hands-on "
+            f"engineering signal, not an architectural or managerial one",
+            f"shipping mentality in evidence at {company}: the profile "
+            f"describes work in delivery and implementation terms, which is "
+            f"what this JD is actually looking for rather than seniority titles",
+            f"{company} context is described with vocabulary of someone "
+            f"who codes and ships rather than delegates -- {article} {word} "
+            f"IC signal for a role that values engineering execution over "
+            f"org-chart seniority",
+        )
+    else:
+        if sim < _POSITIVE_LATENT_THRESHOLD:
+            return None
+        evidence.append(
+            make_evidence(
+                EvidenceKind.DERIVED,
+                "semantic.anchor.shipping_mentality",
+                round(sim, 4),
+            )
+        )
+        templates = (
+            f"profile language suggests {article} {word} hands-on "
+            f"engineering orientation -- the emphasis is on building and "
+            f"shipping rather than on strategy or management",
+            f"{word} alignment with the execution signal this JD is looking "
+            f"for -- the candidate's work framing reads as IC-first",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+def _jd_eval_framework_strength(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Evaluation rigor: NDCG / MRR / MAP usage and offline/online discipline."""
+    _ = representation
+    word = _bucket_word(seed, sim)
+    article = _article(word)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    eval_skill_idx: int | None = None
+    for i, sk in enumerate(raw.skills):
+        if any(
+            cue in sk.name.lower()
+            for cue in ("ndcg", "mrr", " map", "eval", "metrics", "a/b")
+        ):
+            eval_skill_idx = i
+            break
+
+    pos_idx = _best_position_for_cues(raw, _EVAL_EVIDENCE_CUES)
+    if eval_skill_idx is not None:
+        sk = raw.skills[eval_skill_idx]
+        evidence.append(
+            mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{eval_skill_idx}].name")
+        )
+        if pos_idx is not None:
+            evidence.append(
+                mint(
+                    dump,
+                    kind=EvidenceKind.CAREER_FIELD,
+                    path=f"career_history[{pos_idx}].description",
+                )
+            )
+        templates = (
+            f"evaluation rigour shows up explicitly: {sk.name} is listed as "
+            f"a skill, and the JD specifically calls for proper offline/online "
+            f"evaluation -- {article} {word} signal this isn't a "
+            f"vibes-based engineer",
+            f"{sk.name} in the skills section is exactly the evaluation-metric "
+            f"literacy the JD flags as a differentiator; {article} {word} "
+            f"credibility signal for a ranking role",
+            f"the presence of {sk.name} here is the JD's 'evaluation "
+            f"framework' signal in concrete form -- {article} {word} "
+            f"indicator that this person measures ranking quality correctly",
+        )
+    elif pos_idx is not None:
+        pos = raw.career_history[pos_idx]
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{pos_idx}].company",
+            )
+        )
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{pos_idx}].description",
+            )
+        )
+        templates = (
+            f"evaluation framework usage in evidence at {pos.company}: "
+            f"the role description references ranking metrics (NDCG, MRR, "
+            f"or similar), which is the rigour signal the JD is hiring for",
+            f"the {pos.company} description shows evaluation-aware "
+            f"engineering -- ranking metrics are referenced, differentiating "
+            f"this from candidates who tune systems by intuition alone",
+        )
+    else:
+        if sim < _POSITIVE_LATENT_THRESHOLD:
+            return None
+        evidence.append(
+            make_evidence(
+                EvidenceKind.DERIVED, "semantic.anchor.eval_framework", round(sim, 4)
+            )
+        )
+        templates = (
+            f"{word} alignment with the evaluation-framework signal -- "
+            f"profile language suggests metric-aware engineering even where "
+            f"specific metrics are not named explicitly",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+def _jd_hybrid_retrieval_strength(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Dense + sparse hybrid retrieval experience."""
+    _ = representation
+    word = _bucket_word(seed, sim)
+    article = _article(word)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    pos_idx = _best_position_for_cues(raw, _HYBRID_RET_CUES)
+    skill_idx: int | None = None
+    for i, sk in enumerate(raw.skills):
+        name_lower = sk.name.lower()
+        _hcues = ("hybrid", "bm25", "faiss", "colbert", "rerank", "dense", "sparse")
+        if any(cue in name_lower for cue in _hcues):
+            skill_idx = i
+            break
+
+    if pos_idx is not None:
+        pos = raw.career_history[pos_idx]
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{pos_idx}].company",
+            )
+        )
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{pos_idx}].description",
+            )
+        )
+        if skill_idx is not None:
+            evidence.append(
+                mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{skill_idx}].name")
+            )
+        company = pos.company
+        templates = (
+            f"hybrid retrieval experience at {company}: the description "
+            f"shows familiarity with the full retrieval stack (dense + sparse), "
+            f"not just one approach -- {article} {word} fit for what the JD asks",
+            f"dense and sparse retrieval are both in scope based on the "
+            f"{company} experience; {article} {word} signal for a role that "
+            f"specifically requires hybrid systems",
+            f"the JD asks for hybrid retrieval; the {company} context suggests "
+            f"{article} {word} hands-on exposure to both dense and sparse "
+            f"methods rather than expertise in one only",
+        )
+    elif skill_idx is not None:
+        sk = raw.skills[skill_idx]
+        evidence.append(
+            mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{skill_idx}].name")
+        )
+        templates = (
+            f"hybrid retrieval technology visible in the skills: {sk.name} "
+            f"-- {article} {word} alignment with the JD's hybrid-retrieval "
+            f"requirement",
+            f"{sk.name} in the skills section is the JD's hybrid-retrieval "
+            f"signal in concrete form; {article} {word} match for this "
+            f"specific technical ask",
+        )
+    else:
+        if sim < _POSITIVE_LATENT_THRESHOLD:
+            return None
+        evidence.append(
+            make_evidence(
+                EvidenceKind.DERIVED,
+                "semantic.anchor.hybrid_retrieval",
+                round(sim, 4),
+            )
+        )
+        templates = (
+            f"{word} alignment with the hybrid-retrieval domain; profile "
+            f"language suggests familiarity with combined dense and sparse "
+            f"approaches",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+_LATENT_STRENGTH_BUILDERS: Final[Mapping[str, _LatentBuilder]] = {
+    "jd.production_ml": _jd_production_ml_strength,
+    "jd.product_company": _jd_product_company_strength,
+    "jd.retrieval_ranking": _jd_retrieval_ranking_strength,
+    "jd.shipping_mentality": _jd_shipping_mentality_strength,
+    "jd.eval_framework": _jd_eval_framework_strength,
+    "jd.hybrid_retrieval": _jd_hybrid_retrieval_strength,
+}
+
+
+# --------------------------------------------------------------------------- #
+# Negative-latent concern builders — pattern-level concerns derived from JD   #
+# anti-patterns that do not map 1:1 to EligibilityCodes.                      #
+# --------------------------------------------------------------------------- #
+def _jd_pure_researcher_concern(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]]:
+    """Anti-pattern: pure research career with no production counterpart."""
+    _ = representation
+    word = _bucket_word(seed, sim)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    idx = _best_position_for_cues(raw, _RESEARCH_ONLY_CUES)
+    if idx is not None:
+        pos = raw.career_history[idx]
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{idx}].company",
+            )
+        )
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{idx}].description",
+            )
+        )
+        company = pos.company
+        templates = (
+            f"career pattern leans toward research ({company} context): "
+            f"this is one of the JD's explicit anti-patterns -- the role "
+            f"needs production ML, not research output alone",
+            f"the {company} context reads as research-oriented (publications, "
+            f"papers, or prototype-level work) rather than the production "
+            f"deployment this JD is hiring for",
+            f"pure-researcher signal at {company}: the JD explicitly rules "
+            f"out candidates whose recent work is research without a "
+            f"production counterpart",
+            f"research framing at {company} is visible in the description -- "
+            f"the role specifically wants someone who has shipped systems, "
+            f"not just produced results in a lab or academic context",
+        )
+    else:
+        evidence.append(
+            make_evidence(
+                EvidenceKind.DERIVED, "semantic.anchor.pure_researcher", round(sim, 4)
+            )
+        )
+        templates = (
+            f"profile language has {word} alignment with the 'pure researcher' "
+            f"anti-pattern this JD calls out -- the work framing is academic "
+            f"rather than deployment-oriented",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+def _jd_consulting_only_concern(
+    raw: RawCandidate,
+    representation: CandidateRepresentation,
+    sim: float,
+    seed: str,
+) -> tuple[str, tuple[EvidenceRef, ...]]:
+    """Anti-pattern: consulting-heavy career with limited product ownership."""
+    _ = representation
+    word = _bucket_word(seed, sim)
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = []
+    templates: tuple[str, ...]
+
+    idx = _best_position_for_cues(raw, _CONSULTING_SIGNAL_CUES)
+    if idx is not None:
+        pos = raw.career_history[idx]
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{idx}].company",
+            )
+        )
+        evidence.append(
+            mint(
+                dump,
+                kind=EvidenceKind.CAREER_FIELD,
+                path=f"career_history[{idx}].description",
+            )
+        )
+        company = pos.company
+        templates = (
+            f"consulting-heavy career pattern at {company} and elsewhere: "
+            f"client-delivery work builds breadth, but not the product-company "
+            f"depth this JD is specifically screening for",
+            f"the {company} context reads as a consulting engagement rather "
+            f"than product-company ownership -- the JD is explicit that this "
+            f"is an anti-pattern for this role",
+            f"client-facing consulting at {company} is {word} evidence of "
+            f"what this JD screens against: the role wants in-house product "
+            f"engineering, not client delivery",
+            f"the {company} role description carries consulting signals -- "
+            f"a career path the JD views as a poor proxy for product-company "
+            f"ML experience",
+        )
+    else:
+        evidence.append(
+            make_evidence(
+                EvidenceKind.DERIVED, "semantic.anchor.consulting_only", round(sim, 4)
+            )
+        )
+        templates = (
+            f"profile language has {word} alignment with the consulting-heavy "
+            f"anti-pattern the JD calls out -- client-delivery framing over "
+            f"product-ownership framing",
+        )
+    return _pick(seed, templates), tuple(evidence)
+
+
+_LATENT_CONCERN_BUILDERS: Final[Mapping[str, _LatentBuilder]] = {
+    "jd.pure_researcher": _jd_pure_researcher_concern,
+    "jd.consulting_only": _jd_consulting_only_concern,
 }
 
 
@@ -996,15 +2095,21 @@ class ReasoningEngine(BaseModel):
 
     Every clause is assembled from named facts on the candidate's own raw
     profile (current employer, named skills, institutions, tenure, notice
-    period, ...) rather than a bare component float; phrasing is selected
-    deterministically per ``(candidate_id, component_or_code)`` from a small
-    pool of structurally distinct sentence templates, so two candidates who
-    share a dominant component still render materially different text.
+    period, behavioral signals, ...) rather than a bare component float;
+    phrasing is selected deterministically per
+    ``(candidate_id, component_or_code)`` from a pool of structurally
+    distinct sentence templates, so two candidates who share a dominant
+    component still render materially different text.
+
+    ``as_of`` is injected (not read from the wall clock) and is used only
+    to compute recency for behavioral-signal clauses.
     """
 
     model_config = ConfigDict(
         frozen=True, extra="forbid", arbitrary_types_allowed=False
     )
+
+    as_of: date = Field()
 
     # ------------------------------------------------------------------ public
     def explain(
@@ -1063,19 +2168,63 @@ class ReasoningEngine(BaseModel):
         representation: CandidateRepresentation,
         ranked: RankedCandidate,
     ) -> tuple[ReasoningClause, ...]:
-        components = ranked.scored.breakdown.components
-        # Strongest by weighted contribution; only those with citable evidence.
-        ranked_components = sorted(
-            (c for c in components if float(c.raw) > 0.0 and c.evidence),
-            key=lambda c: (-float(c.weighted), c.component.value),
-        )
+        # JD-latent hiring-thesis selection: check each positive JD anchor in
+        # priority order, emit a clause for the first _MAX_STRENGTHS that clear
+        # the threshold.  Clause content is derived from career/skill evidence
+        # that directly supports the JD's hiring case for this candidate, not
+        # from which ML score component happened to score highest.
+        semantic = representation.require_semantic()
+        anchor_sims = semantic.anchor_similarities
         clauses: list[ReasoningClause] = []
-        for component_value in ranked_components[:_MAX_STRENGTHS]:
+        for latent_id in _JD_POSITIVE_LATENT_PRIORITY:
+            if len(clauses) >= _MAX_STRENGTHS:
+                break
+            sim = float(anchor_sims.get(AnchorId(latent_id), -1.0))
+            builder = _LATENT_STRENGTH_BUILDERS.get(latent_id)
+            if builder is None:
+                continue
+            seed = f"{ranked.candidate_id}:{latent_id}:strength"
+            result = builder(raw, representation, sim, seed)
+            if result is None:
+                continue
+            fragment, evidence = result
+            jd_link: ScoreComponent | None = _LATENT_TO_JD_LINK.get(latent_id)
             clauses.append(
-                self._strength_clause(
-                    raw, representation, ranked.candidate_id, component_value
+                ReasoningClause(
+                    polarity=ReasoningPolarity.STRENGTH,
+                    fragment=fragment,
+                    evidence=evidence,
+                    jd_link=jd_link,
                 )
             )
+
+        # Behavioral strength fills any remaining slot (additive, not replacing
+        # JD evidence -- the hiring thesis always takes priority over behavioral).
+        if len(clauses) < _MAX_STRENGTHS and representation.behavioral is not None:
+            beh_seed = f"{ranked.candidate_id}:behavioral:strength"
+            beh_result = _behavioral_strength(
+                raw, ranked.candidate_id, self.as_of, beh_seed
+            )
+            if beh_result is not None:
+                beh_fragment, beh_evidence = beh_result
+                clauses.append(
+                    ReasoningClause(
+                        polarity=ReasoningPolarity.STRENGTH,
+                        fragment=beh_fragment,
+                        evidence=beh_evidence,
+                        jd_link=None,
+                    )
+                )
+
+        # Ensure the domain invariant: at least one clause carries a non-null
+        # jd_link.  Behavioral clauses always have jd_link=None, so if the
+        # only clause that fired was behavioral (no JD latent cleared the
+        # threshold), we prepend a score-component fallback to satisfy the
+        # invariant without discarding the behavioral signal.
+        has_jd_link = any(c.jd_link is not None for c in clauses)
+        if not has_jd_link:
+            clauses.insert(0, self._fallback_strength(raw, representation, ranked))
+
         return tuple(clauses)
 
     @staticmethod
@@ -1101,9 +2250,57 @@ class ReasoningEngine(BaseModel):
         if representation.eligibility is None:
             return ()
         penalties = representation.eligibility.soft_penalties
-        clauses: list[ReasoningClause] = []
-        for finding in penalties[:_MAX_CONCERNS]:
-            clauses.append(self._concern_clause(raw, representation, finding))
+        clauses: list[ReasoningClause] = [
+            self._concern_clause(raw, representation, finding)
+            for finding in penalties[:_MAX_CONCERNS]
+        ]
+
+        # JD negative-latent concerns: add pattern-level concerns when the
+        # candidate's profile fires strongly against a JD anti-pattern anchor
+        # (e.g., pure_researcher, consulting_only) and capacity remains.
+        if len(clauses) < _MAX_CONCERNS and representation.semantic is not None:
+            anchor_sims = representation.semantic.anchor_similarities
+            for latent_id in _JD_NEGATIVE_LATENT_PRIORITY:
+                if len(clauses) >= _MAX_CONCERNS:
+                    break
+                sim = float(anchor_sims.get(AnchorId(latent_id), -1.0))
+                if sim < _NEGATIVE_LATENT_THRESHOLD:
+                    continue
+                builder = _LATENT_CONCERN_BUILDERS.get(latent_id)
+                if builder is None:
+                    continue
+                seed = f"{representation.candidate_id}:{latent_id}:concern"
+                result = builder(raw, representation, sim, seed)
+                if result is None:
+                    continue
+                fragment, evidence = result
+                clauses.append(
+                    ReasoningClause(
+                        polarity=ReasoningPolarity.CONCERN,
+                        fragment=fragment,
+                        evidence=evidence,
+                        jd_link=None,
+                    )
+                )
+
+        # Behavioral concern: add when signals indicate low practical hirability,
+        # provided there is still room within the concern cap.
+        if len(clauses) < _MAX_CONCERNS and representation.behavioral is not None:
+            beh_seed = f"{representation.candidate_id}:behavioral:concern"
+            beh_result = _behavioral_concern(
+                raw, representation.candidate_id, self.as_of, beh_seed
+            )
+            if beh_result is not None:
+                beh_fragment, beh_evidence = beh_result
+                clauses.append(
+                    ReasoningClause(
+                        polarity=ReasoningPolarity.CONCERN,
+                        fragment=beh_fragment,
+                        evidence=beh_evidence,
+                        jd_link=None,
+                    )
+                )
+
         return tuple(clauses)
 
     @staticmethod
