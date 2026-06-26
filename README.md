@@ -65,11 +65,15 @@ cli  ──▶  pipelines  ──▶  engines  ──▶  features  ──▶  d
 
 > Requires Python 3.12. [`uv`](https://docs.astral.sh/uv/) is the recommended toolchain.
 
-**Sync the workspace (all groups):**
+**Universal onboarding — run this once before anything else:**
 
 ```bash
-uv sync --frozen --group core --group offline --group dev
+uv sync --frozen --all-groups
 ```
+
+`--all-groups` installs every dependency group (`core`, `offline`, `dev`) from
+the committed lockfile in one step. `--frozen` guarantees byte-identical
+resolution on every machine and fails fast if the lockfile is out of sync.
 
 **Hot-path only (no heavy ML deps):**
 

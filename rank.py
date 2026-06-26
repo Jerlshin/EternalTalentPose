@@ -13,6 +13,12 @@ import argparse
 import os
 import subprocess
 import sys
+from pathlib import Path
+
+# Resolve repo root and src/ once at import time so bare `python rank.py` works
+# without uv or an editable install — PYTHONPATH is injected into the subprocess.
+_REPO_ROOT = Path(__file__).resolve().parent
+_SRC_DIR = _REPO_ROOT / "src"
 
 # ---------------------------------------------------------------------------
 # Deterministic thread-count pins — must be set before importing numpy / BLAS.
@@ -54,7 +60,11 @@ def main() -> None:
         "--output",
         args.out,
     ]
-    result = subprocess.run(cmd)
+    env = os.environ.copy()
+    src = str(_SRC_DIR)
+    existing_pp = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{src}{os.pathsep}{existing_pp}" if existing_pp else src
+    result = subprocess.run(cmd, env=env)
     sys.exit(result.returncode)
 
 

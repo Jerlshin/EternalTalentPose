@@ -4,15 +4,15 @@
 # ============================================================================
 # Team identity
 # ============================================================================
-team_name: "RedStack"
+team_name: "EternalTalentPose"
 
 primary_contact:
   name: "Afnan"
-  email: "jerlshin.official008@gmail.com"
-  phone: "+91-XXXXXXXXXX"
+  email: "asjved.8385@gmail.com"
+  phone: "+91-8148604385"
 
 team_members:
-  - name: "Jerlshin Jose Gerly"
+  - name: "Jerlshin JG"
     email: "jerlshin.official008@gmail.com"
     role: "Lead AI Engineer"
 
@@ -29,11 +29,11 @@ reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submi
 # Compute environment
 # ============================================================================
 compute:
-  platform: "MacBook Pro M2"
-  cpu_cores: 8
+  platform: "Windows 11"
+  cpu_cores: 4
   ram_gb: 16
   python_version: "3.12"
-  os: "macOS 26.5.1"
+  os: "Windows 11"
   uses_gpu_for_inference: false
   has_network_during_ranking: false
   pre_computation_required: true
@@ -44,6 +44,8 @@ compute:
 # ============================================================================
 ai_tools_used:
   - "Claude"
+  - "Gemini"
+-
 
 ai_usage_summary: |
   Used Claude for architecture discussion, code review, and system design.

@@ -28,11 +28,17 @@ os.environ["PYTHONUNBUFFERED"] = "1"
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+SRC_DIR = REPO_ROOT / "src"
 PYTHON = sys.executable
 
 
 def _run(*args: str) -> None:
-    result = subprocess.run([PYTHON, "-m"] + list(args), cwd=REPO_ROOT)
+    # Propagate src/ so bare `python scripts/run.py` works without uv or editable install.
+    env = os.environ.copy()
+    src = str(SRC_DIR)
+    existing_pp = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{src}{os.pathsep}{existing_pp}" if existing_pp else src
+    result = subprocess.run([PYTHON, "-m"] + list(args), cwd=REPO_ROOT, env=env)
     sys.exit(result.returncode)
 
 

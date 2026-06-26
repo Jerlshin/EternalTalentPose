@@ -78,6 +78,16 @@ dev = [
 default-groups = ["core", "dev"]
 package = true
 
+# Portable shortcut definitions — `uv run <name>` on any platform.
+# cmd-list form avoids shell interpretation, works on Windows PowerShell / CMD
+# and POSIX containers identically. `python` resolves to the venv interpreter
+# when uv drives the invocation.
+[tool.uv.scripts]
+build    = { cmd = ["python", "scripts/run.py", "build"] }
+rank     = { cmd = ["python", "scripts/run.py", "rank"] }
+validate = { cmd = ["python", "scripts/run.py", "validate"] }
+clean    = { cmd = ["python", "scripts/run.py", "clean"] }
+
 # ============================================================================
 # Ruff — lint + format
 # ============================================================================

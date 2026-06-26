@@ -23,9 +23,8 @@ help: ## List available targets
 # ---------------------------------------------------------------------------
 # Environment
 # ---------------------------------------------------------------------------
-install: ## Sync the full env (core+offline+dev) from the committed lockfile
-	$(UV) sync --frozen --group core --group offline --group dev
-	$(UV) pip install -e .
+install: ## Sync the full env (all groups) from the committed lockfile
+	$(UV) sync --frozen --all-groups
 
 lock: ## Re-resolve and rewrite uv.lock after a dependency bump
 	$(UV) lock
