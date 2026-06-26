@@ -1,12 +1,6 @@
 # =============================================================================
 # RedStack — Repository .gitignore
 # =============================================================================
-# Invariant: everything inside artifacts/ is submission-critical and TRACKED.
-# Only the four per-run observability blobs at the bottom of this file are
-# excluded from the index.  Global binary-extension rules (*.onnx, *.parquet,
-# *.npy, *.pkl, …) are intentionally absent to prevent silent artifact loss.
-# =============================================================================
-
 
 # =============================================================================
 # § 1  Python runtime noise
@@ -112,11 +106,14 @@ secrets/
 # without stomping the shared history.
 configs/profiles/local.yaml
 
-# Claude Code machine-local project settings only (CLAUDE.md is tracked).
-# The pattern is un-anchored so it matches .claude/ at any directory depth
-# (e.g. scripts/.claude/settings.local.json as well as root-level).
+# Professional Tooling
 **/.claude/settings.local.json
-
+CLAUDE.md
+**/.codex
+**/.anthropic
+**/.openai
+**/.cohere
+**/.ai21
 
 # =============================================================================
 # § 9  Logs & ephemeral scratch files
@@ -133,27 +130,10 @@ temp/
 
 # =============================================================================
 # § 10  Raw challenge data (too large / sensitive for VCS)
-#
-# candidates.jsonl and golden_labels.csv are gitignored.
-# README files and the small sandbox seed are explicitly preserved so the
-# repository is self-documenting and offline-buildable without the full pool.
 # =============================================================================
 data/raw/*
 !data/raw/README.md
-!data/raw/sandbox_sample.jsonl
 
 data/golden/*
 !data/golden/README.md
 
-
-# =============================================================================
-# § 11  artifacts/ — everything is tracked and pushed to GitHub.
-#
-# Large binaries (encoder.onnx 87 MB, candidate_vectors.parquet 199 MB,
-# feature_snapshot.parquet 20 MB, *.npy) are stored via Git LFS.
-# Patterns are declared in .gitattributes:
-#   artifacts/**/*.onnx   filter=lfs diff=lfs merge=lfs -text
-#   artifacts/**/*.parquet filter=lfs diff=lfs merge=lfs -text
-#   artifacts/**/*.npy    filter=lfs diff=lfs merge=lfs -text
-# No files inside artifacts/ are excluded from the index.
-# =============================================================================
