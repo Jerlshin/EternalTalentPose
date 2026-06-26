@@ -1,151 +1,159 @@
-# ==========================================================
-# Python
-# ==========================================================
+# =============================================================================
+# RedStack — Repository .gitignore
+# =============================================================================
+# Invariant: everything inside artifacts/ is submission-critical and TRACKED.
+# Only the four per-run observability blobs at the bottom of this file are
+# excluded from the index.  Global binary-extension rules (*.onnx, *.parquet,
+# *.npy, *.pkl, …) are intentionally absent to prevent silent artifact loss.
+# =============================================================================
+
+
+# =============================================================================
+# § 1  Python runtime noise
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 
-# Build artifacts
+
+# =============================================================================
+# § 2  Virtual environments & package management
+# =============================================================================
+.venv/
+venv/
+env/
+ENV/
+.uv/
+.python-version
+
+
+# =============================================================================
+# § 3  Build & distribution artefacts
+# =============================================================================
 build/
 dist/
 *.egg-info/
 .eggs/
 
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
 
-# UV
-.uv/
-.python-version
-
-# ==========================================================
-# Testing
-# ==========================================================
+# =============================================================================
+# § 4  Test & quality-gate caches
+# =============================================================================
 .pytest_cache/
 .coverage
 .coverage.*
 htmlcov/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
 .tox/
 .nox/
-
-# MyPy
-.mypy_cache/
-
-# Ruff
-.ruff_cache/
-
-# Pyright
+typecover/
+.import_linter_cache/
 .pyright/
 
-# Hypothesis
-.hypothesis/
 
-# ==========================================================
-# IDEs / Editors
-# ==========================================================
-.vscode/
-.idea/
+# =============================================================================
+# § 5  OS filesystem noise
+# =============================================================================
 
-*.swp
-*.swo
+# macOS
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+._*
+.fseventsd
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Linux
 *~
 
-# ==========================================================
-# OS Files
-# ==========================================================
-.DS_Store
-Thumbs.db
 
-# ==========================================================
-# Logs
-# ==========================================================
-logs/
-*.log
+# =============================================================================
+# § 6  IDE & editor state
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# ==========================================================
-# Runtime Outputs
-# ==========================================================
-tmp/
-temp/
-.cache/
 
-# ==========================================================
-# Local Configuration Overrides
-# ==========================================================
-configs/profiles/local.yaml
+# =============================================================================
+# § 7  Jupyter
+# =============================================================================
+.ipynb_checkpoints/
 
-# Secrets (if ever added)
+
+# =============================================================================
+# § 8  Secrets, credentials & machine-local configuration
+# =============================================================================
 .env
 .env.*
 *.secret
 secrets/
 
-# ==========================================================
-# Generated Data
-# ==========================================================
-data/raw/*
-data/golden/*
+# Local profile override — machine-specific. The committed default lives at
+# configs/profiles/ci.yaml; each developer authors their own local.yaml
+# without stomping the shared history.
+configs/profiles/local.yaml
 
-!data/raw/.gitkeep
-!data/golden/.gitkeep
-
-# ==========================================================
-# Generated Artifacts
-# ==========================================================
-artifacts/embeddings/*
-artifacts/model/*
-
-!artifacts/embeddings/.gitkeep
-!artifacts/model/.gitkeep
-
-# ==========================================================
-# Offline Pipeline Outputs
-# ==========================================================
-*.onnx
-*.pt
-*.pth
-*.bin
-*.joblib
-*.pkl
-*.pickle
-*.parquet
-*.feather
-*.npy
-*.npz
-
-# Embedding stores
-*.faiss
-*.index
-*.sqlite
-*.db
-
-# ==========================================================
-# Reports / Generated Results
-# ==========================================================
-reports/
-outputs/
-runs/
+# Claude Code machine-local project settings only (CLAUDE.md is tracked).
+# The pattern is un-anchored so it matches .claude/ at any directory depth
+# (e.g. scripts/.claude/settings.local.json as well as root-level).
+**/.claude/settings.local.json
 
 
-# ==========================================================
-# Jupyter
-# ==========================================================
-.ipynb_checkpoints/
-
-# ==========================================================
-# Optional Industry Artifacts (change if you are using this)
-# ==========================================================
-.claude/
-.claude-cache/
-CLAUDE.md
-
-# ==========================================================
-# Misc
-# ==========================================================
+# =============================================================================
+# § 9  Logs & ephemeral scratch files
+# =============================================================================
+*.log
+logs/
+tmp/
+temp/
+.cache/
 *.bak
 *.tmp
 *.temp
+
+
+# =============================================================================
+# § 10  Raw challenge data (too large / sensitive for VCS)
+#
+# candidates.jsonl and golden_labels.csv are gitignored.
+# README files and the small sandbox seed are explicitly preserved so the
+# repository is self-documenting and offline-buildable without the full pool.
+# =============================================================================
+data/raw/*
+!data/raw/README.md
+!data/raw/sandbox_sample.jsonl
+
+data/golden/*
+!data/golden/README.md
+
+
+# =============================================================================
+# § 11  artifacts/ — everything is tracked and pushed to GitHub.
+#
+# Large binaries (encoder.onnx 87 MB, candidate_vectors.parquet 199 MB,
+# feature_snapshot.parquet 20 MB, *.npy) are stored via Git LFS.
+# Patterns are declared in .gitattributes:
+#   artifacts/**/*.onnx   filter=lfs diff=lfs merge=lfs -text
+#   artifacts/**/*.parquet filter=lfs diff=lfs merge=lfs -text
+#   artifacts/**/*.npy    filter=lfs diff=lfs merge=lfs -text
+# No files inside artifacts/ are excluded from the index.
+# =============================================================================

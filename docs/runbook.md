@@ -62,3 +62,4 @@ Runs `ValidationEngine` over the finished CSV: row count, rank uniqueness and ra
 | `redstack build` raises `GoldLabelSeedMissingError` | Running without `--no-golden-labels` but `data/golden/golden_labels.csv` is missing. Either add the file or pass `--no-golden-labels`. |
 | `redstack rank` aborts at startup with an artifact/manifest error | `artifacts/` is stale, partially built, or was hand-edited. Re-run `make build`. Artifacts are content-hash-verified on every load — any corruption or staleness fails loudly rather than degrading the ranking silently. |
 | `redstack rank` reports `within_budget=False` | The run exceeded its internal compute budget. Check `run_report.json`'s `timings` block for the offending stage; see [`/ARCHITECTURE.md` §10](../ARCHITECTURE.md#10-determinism-and-performance). |
+****

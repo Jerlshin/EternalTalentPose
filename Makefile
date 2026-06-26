@@ -1,32 +1,38 @@
-# REDSTACK — task aliases over `uv` and the `redstack` CLI.
-# No business logic lives here; every target shells to uv or a CLI verb.
+# REDSTACK — task aliases routed through the cross-platform Python task runner.
+# Every target delegates to scripts/run.py so behaviour is identical on
+# macOS, Linux, and native Windows — no shell-specific binary assumptions.
 
 .DEFAULT_GOAL := help
-SHELL := /bin/bash
 
-# Determinism: pin BLAS/OMP threads for every invoked target so local runs
-# match the network-isolated sandbox byte-for-byte.
-export OMP_NUM_THREADS := 1
-export MKL_NUM_THREADS := 1
-export OPENBLAS_NUM_THREADS := 1
-export VECLIB_MAXIMUM_THREADS := 1
+# Determinism: pin BLAS/OMP threads for the make session itself (subprocesses
+# inherit these; scripts/run.py also sets them programmatically for coverage).
+export OMP_NUM_THREADS          := 1
+export MKL_NUM_THREADS          := 1
+export OPENBLAS_NUM_THREADS     := 1
+export VECLIB_MAXIMUM_THREADS   := 1
 
 UV ?= uv
 
-.PHONY: help install format lint typecheck test test-unit test-integration \
-        build rank validate imports lock clean
+.PHONY: help install lock format lint typecheck test test-unit test-integration \
+        imports build rank validate clean
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-install: ## Sync the full env (core+offline+dev) from the committed lock
+# ---------------------------------------------------------------------------
+# Environment
+# ---------------------------------------------------------------------------
+install: ## Sync the full env (core+offline+dev) from the committed lockfile
 	$(UV) sync --frozen --group core --group offline --group dev
 	$(UV) pip install -e .
 
 lock: ## Re-resolve and rewrite uv.lock after a dependency bump
 	$(UV) lock
 
+# ---------------------------------------------------------------------------
+# Quality gates
+# ---------------------------------------------------------------------------
 format: ## Apply ruff formatting + import sorting
 	$(UV) run ruff format src tests
 	$(UV) run ruff check --fix src tests
@@ -50,20 +56,17 @@ test-unit: ## Fast unit + property suites only
 test-integration: ## Integration + determinism suites
 	$(UV) run pytest -m "integration or determinism" tests/
 
-build: ## Offline: O0..O18 -> artifacts/ + MANIFEST.json (locked heuristic weights; no gold-label search)
-	@mkdir -p artifacts/embeddings artifacts/models artifacts/gates artifacts/weights artifacts/calibration artifacts/lexicon artifacts/archetypes
-	$(UV) run redstack build --config configs/runtime/offline.yaml --no-golden-labels
+# ---------------------------------------------------------------------------
+# Pipeline lifecycle (routed through the cross-platform task runner)
+# ---------------------------------------------------------------------------
+build: ## Offline: O0..O18 -> artifacts/ + MANIFEST.json
+	python scripts/run.py build
 
-rank: ## Online: R0..R9 -> submission.csv + run_report.json
-	@mkdir -p artifacts
-	$(UV) run redstack rank \
-		--input data/raw/candidates.jsonl \
-		--output artifacts/submission.csv
+rank: ## Online: R0..R9 -> artifacts/submission.csv + run_report.json
+	python scripts/run.py rank
 
-validate: ## Validate a finished submission.csv against validate_submission.py rules
-	$(UV) run redstack validate --submission artifacts/submission.csv
+validate: ## Validate a finished submission.csv against submission spec rules
+	python scripts/run.py validate
 
-clean: ## Remove caches and build noise (never touches data/ or configurations)
-	rm -rf .mypy_cache .ruff_cache .pytest_cache .coverage htmlcov typecover \
-		dist build
-	find . -type d -name "__pycache__" -exec rm -rf {} +
+clean: ## Remove caches and build noise (never touches data/ or artifacts/)
+	python scripts/run.py clean

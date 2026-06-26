@@ -1,13 +1,65 @@
-# Mirrors the portal submission metadata (spec 10.3). Filled pre-submission.
-team: {}
-github_repo: ""
-sandbox_link: ""
-reproduce_command: "uv run redstack rank --candidates data/raw/candidates.jsonl --out submission.csv"
+# Redrob Hackathon — Submission Metadata
+# RedStack v1.1 · Stage 3 submission
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "RedStack"
+
+primary_contact:
+  name: "Afnan"
+  email: "jerlshin.official008@gmail.com"
+  phone: "+91-XXXXXXXXXX"
+
+team_members:
+  - name: "Jerlshin Jose Gerly"
+    email: "jerlshin.official008@gmail.com"
+    role: "Lead AI Engineer"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "https://github.com/Jerlshin/EternalTalentPose"
+
+sandbox_link: "https://huggingface.co/spaces/Jerlshin/EternalTalenPose"
+
+reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+
+# ============================================================================
+# Compute environment
+# ============================================================================
 compute:
-  cpu_only: true
-  network: false
-  max_ram_gb: 16
-  max_wall_minutes: 5
-ai_tools_declaration: ""
+  platform: "MacBook Pro M2"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.12"
+  os: "macOS 26.5.1"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: true
+  pre_computation_time_minutes: 11
+
+# ============================================================================
+# AI tools declaration
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude for architecture discussion, code review, and system design.
+  No candidate data was fed to any LLM.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
 methodology_summary: ""
-declarations: {}
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

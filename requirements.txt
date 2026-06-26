@@ -1,0 +1,18 @@
+# RedStack — core runtime dependencies (CPU-only, network-isolated hot path).
+# Generated from pyproject.toml [project].dependencies for environments
+# that do not have uv or a modern Python toolchain available.
+#
+# Preferred installation method (exact lockfile):
+#   uv sync --frozen --group core
+#
+# Fallback (pip, range-constrained):
+#   pip install -r requirements.txt
+#
+# Python >= 3.12 required.
+
+pydantic>=2.7,<3
+numpy>=1.26,<2.2
+pyarrow>=16,<18
+onnxruntime>=1.18,<2
+typer>=0.12,<1
+PyYAML>=6,<7
