@@ -97,7 +97,7 @@ Populate `data/raw/candidates.jsonl` before running — see [docs/runbook.md](do
 The offline build packages parity matrices, ONNX encoder, locked scoring weights, and the archetype centroids into `artifacts/`. This must run once before ranking:
 
 ```bash
-uv run build
+uv run redstack build
 # or
 python scripts/run.py build
 # or
@@ -107,17 +107,22 @@ make build
 Approximate wall-clock time: **~11 minutes** on an 8-core CPU with 16 GB RAM. The online ranking run requires only the frozen `artifacts/` — it never retrain or re-embed.
 
 ---
-
 ## Build, Rank, Validate
 
-All lifecycle commands are cross-platform, routed through `scripts/run.py`:
+RedStack exposes the same lifecycle operations through multiple interfaces:
 
-| Command | What it does |
-|---|---|
-| `python scripts/run.py build` / `make build` | Offline O0–O18 → `artifacts/` + `MANIFEST.json` |
-| `python scripts/run.py rank` / `make rank` | Online R0–R9 → `artifacts/submission.csv` + `run_report.json` |
-| `python scripts/run.py validate` / `make validate` | Validates `artifacts/submission.csv` against spec rules |
-| `python scripts/run.py clean` / `make clean` | Purges `.mypy_cache`, `.ruff_cache`, `.pytest_cache`, `__pycache__`, `dist`, `build` |
+- **`redstack` CLI** — the canonical packaged interface.
+- **`scripts/run.py`** — a cross-platform Python task runner.
+- **`Makefile`** — developer convenience aliases that delegate to the Python task runner.
+
+All interfaces execute the same deterministic pipeline and produce identical outputs.
+
+| Operation | CLI | Python Runner | Make | Output |
+|---|---|---|---|---|
+| **Offline Build** | `uv run redstack build` | `python scripts/run.py build` | `make build` | Executes stages **O0–O18**, producing the immutable artifact store in `artifacts/` and `MANIFEST.json`. |
+| **Online Ranking** | `uv run redstack rank` | `python scripts/run.py rank` | `make rank` | Executes stages **R0–R9**, producing `artifacts/submission.csv` and `run_report.json`. |
+| **Validation** | `uv run redstack validate` | `python scripts/run.py validate` | `make validate` | Validates the generated submission and evidence-based reasoning against the competition specification. |
+| **Clean** | — | `python scripts/run.py clean` | `make clean` | Removes generated caches (`.mypy_cache`, `.ruff_cache`, `.pytest_cache`, `__pycache__`, `dist`, `build`) without modifying project data, configuration, or artifacts. |
 
 ---
 
