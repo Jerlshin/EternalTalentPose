@@ -108,7 +108,7 @@ configs/profiles/local.yaml
 
 # Professional Tooling
 **/.claude/settings.local.json
-CLAUDE.md
+**/CLAUDE.md
 **/.codex
 **/.anthropic
 **/.openai

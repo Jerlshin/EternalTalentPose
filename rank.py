@@ -15,8 +15,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# Resolve repo root and src/ once at import time so bare `python rank.py` works
-# without uv or an editable install — PYTHONPATH is injected into the subprocess.
 _REPO_ROOT = Path(__file__).resolve().parent
 _SRC_DIR = _REPO_ROOT / "src"
 
