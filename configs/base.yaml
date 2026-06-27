@@ -19,7 +19,7 @@ paths:
   candidates_path: data/raw/candidates.jsonl
   golden_labels_path: data/golden/golden_labels.csv
   manifest_path: artifacts/MANIFEST.json
-  submission_path: submission.csv
+  submission_path: team_EternalTeamPose.csv
   run_report_path: run_report.json
 
 logging:
