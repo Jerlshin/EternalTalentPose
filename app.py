@@ -566,13 +566,17 @@ else:
                 label_visibility="collapsed",
             )
             score_min, score_max = float(df["score"].min()), float(df["score"].max())
-            selected_range = ctrl_cols[2].slider(
-                "Score range",
-                min_value=score_min,
-                max_value=score_max,
-                value=(score_min, score_max),
-                label_visibility="collapsed",
-            )
+            if score_min < score_max:
+                selected_range = ctrl_cols[2].slider(
+                    "Score range",
+                    min_value=score_min,
+                    max_value=score_max,
+                    value=(score_min, score_max),
+                    label_visibility="collapsed",
+                )
+            else:
+                ctrl_cols[2].caption(f"Score range: {score_min:.6f} (all rows equal)")
+                selected_range = (score_min, score_max)
 
             filtered = df[(df["score"] >= selected_range[0]) & (df["score"] <= selected_range[1])]
             if search_term:
