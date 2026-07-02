@@ -28,8 +28,15 @@ from redstack.features.view import make_evidence
 
 RankBand = Literal["top", "mid", "tail"]
 
-_MAX_STRENGTHS: Final[int] = 3
-_MAX_CONCERNS: Final[int] = 3
+#: Exactly one strength + at most one concern per candidate (§ strict
+#: sentence count) -- chaining several clauses into one paragraph is what
+#: produced run-on, over-stuffed reasoning; capping here means the render
+#: layer never has more than two fragments to compose in the first place.
+_MAX_STRENGTHS: Final[int] = 1
+#: Upper bound on ReasoningEngine._dedupe's salt-increment retries when two
+#: candidates' reasoning collides byte-for-byte within one submission batch.
+_MAX_TIE_BREAK_ATTEMPTS: Final[int] = 1000
+_MAX_CONCERNS: Final[int] = 1
 
 _StrengthBuilder = Callable[
     [RawCandidate, CandidateRepresentation, ScoreComponentValue, str],
@@ -40,9 +47,14 @@ _ConcernBuilder = Callable[
     tuple[str, tuple[EvidenceRef, ...]],
 ]
 # Latent builders receive the raw anchor cosine similarity (float) instead of
-# a ScoreComponentValue, because JD-latent reasoning is evidence-first.
+# a ScoreComponentValue, because JD-latent reasoning is evidence-first. The
+# trailing float is the rank-band word floor (see _WORD_FLOOR_BY_BAND): the
+# minimum intensity-bucket value the builder may describe its evidence with,
+# so a top-band candidate is never rendered with a bottom-bucket adjective
+# ("Exceptional fit -- a shallow signal ...") that contradicts the verdict
+# the qualifier just delivered.
 _LatentBuilder = Callable[
-    [RawCandidate, CandidateRepresentation, float, str],
+    [RawCandidate, CandidateRepresentation, float, str, float],
     tuple[str, tuple[EvidenceRef, ...]] | None,
 ]
 # Negative-latent *concern* builders additionally receive the set of company
@@ -159,6 +171,56 @@ def _bucket_word(seed: str, value: float) -> str:
     else:
         pool = _LOW_WORDS
     return _pick(seed, pool)
+
+
+#: Minimum intensity-bucket value per rank band. The qualifier that opens a
+#: rendered reasoning asserts the verdict ("Exceptional fit" for the top
+#: band), so the evidence adjective inside the same sentence must not argue
+#: with it: top-band text never drops below the GOOD bucket, mid-band never
+#: below FAIR. The floor shapes presentation only -- latent *gating* always
+#: uses the raw cosine, so no clause is emitted that the evidence doesn't
+#: support.
+_WORD_FLOOR_BY_BAND: Final[Mapping[RankBand, float]] = {
+    "top": 0.5,
+    "mid": 0.3,
+    "tail": 0.0,
+}
+
+#: Intensity assigned when the citable fact is a named skills-section entry
+#: rather than a position description -- a real, verifiable citation, but a
+#: single line item, so it reads at the GOOD bucket rather than HIGH.
+_SKILL_CITE_INTENSITY: Final[float] = 0.55
+
+
+def _cue_hits(raw: RawCandidate, idx: int, cues: tuple[str, ...]) -> int:
+    """How many distinct cues from ``cues`` appear in position ``idx``'s blob."""
+    pos = raw.career_history[idx]
+    blob = f"{pos.description} {pos.company} {pos.industry}".lower()
+    return sum(1 for cue in cues if cue in blob)
+
+
+def _evidence_intensity(hits: int) -> float:
+    """Intensity-bucket value derived from concrete cue-hit density.
+
+    When a builder cites a real position (cue hits in the description), the
+    adjective describing that evidence should reflect how much of it there is
+    -- not the anchor cosine, which sits in a narrow, uncalibrated band for
+    almost any profile and produced "a shallow production ML signal from
+    Apple" against a description that plainly showed deployed systems. One
+    cue lands in the GOOD bucket (0.5), three or more reach HIGH.
+    """
+    return min(0.85, 0.35 + 0.15 * hits)
+
+
+def _has_concrete_evidence(evidence: tuple[EvidenceRef, ...]) -> bool:
+    """True when at least one ref points into the raw profile itself.
+
+    DERIVED refs (anchor cosines, aggregate figures) are real provenance but
+    not facts a reader can check against the resume; a clause is "grounded"
+    for lead-selection purposes only if it cites a minted profile path
+    (career_history[i].*, skills[i].*, ...).
+    """
+    return any(ref.kind is not EvidenceKind.DERIVED for ref in evidence)
 
 
 def _article(word: str) -> str:
@@ -1096,10 +1158,14 @@ def _behavioral_concern(
 # weighted contribution?", the new _strength_clauses selects clauses by       #
 # asking "which JD positive latent does this candidate most clearly satisfy?" #
 #                                                                               #
-# Positive latents are checked in JD priority order; the first _MAX_STRENGTHS  #
-# that clear _POSITIVE_LATENT_THRESHOLD emit thesis clauses built from career  #
-# and skill evidence, not from ML score floats.  Negative latents with        #
-# sufficient anchor cosine add concern clauses after soft-penalty findings.   #
+# Positive latents that can cite a concrete profile fact (a named position   #
+# or skill) compete to lead the reasoning, with the choice rotated           #
+# deterministically per candidate_id; strict priority order alone made every #
+# top-100 row open with the same production-ML thesis, because the first     #
+# latent clears its threshold for nearly everyone. Cosine-only fallbacks     #
+# keep canonical JD priority order -- with no concrete fact to cite, JD      #
+# importance is the only defensible tie-break. Negative latents with         #
+# sufficient anchor cosine add concern clauses after soft-penalty findings.  #
 # --------------------------------------------------------------------------- #
 
 _JD_POSITIVE_LATENT_PRIORITY: Final[tuple[str, ...]] = (
@@ -1276,11 +1342,10 @@ def _jd_production_ml_strength(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
+    word_floor: float,
 ) -> tuple[str, tuple[EvidenceRef, ...]] | None:
     """Production ML deployment: ML shipped to real users at scale."""
     _ = representation
-    word = _bucket_word(seed, sim)
-    article = _article(word)
     dump = _dump(raw)
     evidence: list[EvidenceRef] = []
     templates: tuple[str, ...]
@@ -1288,6 +1353,9 @@ def _jd_production_ml_strength(
     idx = _best_position_for_cues(raw, _PROD_SIGNAL_CUES)
     if idx is not None:
         pos = raw.career_history[idx]
+        hits = _cue_hits(raw, idx, _PROD_SIGNAL_CUES)
+        word = _bucket_word(seed, max(_evidence_intensity(hits), word_floor))
+        article = _article(word)
         _ck = EvidenceKind.CAREER_FIELD
         evidence.append(mint(dump, kind=_ck, path=f"career_history[{idx}].company"))
         evidence.append(mint(dump, kind=_ck, path=f"career_history[{idx}].description"))
@@ -1302,13 +1370,10 @@ def _jd_production_ml_strength(
             f"{company} shows up as a context where ML went to production, "
             f"not just to a notebook -- the description puts this in "
             f"{article} {word} tier for what the role is actually asking for",
-            f"the production ML bar this JD sets is cleared at {company}: "
-            f"the work described carries the fingerprints of live deployment, "
-            f"not prototype-and-hand-off",
             f"shipping ML to real users is the hardest signal to fake on a "
             f"resume, and {company}'s context makes {article} {word} case "
             f"that this candidate has actually done it",
-            f"{article.capitalize()} {word} production ML signal from "
+            f"{article} {word} production ML signal from "
             f"{company}: not just model training but live inference with "
             f"the operational responsibility that comes with it",
             f"the JD's primary bar is production ML; the {company} context "
@@ -1318,6 +1383,8 @@ def _jd_production_ml_strength(
     else:
         if sim < _POSITIVE_LATENT_THRESHOLD:
             return None
+        word = _bucket_word(seed, max(sim, word_floor))
+        article = _article(word)
         evidence.append(
             make_evidence(
                 EvidenceKind.DERIVED,
@@ -1342,10 +1409,9 @@ def _jd_product_company_strength(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
+    word_floor: float,
 ) -> tuple[str, tuple[EvidenceRef, ...]] | None:
     """Product company tenure: built for end users inside a product org."""
-    word = _bucket_word(seed, sim)
-    article = _article(word)
     dump = _dump(raw)
     evidence: list[EvidenceRef] = []
     templates: tuple[str, ...]
@@ -1353,6 +1419,10 @@ def _jd_product_company_strength(
     career = representation.require_career()
     product_positions = [p for p in career.positions if p.is_product_company]
     if product_positions:
+        word = _bucket_word(
+            seed, max(_evidence_intensity(len(product_positions)), word_floor)
+        )
+        article = _article(word)
         best = product_positions[0]  # positions are sorted by start_date desc
         idx = _position_index(
             raw,
@@ -1407,6 +1477,8 @@ def _jd_product_company_strength(
     else:
         idx = _best_position_for_cues(raw, _PRODUCT_ORG_CUES)
         if idx is not None:
+            hits = _cue_hits(raw, idx, _PRODUCT_ORG_CUES)
+            word = _bucket_word(seed, max(_evidence_intensity(hits), word_floor))
             evidence.append(
                 mint(
                     dump,
@@ -1417,6 +1489,7 @@ def _jd_product_company_strength(
         else:
             if sim < _POSITIVE_LATENT_THRESHOLD:
                 return None
+            word = _bucket_word(seed, max(sim, word_floor))
             evidence.append(
                 make_evidence(
                     EvidenceKind.DERIVED,
@@ -1424,6 +1497,7 @@ def _jd_product_company_strength(
                     round(sim, 4),
                 )
             )
+        article = _article(word)
         templates = (
             f"profile suggests {article} {word} product-company orientation "
             f"in how work is described, though explicit product-company "
@@ -1440,10 +1514,9 @@ def _jd_retrieval_ranking_strength(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
+    word_floor: float,
 ) -> tuple[str, tuple[EvidenceRef, ...]] | None:
     """Core domain: ranking, retrieval, or search systems built and shipped."""
-    word = _bucket_word(seed, sim)
-    article = _article(word)
     dump = _dump(raw)
     evidence: list[EvidenceRef] = []
     templates: tuple[str, ...]
@@ -1461,6 +1534,9 @@ def _jd_retrieval_ranking_strength(
 
     if pos_idx is not None:
         pos = raw.career_history[pos_idx]
+        hits = _cue_hits(raw, pos_idx, _RETRIEVAL_DOMAIN_CUES)
+        word = _bucket_word(seed, max(_evidence_intensity(hits), word_floor))
+        article = _article(word)
         evidence.append(
             mint(
                 dump,
@@ -1494,6 +1570,8 @@ def _jd_retrieval_ranking_strength(
         )
     elif skill_idx is not None:
         sk = raw.skills[skill_idx]
+        word = _bucket_word(seed, max(_SKILL_CITE_INTENSITY, word_floor))
+        article = _article(word)
         evidence.append(
             mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{skill_idx}].name")
         )
@@ -1508,6 +1586,8 @@ def _jd_retrieval_ranking_strength(
     else:
         if sim < _POSITIVE_LATENT_THRESHOLD:
             return None
+        word = _bucket_word(seed, max(sim, word_floor))
+        article = _article(word)
         anchor = semantic.best_positive_anchor
         if anchor is not None:
             evidence.append(
@@ -1541,11 +1621,10 @@ def _jd_shipping_mentality_strength(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
+    word_floor: float,
 ) -> tuple[str, tuple[EvidenceRef, ...]] | None:
     """Hands-on engineering execution: built and shipped, not just designed."""
     _ = representation
-    word = _bucket_word(seed, sim)
-    article = _article(word)
     dump = _dump(raw)
     evidence: list[EvidenceRef] = []
     templates: tuple[str, ...]
@@ -1553,6 +1632,9 @@ def _jd_shipping_mentality_strength(
     idx = _best_position_for_cues(raw, _HANDS_ON_CUES)
     if idx is not None:
         pos = raw.career_history[idx]
+        hits = _cue_hits(raw, idx, _HANDS_ON_CUES)
+        word = _bucket_word(seed, max(_evidence_intensity(hits), word_floor))
+        article = _article(word)
         evidence.append(
             mint(
                 dump,
@@ -1590,6 +1672,8 @@ def _jd_shipping_mentality_strength(
     else:
         if sim < _POSITIVE_LATENT_THRESHOLD:
             return None
+        word = _bucket_word(seed, max(sim, word_floor))
+        article = _article(word)
         evidence.append(
             make_evidence(
                 EvidenceKind.DERIVED,
@@ -1612,11 +1696,10 @@ def _jd_eval_framework_strength(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
+    word_floor: float,
 ) -> tuple[str, tuple[EvidenceRef, ...]] | None:
     """Evaluation rigor: NDCG / MRR / MAP usage and offline/online discipline."""
     _ = representation
-    word = _bucket_word(seed, sim)
-    article = _article(word)
     dump = _dump(raw)
     evidence: list[EvidenceRef] = []
     templates: tuple[str, ...]
@@ -1633,6 +1716,8 @@ def _jd_eval_framework_strength(
     pos_idx = _best_position_for_cues(raw, _EVAL_EVIDENCE_CUES)
     if eval_skill_idx is not None:
         sk = raw.skills[eval_skill_idx]
+        word = _bucket_word(seed, max(_SKILL_CITE_INTENSITY, word_floor))
+        article = _article(word)
         evidence.append(
             mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{eval_skill_idx}].name")
         )
@@ -1683,6 +1768,7 @@ def _jd_eval_framework_strength(
     else:
         if sim < _POSITIVE_LATENT_THRESHOLD:
             return None
+        word = _bucket_word(seed, max(sim, word_floor))
         evidence.append(
             make_evidence(
                 EvidenceKind.DERIVED, "semantic.anchor.eval_framework", round(sim, 4)
@@ -1701,11 +1787,10 @@ def _jd_hybrid_retrieval_strength(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
+    word_floor: float,
 ) -> tuple[str, tuple[EvidenceRef, ...]] | None:
     """Dense + sparse hybrid retrieval experience."""
     _ = representation
-    word = _bucket_word(seed, sim)
-    article = _article(word)
     dump = _dump(raw)
     evidence: list[EvidenceRef] = []
     templates: tuple[str, ...]
@@ -1721,6 +1806,9 @@ def _jd_hybrid_retrieval_strength(
 
     if pos_idx is not None:
         pos = raw.career_history[pos_idx]
+        hits = _cue_hits(raw, pos_idx, _HYBRID_RET_CUES)
+        word = _bucket_word(seed, max(_evidence_intensity(hits), word_floor))
+        article = _article(word)
         evidence.append(
             mint(
                 dump,
@@ -1753,6 +1841,8 @@ def _jd_hybrid_retrieval_strength(
         )
     elif skill_idx is not None:
         sk = raw.skills[skill_idx]
+        word = _bucket_word(seed, max(_SKILL_CITE_INTENSITY, word_floor))
+        article = _article(word)
         evidence.append(
             mint(dump, kind=EvidenceKind.SKILL, path=f"skills[{skill_idx}].name")
         )
@@ -1767,6 +1857,7 @@ def _jd_hybrid_retrieval_strength(
     else:
         if sim < _POSITIVE_LATENT_THRESHOLD:
             return None
+        word = _bucket_word(seed, max(sim, word_floor))
         evidence.append(
             make_evidence(
                 EvidenceKind.DERIVED,
@@ -1991,7 +2082,7 @@ def _title_chaser_concern(
         f"but worth a direct conversation about what's driving the moves",
         f"tenure stability is the soft spot here: {_pct(hop_rate)} of roles "
         f"under 18 months, averaging {mean_tenure:.0f} months apiece, which "
-        f"tempers an otherwise strong-looking case",
+        f"tempers the otherwise positive read of this profile",
         f"the pattern across this career history -- {_pct(hop_rate)} hop "
         f"rate, {mean_tenure:.0f}-month average stay -- reads as title-"
         f"chasing risk rather than settled progression",
@@ -2001,9 +2092,9 @@ def _title_chaser_concern(
         f"{mean_tenure:.0f} months is the average stay here, and at a "
         f"{_pct(hop_rate)} hop rate this looks more like a pattern than a "
         f"one-off job change",
-        f"a candidate this strong on paper with a {_pct(hop_rate)} hop rate "
-        f"is exactly the profile worth a direct retention conversation with, "
-        f"rather than assuming the next stop is a long one",
+        f"a {_pct(hop_rate)} hop rate is a pattern that calls for a direct "
+        f"retention conversation, rather than an assumption that the next "
+        f"stop will be a long one",
         f"history shows {_pct(hop_rate)} of roles closing inside 18 months "
         f"(averaging {mean_tenure:.0f} months) -- a pattern that deserves a "
         f"straight question in the loop, not a quiet pass",
@@ -2149,6 +2240,38 @@ _CONCERN_BUILDERS: Final[Mapping[EligibilityCode, _ConcernBuilder]] = {
     EligibilityCode.OUTSIDE_INDIA_NO_SPONSOR: _outside_india_concern,
     EligibilityCode.OUTSIDE_EXPERIENCE_BAND: _outside_experience_band_concern,
 }
+#: With _MAX_CONCERNS=1, only the single most significant soft-penalty
+#: survives -- ranked by the penalty weight each code carries in
+#: configs/gates/eligibility_rules.yaml (title_chaser / outside_india at
+#: 0.15 outrank notice_over_30 / outside_experience_band at 0.10; keep this
+#: in sync if that file's weights change). Codes absent from this tuple sort
+#: last, then ties break on the enum's own alphabetical order (matching
+#: EligibilityReport.evaluate's existing sort).
+_SOFT_CONCERN_PRIORITY: Final[tuple[EligibilityCode, ...]] = (
+    EligibilityCode.TITLE_CHASER_SUB_18M_HOPS,
+    EligibilityCode.OUTSIDE_INDIA_NO_SPONSOR,
+    EligibilityCode.NOTICE_OVER_30,
+    EligibilityCode.OUTSIDE_EXPERIENCE_BAND,
+)
+
+
+def _most_significant_penalties(
+    penalties: tuple[EligibilityFinding, ...],
+) -> tuple[EligibilityFinding, ...]:
+    """``penalties`` reordered by severity (see ``_SOFT_CONCERN_PRIORITY``).
+
+    ``EligibilityReport.soft_penalties`` is sorted alphabetically by code for
+    determinism, not by severity -- truncating that order to _MAX_CONCERNS
+    would surface whichever code happens to sort first, not the one that
+    actually matters most.
+    """
+
+    def _rank(finding: EligibilityFinding) -> tuple[int, str]:
+        if finding.code in _SOFT_CONCERN_PRIORITY:
+            return _SOFT_CONCERN_PRIORITY.index(finding.code), finding.code.value
+        return len(_SOFT_CONCERN_PRIORITY), finding.code.value
+
+    return tuple(sorted(penalties, key=_rank))
 
 
 @final
@@ -2179,17 +2302,61 @@ class ReasoningEngine(BaseModel):
         ranking: Ranking,
         representations: Mapping[CandidateId, CandidateRepresentation],
     ) -> Ranking:
-        """Build reasoning for every ranked candidate; attach via copy-on-write."""
+        """Build reasoning for every ranked candidate; attach via copy-on-write.
+
+        Also enforces batch-level uniqueness (Stage-4's "no two top-100
+        rows render identically" hard rejection): each candidate's
+        reasoning is composed independently and in isolation
+        (``reason_for``), so a collision -- two different candidates
+        legitimately sharing one fact pattern closely enough (e.g. the
+        same employer, the same intensity bucket) to render the same text
+        -- is only visible here, with the whole batch in view. On
+        collision, the later row is deterministically re-assembled with an
+        incremented ``tie_break_salt`` until its rendering is unique.
+        """
         _raw_dump_cache.clear()
         reasoning_by_id: dict[CandidateId, CandidateReasoning] = {}
+        seen_rendered: set[str] = set()
         for ranked in ranking.ordered:
             rep = representations.get(ranked.candidate_id)
             if rep is None:
                 raise ProvenanceError(
                     f"top-K representation for {ranked.candidate_id} not hydrated"
                 )
-            reasoning_by_id[ranked.candidate_id] = self.reason_for(ranked, rep)
+            reasoning = self.reason_for(ranked, rep)
+            if reasoning.rendered in seen_rendered:
+                reasoning = self._dedupe(reasoning, seen_rendered)
+            seen_rendered.add(reasoning.rendered)
+            reasoning_by_id[ranked.candidate_id] = reasoning
         return ranking.with_reasoning(reasoning_by_id)
+
+    @staticmethod
+    def _dedupe(
+        reasoning: CandidateReasoning, seen_rendered: set[str]
+    ) -> CandidateReasoning:
+        """Re-assemble ``reasoning`` with an incremented salt until unique.
+
+        Bounded at ``_MAX_TIE_BREAK_ATTEMPTS`` (comfortably larger than the
+        combined qualifier x transition space, so any reachable collision
+        resolves well before the cap) -- if it's ever exhausted, that means
+        far more than a handful of top-100 candidates render byte-identical
+        single-fact reasoning, which is itself a signal something upstream
+        is wrong; failing loudly here is the CLAUDE.md-mandated response,
+        not silently shipping a submission Stage-4 would reject anyway.
+        """
+        for salt in range(1, _MAX_TIE_BREAK_ATTEMPTS + 1):
+            candidate = CandidateReasoning.assemble(
+                candidate_id=reasoning.candidate_id,
+                clauses=reasoning.clauses,
+                rank_band=reasoning.rank_band,
+                tie_break_salt=salt,
+            )
+            if candidate.rendered not in seen_rendered:
+                return candidate
+        raise ProvenanceError(
+            f"could not deduplicate reasoning for {reasoning.candidate_id} "
+            f"within {_MAX_TIE_BREAK_ATTEMPTS} tie-break attempts"
+        )
 
     def reason_for(
         self, ranked: RankedCandidate, representation: CandidateRepresentation
@@ -2197,7 +2364,7 @@ class ReasoningEngine(BaseModel):
         """Assemble one candidate's evidence-grounded reasoning."""
         raw = representation.require_raw()
         band = self._rank_band(ranked.rank, ranked_size=self._size_of(ranked))
-        strengths = self._strength_clauses(raw, representation, ranked)
+        strengths = self._strength_clauses(raw, representation, ranked, band)
         excluded_companies = _strength_cited_companies(strengths, raw)
         concerns = self._concern_clauses(raw, representation, excluded_companies)
 
@@ -2231,27 +2398,50 @@ class ReasoningEngine(BaseModel):
         raw: RawCandidate,
         representation: CandidateRepresentation,
         ranked: RankedCandidate,
+        band: RankBand,
     ) -> tuple[ReasoningClause, ...]:
-        # JD-latent hiring-thesis selection: check each positive JD anchor in
-        # priority order, emit a clause for the first _MAX_STRENGTHS that clear
-        # the threshold.  Clause content is derived from career/skill evidence
-        # that directly supports the JD's hiring case for this candidate, not
-        # from which ML score component happened to score highest.
+        # JD-latent hiring-thesis selection, grounded-evidence first: every
+        # latent whose builder can cite a concrete profile fact (a named
+        # position or skill -- _has_concrete_evidence) competes to lead the
+        # reasoning, and the winner among them rotates deterministically per
+        # candidate_id. Strict priority order alone made all 100 submission
+        # rows open with the same production-ML thesis; rotation keeps each
+        # clause fact-grounded while spreading the lead across the JD's whole
+        # evidence hierarchy. Only when no latent can cite a concrete fact
+        # does selection fall back to cosine-only clauses, in canonical JD
+        # priority order.
         semantic = representation.require_semantic()
         anchor_sims = semantic.anchor_similarities
+        word_floor = _WORD_FLOOR_BY_BAND[band]
+
+        built: dict[str, tuple[str, tuple[EvidenceRef, ...]] | None] = {}
+
+        def _build(latent_id: str) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+            if latent_id not in built:
+                builder = _LATENT_STRENGTH_BUILDERS.get(latent_id)
+                if builder is None:
+                    built[latent_id] = None
+                else:
+                    sim = float(anchor_sims.get(AnchorId(latent_id), -1.0))
+                    seed = f"{ranked.candidate_id}:{latent_id}:strength"
+                    built[latent_id] = builder(
+                        raw, representation, sim, seed, word_floor
+                    )
+            return built[latent_id]
+
+        start = _pick_index(
+            f"{ranked.candidate_id}:latent-rotation",
+            len(_JD_POSITIVE_LATENT_PRIORITY),
+        )
+        rotated = (
+            _JD_POSITIVE_LATENT_PRIORITY[start:] + _JD_POSITIVE_LATENT_PRIORITY[:start]
+        )
+
         clauses: list[ReasoningClause] = []
-        for latent_id in _JD_POSITIVE_LATENT_PRIORITY:
-            if len(clauses) >= _MAX_STRENGTHS:
-                break
-            sim = float(anchor_sims.get(AnchorId(latent_id), -1.0))
-            builder = _LATENT_STRENGTH_BUILDERS.get(latent_id)
-            if builder is None:
-                continue
-            seed = f"{ranked.candidate_id}:{latent_id}:strength"
-            result = builder(raw, representation, sim, seed)
-            if result is None:
-                continue
-            fragment, evidence = result
+
+        def _append(
+            latent_id: str, fragment: str, evidence: tuple[EvidenceRef, ...]
+        ) -> None:
             jd_link: ScoreComponent | None = _LATENT_TO_JD_LINK.get(latent_id)
             clauses.append(
                 ReasoningClause(
@@ -2261,6 +2451,20 @@ class ReasoningEngine(BaseModel):
                     jd_link=jd_link,
                 )
             )
+
+        for latent_id in rotated:
+            if len(clauses) >= _MAX_STRENGTHS:
+                break
+            result = _build(latent_id)
+            if result is not None and _has_concrete_evidence(result[1]):
+                _append(latent_id, result[0], result[1])
+        if not clauses:
+            for latent_id in _JD_POSITIVE_LATENT_PRIORITY:
+                if len(clauses) >= _MAX_STRENGTHS:
+                    break
+                result = _build(latent_id)
+                if result is not None:
+                    _append(latent_id, result[0], result[1])
 
         # Behavioral strength fills any remaining slot (additive, not replacing
         # JD evidence -- the hiring thesis always takes priority over behavioral).
@@ -2281,13 +2485,15 @@ class ReasoningEngine(BaseModel):
                 )
 
         # Ensure the domain invariant: at least one clause carries a non-null
-        # jd_link.  Behavioral clauses always have jd_link=None, so if the
-        # only clause that fired was behavioral (no JD latent cleared the
-        # threshold), we prepend a score-component fallback to satisfy the
-        # invariant without discarding the behavioral signal.
+        # jd_link. Behavioral clauses always have jd_link=None, so if the only
+        # clause that fired was behavioral (no JD latent cleared the
+        # threshold), it is *replaced* by a score-component fallback rather
+        # than supplemented -- with _MAX_STRENGTHS=1, the single-strength
+        # contract must hold even on this edge case (inserting alongside
+        # would silently emit two strength clauses instead of one).
         has_jd_link = any(c.jd_link is not None for c in clauses)
         if not has_jd_link:
-            clauses.insert(0, self._fallback_strength(raw, representation, ranked))
+            clauses = [self._fallback_strength(raw, representation, ranked)]
 
         return tuple(clauses)
 
@@ -2316,7 +2522,9 @@ class ReasoningEngine(BaseModel):
     ) -> tuple[ReasoningClause, ...]:
         if representation.eligibility is None:
             return ()
-        penalties = representation.eligibility.soft_penalties
+        penalties = _most_significant_penalties(
+            representation.eligibility.soft_penalties
+        )
         clauses: list[ReasoningClause] = [
             self._concern_clause(raw, representation, finding)
             for finding in penalties[:_MAX_CONCERNS]

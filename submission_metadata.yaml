@@ -12,16 +12,20 @@ primary_contact:
   phone: "+91-8148604385"
 
 team_members:
+  - name: "Afnan"
+    email: "asjved.8385@gmail.com"
+    role: "AI Engineer"
+
   - name: "Jerlshin JG"
     email: "jerlshin.official008@gmail.com"
-    role: "Lead AI Engineer"
+    role: "AI Engineer"
 
 # ============================================================================
 # Code and reproducibility
 # ============================================================================
 github_repo: "https://github.com/Jerlshin/EternalTalentPose"
 
-sandbox_link: "https://huggingface.co/spaces/Jerlshin/EternalTalenPose"
+sandbox_link: "https://huggingface.co/spaces/Jerlshin/EternalTalentSpace"
 
 reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submission.csv"
 
@@ -29,11 +33,11 @@ reproduce_command: "python rank.py --candidates ./candidates.jsonl --out ./submi
 # Compute environment
 # ============================================================================
 compute:
-  platform: "Windows 11"
-  cpu_cores: 4
+  platform: "MacBook M5"
+  cpu_cores: 10
   ram_gb: 16
   python_version: "3.12"
-  os: "Windows 11"
+  os: "macOS 26.0"
   uses_gpu_for_inference: false
   has_network_during_ranking: false
   pre_computation_required: true
@@ -45,15 +49,17 @@ compute:
 ai_tools_used:
   - "Claude"
   - "Gemini"
+  - "ChatGPT"
+  - "Grok"
 
 ai_usage_summary: |
-  Used Claude for architecture discussion, code review, and system design.
+  Used Gemini/ChatGPT/Claude for research and brainstorming ideas.
   No candidate data was fed to any LLM.
 
 # ============================================================================
 # Approach summary
 # ============================================================================
-methodology_summary: ""
+methodology_summary: "RedStack is a deterministic, evidence-grounded ranking system split into an unbounded offline build and a strictly constrained, CPU-only online pipeline. The offline phase pre-computes dense candidate embeddings via sentence-transformers, calibrates scoring weights, and locks them into hash-verified artifacts. During the online run, candidates are streamed in constant memory to extract structural and behavioral features into a columnar Candidate Quality Vector (CQV). Semantic hydration utilizes O(1) memory-mapped lookups of precomputed vectors rather than expensive on-the-fly encoding. Crucially, an upstream Gating Layer detects internally impossible 'honeypots' and explicit job mismatches, flooring their scores to zero before any relevance evaluation occurs. Base relevance is computed via a weighted sum of the CQV, which is then modulated by bounded behavioral and logistics multipliers. Finally, a deterministic stable sort isolates the top 100, and a Reasoning Engine generates non-templated explanations strictly tied to verifiable candidate facts to eliminate hallucination."
 
 # ============================================================================
 # Declarations

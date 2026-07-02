@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Mapping
 from typing import Final, Literal, final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -32,180 +33,64 @@ def _stable_index(seed: str, n: int) -> int:
     return int.from_bytes(digest[:8], "big") % n
 
 
-#: Component groups that license a topic-led opening framing (§ below);
-#: a component absent from all three (e.g. EDUCATION_FIT) simply renders
-#: unframed -- framing is a bonus narrative device, never a requirement.
-_CAREER_LED_COMPONENTS: Final[frozenset[ScoreComponent]] = frozenset(
-    {ScoreComponent.CAREER_FIT, ScoreComponent.EXPERIENCE_FIT}
+#: Rank-band tone qualifiers -- rank<=10 gets decisive, "this is a clear
+#: yes" language; the rest gets objective, descriptive language. This is a
+#: substantive claim about fit (varies with rank), not narrative throat-
+#: clearing about how the paragraph is organized -- unlike the old framing
+#: clauses ("Starting from...", "The arc of this career...") it replaces,
+#: which announced a presentation choice rather than asserting a fact.
+_TOP_BAND_QUALIFIERS: Final[tuple[str, ...]] = (
+    "Exceptional fit",
+    "Direct match",
+    "Top-tier candidate",
+    "Standout case",
+    "Elite alignment",
+    "A clear top pick",
 )
-_COMPETENCY_LED_COMPONENTS: Final[frozenset[ScoreComponent]] = frozenset(
-    {ScoreComponent.SKILL_MATCH, ScoreComponent.CREDIBILITY}
-)
-_SEMANTIC_LED_COMPONENTS: Final[frozenset[ScoreComponent]] = frozenset(
-    {ScoreComponent.SEMANTIC_FIT, ScoreComponent.ARCHETYPE_FIT}
-)
-
-#: One of five seed-selected opening "topologies" -- which positive clause
-#: leads, and under what framing -- so two candidates dominated by the same
-#: component still open their paragraph differently (§J.5 structural variety).
-_LEAD_CAREER: Final[int] = 0
-_LEAD_COMPETENCY: Final[int] = 1
-_LEAD_SEMANTIC: Final[int] = 2
-_LEAD_CUMULATIVE: Final[int] = 3
-_LEAD_DIRECT: Final[int] = 4
-_LEAD_STYLE_COUNT: Final[int] = 5
-
-_CAREER_FRAMINGS: Final[tuple[str, ...]] = (
-    "looking at the career arc first,",
-    "starting from where this career has actually gone,",
-    "leading with trajectory rather than the skills list,",
-    "the career history is the natural place to start here:",
-    "viewed through career progression first,",
-    "putting the career narrative up front,",
-    "the arc of this career is worth framing before anything else:",
-    "starting from career shape rather than any single line item,",
-)
-_COMPETENCY_FRAMINGS: Final[tuple[str, ...]] = (
-    "leading with the concrete competencies on file,",
-    "starting from hard skills rather than narrative arc,",
-    "the corroborated competencies make the strongest opening case:",
-    "putting the verified skill set first,",
-    "competency evidence is the place to start:",
-    "a skills-first read on this profile starts here:",
-    "the most concrete starting point is what's actually been verified:",
-    "leading with substance over story,",
-)
-_SEMANTIC_FRAMINGS: Final[tuple[str, ...]] = (
-    "starting from how this profile's own language tracks the JD,",
-    "leading with the semantic read rather than the keyword list,",
-    "vector alignment is the most distinctive signal, so start there:",
-    "the embedding-level read frames this best:",
-    "before anything else, how this profile is actually written is telling:",
-    "semantic fit is the most interesting starting point here:",
-    "starting from meaning rather than vocabulary,",
-    "the way this profile is phrased is worth leading with:",
+_REST_BAND_QUALIFIERS: Final[tuple[str, ...]] = (
+    "Solid fit",
+    "Workable match",
+    "Good alignment",
+    "Reasonable case",
+    "Passable fit",
+    "A fair match",
 )
 
-#: Per-junction connectors gluing consecutive positive clauses into one
-#: flowing sentence -- the direct replacement for the old fixed ``"; "``
-#: join. Two pools (flowing / direct) give the unframed lead styles their
-#: own register instead of reusing the framed styles' connective tissue.
-_CONNECTORS_FLOWING: Final[tuple[str, ...]] = (
-    "and just as tellingly,",
-    "layered on top of that,",
-    "compounding the case,",
-    "rounding out the picture,",
-    "adding to that base,",
-    "and, beyond that,",
-    "what reinforces this further is that",
-    "just as relevant,",
-    "and, building on that,",
-    "to add another data point,",
-    "and, tellingly,",
-    "stacking another signal on top of that,",
-    "further bolstering the case,",
-    "and, rounding things out,",
-    "which pairs with the fact that",
-)
-_CONNECTORS_DIRECT: Final[tuple[str, ...]] = (
-    "plus,",
-    "also,",
-    "alongside that,",
-    "and, equally,",
-    "worth noting too,",
-    "and, separately,",
-    "add to that,",
-    "and, just as relevant,",
-    "not only that --",
-    "and, no less important,",
-    "in the same vein,",
-    "and, on top of that,",
-)
-#: With 3 positive clauses, gluing all of them into a single comma chain
-#: reads as a run-on; the third clause instead opens a short second
-#: sentence introduced by one of these (capitalized) transitions.
-_SECOND_SENTENCE_OPENERS: Final[tuple[str, ...]] = (
-    "Also worth weighing:",
-    "On top of that,",
-    "It's also worth noting that",
-    "Adding further support,",
-    "There's a third data point here too:",
-    "Rounding out the case,",
-    "One more thing counts in this profile's favor:",
-    "Further still,",
-)
-#: Above this many positive clauses, ``_compose_positive_case`` breaks into
-#: two sentences (see ``_SECOND_SENTENCE_OPENERS``) instead of one long chain.
-_MAX_POSITIVES_PER_SENTENCE: Final[int] = 2
-
-#: Concern-sentence lead-ins; picked deterministically from the clause
-#: fragments themselves (never randomness/wall-clock) so concern sentences
-#: don't all share the same bolted-on "Concerns: " skeleton (§J.5).
+#: Contrastive transition opening the (optional) second, concern sentence --
+#: "exactly one contrastive transition" per the strict-sentence-count
+#: contract. Picked deterministically (never randomness/wall-clock) so
+#: concern sentences don't all share one bolted-on skeleton (§J.5).
 _CONCERN_LEAD_INS: Final[tuple[str, ...]] = (
+    "However,",
     "That said,",
+    "Even so,",
+    "Still,",
     "On the downside,",
     "Worth flagging:",
-    "The main caveat:",
+    "The one caveat:",
     "Set against that,",
-    "Less convincingly,",
-    "On the other side of the ledger,",
-    "The case isn't without friction:",
-    "A counterpoint worth weighing:",
-    "Pulling in the other direction,",
-    "Not every signal points the same way here:",
-    "The flip side:",
-    "There's a real caveat, though:",
-    "Tempering that read somewhat,",
-    "It isn't all upside, however:",
-    "Weighed against the above,",
-    "Cutting the other way,",
-    "To be even-handed about it,",
-    "One thing worth flagging against the above:",
-    "A point of friction worth naming:",
+    "The main friction point:",
+    "Weighed against that,",
 )
-#: Joiners between *multiple* concern fragments within that one sentence.
-_CONCERN_JOINERS: Final[tuple[str, ...]] = (
-    "and",
-    "and, separately,",
-    "and, just as relevant,",
-    "alongside that,",
-    "and, adding to that,",
-)
-#: Above this many concern fragments, chaining all of them into a single
-#: comma sentence via ``_CONCERN_JOINERS`` reads as an exhausting run-on --
-#: the last concern instead opens its own short second sentence, mirroring
-#: how ``_compose_positive_case`` splits a 3rd positive clause.
-_MAX_CONCERNS_PER_SENTENCE: Final[int] = 2
-#: Lead-ins for that second concern sentence -- a distinct pool from both
-#: ``_CONCERN_LEAD_INS`` (first concern sentence) and
-#: ``_SECOND_SENTENCE_OPENERS`` (positive case) so the register stays
-#: separable: negative continuation, not a positive addendum.
-_CONCERN_SECOND_SENTENCE_OPENERS: Final[tuple[str, ...]] = (
-    "There's a separate concern, too:",
-    "A second issue worth flagging:",
-    "Independently of that,",
-    "One more thing to weigh against this:",
-    "Separately worth noting:",
-    "The other open question:",
-)
-#: Mid-sentence contrastive connectors used only when a single concern is
-#: folded directly onto the positive case rather than given its own
-#: sentence (the ``_LEAD_DIRECT``-adjacent, most "cohesive paragraph" shape
-#: the rewrite was asked for) -- each grammatically takes a full clause.
-_CONCERN_FOLD_CONNECTORS: Final[tuple[str, ...]] = (
-    "though",
-    "even though",
-    "even as",
-    "while",
-    "notwithstanding that",
-    "even granting that",
-    "all while",
-    "though it bears mentioning that",
-)
-#: A folded concern is only grafted onto a *compact* positive case (<= 2
-#: lead clauses); with 3, the combined sentence runs long enough that a
-#: separate, clearly-delimited concern sentence reads better.
-_MAX_POSITIVES_FOR_FOLD: Final[int] = 2
+
+#: Terms that make a lead-in read as an echo when the concern fragment
+#: already contains them ("The main friction point: the start-date math is
+#: the friction point: ..."). A lead-in is dropped from the pool for a given
+#: fragment when any of its echo terms appears in that fragment
+#: (case-insensitive); the pick over the filtered pool stays deterministic,
+#: and the transition is guaranteed never to repeat the clause's own wording.
+_LEAD_IN_ECHO_TERMS: Final[Mapping[str, tuple[str, ...]]] = {
+    "However,": ("however",),
+    "That said,": ("that said",),
+    "Even so,": ("even so",),
+    "Still,": ("still",),
+    "On the downside,": ("downside",),
+    "Worth flagging:": ("flagging", "worth"),
+    "The one caveat:": ("caveat",),
+    "Set against that,": ("against",),
+    "The main friction point:": ("friction",),
+    "Weighed against that,": ("against", "weigh"),
+}
 
 
 @final
@@ -230,16 +115,25 @@ class CandidateReasoning(BaseModel):
     clauses: tuple[ReasoningClause, ...] = Field(min_length=1)
     rendered: str = Field(min_length=1)
     rank_band: RankBand
+    #: Disambiguation salt (default 0). Two different candidates can
+    #: legitimately land on the same single strength fragment and the same
+    #: candidate_id-seeded qualifier (small pools + shared facts, e.g. the
+    #: same employer); Stage-4 rejects any two identical top-100 renderings
+    #: outright. ``ReasoningEngine.explain`` detects that batch-level
+    #: collision (invisible to any single candidate's pure render) and
+    #: re-assembles the later one with an incremented salt until its
+    #: rendering is unique -- still fully deterministic, just no longer a
+    #: function of ``(clauses, rank_band, candidate_id)`` alone.
+    tie_break_salt: int = Field(default=0, ge=0)
 
     @staticmethod
     def _trim(fragment: str) -> str:
         """Strip a clause fragment's own terminal punctuation.
 
         Builders author each fragment as a free-standing mid-sentence clause
-        (often itself ending in ``.``); stripping that before weaving several
-        clauses together via prose connectives is what keeps the final
-        rendering from showing a stray ``"."`` mid-sentence or ``".."`` once
-        the one closing period for the whole sentence is appended (§J.5).
+        (often itself ending in ``.``); stripping that before appending the
+        sentence's own closing period is what keeps the final rendering from
+        showing a stray ``"."`` mid-sentence or ``".."`` (§J.5).
         """
         return fragment.strip().rstrip(" .;,")
 
@@ -250,180 +144,82 @@ class CandidateReasoning(BaseModel):
         return sentence[0].upper() + sentence[1:]
 
     @staticmethod
-    def _lead_style(seed_material: str) -> int:
-        return _stable_index(seed_material + "|lead-style", _LEAD_STYLE_COUNT)
-
-    @staticmethod
-    def _find_lead(
-        positives: tuple[ReasoningClause, ...], components: frozenset[ScoreComponent]
-    ) -> int | None:
-        """Index of the first positive clause whose ``jd_link`` is in ``components``.
-
-        Used only to choose which fragment narratively *opens* the rendered
-        paragraph; ``clauses`` itself (already ordered by weighted
-        contribution upstream) is never reordered -- only this local,
-        presentation-only fragment list is.
-        """
-        for index, clause in enumerate(positives):
-            link = clause.jd_link
-            if isinstance(link, ScoreComponent) and link in components:
-                return index
-        return None
-
-    @staticmethod
-    def _compose_positive_case(
-        positives: tuple[ReasoningClause, ...], seed_material: str, lead_style: int
+    def render(
+        clauses: tuple[ReasoningClause, ...],
+        rank_band: RankBand,
+        candidate_id: CandidateId,
+        tie_break_salt: int = 0,
     ) -> str:
-        """Weave the (<=3) positive fragments into one flowing, framed clause.
+        """Deterministically render a clause set into a 1-2 sentence justification.
 
-        Replaces the old fixed ``"; "`` join: ``lead_style`` picks whether a
-        topic framing opens the paragraph (and which topic), and each
-        clause-to-clause junction independently draws its own connector, so
-        two candidates dominated by the same component still open and join
-        their case differently (§J.5).
-        """
-        fragments = [CandidateReasoning._trim(c.fragment) for c in positives]
-        lead_index: int | None
-        framing_pool: tuple[str, ...]
-        if lead_style == _LEAD_CAREER:
-            lead_index = CandidateReasoning._find_lead(
-                positives, _CAREER_LED_COMPONENTS
-            )
-            framing_pool = _CAREER_FRAMINGS
-        elif lead_style == _LEAD_COMPETENCY:
-            lead_index = CandidateReasoning._find_lead(
-                positives, _COMPETENCY_LED_COMPONENTS
-            )
-            framing_pool = _COMPETENCY_FRAMINGS
-        elif lead_style == _LEAD_SEMANTIC:
-            lead_index = CandidateReasoning._find_lead(
-                positives, _SEMANTIC_LED_COMPONENTS
-            )
-            framing_pool = _SEMANTIC_FRAMINGS
-        else:
-            # _LEAD_CUMULATIVE / _LEAD_DIRECT: no topic framing, direct opening.
-            lead_index, framing_pool = None, ()
+        Exactly one STRENGTH fragment leads, opened with a rank-band
+        qualifier ("Exceptional fit" for rank<=10 / "Solid fit" for the
+        rest) instead of a narrative framing clause -- callers upstream cap
+        clause selection to a single strength (``engines.reasoning``'s
+        ``_MAX_STRENGTHS=1``), so there is never a multi-clause chain to
+        weave together here. At most one CONCERN fragment follows as its
+        own sentence, joined by exactly one contrastive transition
+        ("However,", ...) -- never a comma-chain of several concerns. No
+        concern -> exactly one sentence; a concern present -> exactly two.
 
-        order = list(range(len(fragments)))
-        if lead_index is not None and lead_index != 0:
-            order.insert(0, order.pop(lead_index))
-        ordered = [fragments[i] for i in order]
-
-        if lead_index is not None:
-            framing = framing_pool[
-                _stable_index(seed_material + "|framing", len(framing_pool))
-            ]
-            opening = f"{framing} {ordered[0]}"
-        else:
-            opening = ordered[0]
-
-        connectors = (
-            _CONNECTORS_DIRECT if lead_style == _LEAD_DIRECT else _CONNECTORS_FLOWING
-        )
-
-        def _joined(fragments_to_join: list[str], *, offset: int) -> str:
-            parts = [fragments_to_join[0]]
-            for position, fragment in enumerate(fragments_to_join[1:]):
-                junction_seed = f"{seed_material}|junction:{offset + position}"
-                connector = connectors[_stable_index(junction_seed, len(connectors))]
-                parts.append(f"{connector} {fragment}")
-            return ", ".join(parts)
-
-        if len(ordered) <= _MAX_POSITIVES_PER_SENTENCE:
-            return _joined([opening, *ordered[1:]], offset=0)
-
-        # 3 positive clauses: a single comma chain over all three reads as a
-        # run-on, so the last clause opens its own short second sentence.
-        first_sentence = _joined([opening, *ordered[1:-1]], offset=0)
-        opener_pool_size = len(_SECOND_SENTENCE_OPENERS)
-        opener = _SECOND_SENTENCE_OPENERS[
-            _stable_index(seed_material + "|second-sentence", opener_pool_size)
-        ]
-        second_sentence = f"{opener} {ordered[-1]}"
-        return f"{first_sentence}. {second_sentence}"
-
-    @staticmethod
-    def _join_concerns(concerns: list[str], concern_seed: str) -> str:
-        if len(concerns) == 1:
-            return concerns[0]
-        parts = [concerns[0]]
-        for position, fragment in enumerate(concerns[1:]):
-            joiner_seed = f"{concern_seed}|concern-junction:{position}"
-            joiner = _CONCERN_JOINERS[_stable_index(joiner_seed, len(_CONCERN_JOINERS))]
-            parts.append(f"{joiner} {fragment}")
-        return ", ".join(parts)
-
-    @staticmethod
-    def _render_concern_sentence(concerns: list[str]) -> str:
-        if not concerns:
-            return ""
-        concern_seed = "||".join(concerns)
-        lead_in = _CONCERN_LEAD_INS[_stable_index(concern_seed, len(_CONCERN_LEAD_INS))]
-
-        if len(concerns) <= _MAX_CONCERNS_PER_SENTENCE:
-            body = CandidateReasoning._join_concerns(concerns, concern_seed)
-            return CandidateReasoning._capitalize(f"{lead_in} {body}") + "."
-
-        # More than _MAX_CONCERNS_PER_SENTENCE: chaining all of them into one
-        # comma sentence reads as a run-on -- the last concern instead opens
-        # its own short second sentence (mirrors the positive-side split).
-        head, tail = concerns[:-1], concerns[-1]
-        head_body = CandidateReasoning._join_concerns(head, concern_seed)
-        first_sentence = CandidateReasoning._capitalize(f"{lead_in} {head_body}") + "."
-        opener_pool_size = len(_CONCERN_SECOND_SENTENCE_OPENERS)
-        opener = _CONCERN_SECOND_SENTENCE_OPENERS[
-            _stable_index(concern_seed + "|second-concern", opener_pool_size)
-        ]
-        second_sentence = f"{opener} {tail}."
-        return f"{first_sentence} {second_sentence}"
-
-    @staticmethod
-    def render(clauses: tuple[ReasoningClause, ...]) -> str:
-        """Deterministically render an ordered clause set into a cohesive paragraph.
-
-        Positive (STRENGTH/CONTEXT) fragments are woven into one sentence via
-        a seed-selected opening framing plus per-junction connectors -- never
-        a fixed ``"; "`` join, so the structure itself (not just the wording)
-        varies candidate to candidate. A single concern is sometimes grafted
-        onto that same sentence with a contrastive connector instead of
-        getting its own; otherwise concerns form a second sentence introduced
-        by a lead-in drawn from a wide, varied pool. Every selection is a pure
-        SHA-256-derived function of the clause fragments themselves -- no
-        randomness, no wall clock, no name/index templating (§J.5).
+        The qualifier and transition are seeded by ``candidate_id`` rather
+        than the fragment text: two different candidates who share a fact
+        (e.g. the same employer) can legitimately land on the same
+        evidence template, and seeding off the (then-identical) fragment
+        text would make the qualifier collide too, compounding rather than
+        breaking the tie -- exactly what produced byte-identical top-100
+        rows before this fix (Stage-4 "identical reasoning" is a hard
+        rejection). ``candidate_id`` is unique by construction, so this is
+        still a pure, deterministic function of the clause set's owner --
+        no randomness, no wall clock (§J.5) -- just not solely of its text.
         """
         if not clauses:
             return ""
-        positives = tuple(
+        strengths = tuple(
             c for c in clauses if c.polarity is not ReasoningPolarity.CONCERN
         )
-        concerns = [
+        concerns = tuple(
             CandidateReasoning._trim(c.fragment)
             for c in clauses
             if c.polarity is ReasoningPolarity.CONCERN
-        ]
-        if not positives:
-            return CandidateReasoning._render_concern_sentence(concerns)
-
-        seed_material = "||".join(f"{c.polarity.value}:{c.fragment}" for c in clauses)
-        lead_style = CandidateReasoning._lead_style(seed_material)
-        body = CandidateReasoning._compose_positive_case(
-            positives, seed_material, lead_style
         )
+        if not strengths:
+            # Defensive only: upstream always attaches a strength clause for
+            # a ranked candidate (see ReasoningEngine.reason_for's fallback).
+            if not concerns:
+                return ""
+            return CandidateReasoning._capitalize(concerns[0]) + "."
+
+        fragment = CandidateReasoning._trim(strengths[0].fragment)
+        qualifier_pool = (
+            _TOP_BAND_QUALIFIERS if rank_band == "top" else _REST_BAND_QUALIFIERS
+        )
+        qualifier = qualifier_pool[
+            _stable_index(
+                f"{candidate_id}|qualifier|{tie_break_salt}", len(qualifier_pool)
+            )
+        ]
+        strength_sentence = f"{qualifier} -- {fragment}."
 
         if not concerns:
-            return CandidateReasoning._capitalize(body) + "."
+            return strength_sentence
 
-        should_fold = len(concerns) == 1 and len(positives) <= _MAX_POSITIVES_FOR_FOLD
-        if should_fold and _stable_index(seed_material + "|fold-coin", 2) == 1:
-            fold_pool_size = len(_CONCERN_FOLD_CONNECTORS)
-            connector = _CONCERN_FOLD_CONNECTORS[
-                _stable_index(seed_material + "|fold-connector", fold_pool_size)
-            ]
-            combined = f"{body}, {connector} {concerns[0]}"
-            return CandidateReasoning._capitalize(combined) + "."
-
-        strength_sentence = CandidateReasoning._capitalize(body) + "."
-        concern_sentence = CandidateReasoning._render_concern_sentence(concerns)
+        fragment_lower = concerns[0].lower()
+        transition_pool = tuple(
+            lead
+            for lead in _CONCERN_LEAD_INS
+            if not any(term in fragment_lower for term in _LEAD_IN_ECHO_TERMS[lead])
+        )
+        if not transition_pool:
+            transition_pool = _CONCERN_LEAD_INS
+        transition = transition_pool[
+            _stable_index(
+                f"{candidate_id}|transition|{tie_break_salt}", len(transition_pool)
+            )
+        ]
+        concern_sentence = (
+            CandidateReasoning._capitalize(f"{transition} {concerns[0]}") + "."
+        )
         return f"{strength_sentence} {concern_sentence}"
 
     @classmethod
@@ -433,19 +229,23 @@ class CandidateReasoning(BaseModel):
         candidate_id: CandidateId,
         clauses: tuple[ReasoningClause, ...],
         rank_band: RankBand,
+        tie_break_salt: int = 0,
     ) -> CandidateReasoning:
         """Build a reasoning object with ``rendered`` derived from ``clauses``."""
         return cls(
             candidate_id=candidate_id,
             clauses=clauses,
-            rendered=cls.render(clauses),
+            rendered=cls.render(clauses, rank_band, candidate_id, tie_break_salt),
             rank_band=rank_band,
+            tie_break_salt=tie_break_salt,
         )
 
     @model_validator(mode="after")
     def _stage4_invariants(self) -> CandidateReasoning:
         # §J.5 — rendered is the deterministic render of the ordered clauses.
-        if self.rendered != self.render(self.clauses):
+        if self.rendered != self.render(
+            self.clauses, self.rank_band, self.candidate_id, self.tie_break_salt
+        ):
             raise ValueError("rendered must equal the deterministic render of clauses")
         # §J.3 — at least one clause connects to a JD requirement.
         if not any(c.jd_link is not None for c in self.clauses):
