@@ -1202,6 +1202,7 @@ def r9_report(
     gated: GatedSet,
     receipt: SubmissionReceipt,
     stage_timings_ms: Mapping[str, float],
+    wall_elapsed_seconds: float,
 ) -> ReportOutcome:
     """Assemble + persist the deterministic run report; return the terminal paths."""
     honeypot_top100 = sum(
@@ -1226,7 +1227,12 @@ def r9_report(
     ).encode("utf-8")
     score_digest = hashlib.sha256(scores_blob).hexdigest()
 
-    used_seconds = sum(stage_timings_ms.values()) / 1000.0
+    # Budget compliance must reflect true wall-clock time for the ranking step
+    # (composition-root adapter construction + R0..R9), not merely the sum of
+    # in-pipeline stage timings — the spec's 5-minute ceiling is measured by an
+    # external sandbox timer around the whole invocation, which also charges
+    # ONNX session creation and vector-store loading that happen before R0.
+    used_seconds = wall_elapsed_seconds
     report = _RunReport(
         reproducible=_Reproducible(
             code_version="redstack-1.1-test",

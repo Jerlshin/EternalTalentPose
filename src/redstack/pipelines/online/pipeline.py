@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import gc
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from typing import final
@@ -179,7 +179,13 @@ class OnlinePipeline:
         self._entropy = entropy
         self._artifact_store = artifact_store
 
-    def run(self, *, input_file_sha256: str) -> OnlinePipelineResult:
+    def run(
+        self,
+        *,
+        input_file_sha256: str,
+        wall_started: float | None = None,
+        on_result: Callable[[OnlinePipelineResult], None] | None = None,
+    ) -> OnlinePipelineResult:
         """Execute R0→R9 and return the terminal result.
 
         Pins determinism *first* (before any numeric work / onnx init), then runs
@@ -192,11 +198,35 @@ class OnlinePipeline:
             input_file_sha256: the sha256 of ``candidates.jsonl`` (the provenance
                 anchor recorded in the R9 reproducible block; computed by the
                 composition root, not re-read here — no wall clock / extra IO).
+            wall_started: the ``time.perf_counter()`` reading taken by the
+                composition root before any adapter construction (ONNX session
+                creation, vector-store load). Budget compliance is measured from
+                this point, not just across R0..R9, because that setup cost is
+                real wall-clock time an external sandbox timer would also charge
+                against the spec's 5-minute ceiling. Defaults to the top of this
+                call when the caller has no earlier setup to account for.
+            on_result: optional hook invoked with the terminal (lightweight)
+                result *before* this method returns. At full 100k-candidate
+                scale, the representation set live at this point (``ctx``,
+                ``gated``, ``scored``, ``ranking``, ``reasoned``) holds tens of
+                millions of small acyclic objects; letting this call return
+                normally means CPython must refcount-deallocate all of them
+                before the caller resumes — measured at ~165s wall-clock, the
+                single largest cost in the entire online run, paid for no
+                reason since ``submission.csv``/``run_report.json`` are already
+                durably written by R8/R9. A caller that has nothing left to do
+                with the process should use this hook to report the result and
+                then hard-exit (``os._exit``) *before returning*, which skips
+                that teardown entirely — the OS reclaims the whole process's
+                memory in one step instead of CPython freeing each object one
+                at a time. If the hook returns normally (doesn't exit), this
+                method proceeds to `return` as usual.
 
         Returns:
             The terminal :class:`OnlinePipelineResult` (submission + report paths,
             output hash, honeypot rate, budget verdict, peak RSS, stage timings).
         """
+        run_started = wall_started if wall_started is not None else time.perf_counter()
         # Determinism is owned in config/determinism.py and asserted here, at the
         # very top, before any numeric reduction or onnx session creation — so the
         # output is thread-count-invariant (Architecture §2 / Online Part 1).
@@ -284,6 +314,7 @@ class OnlinePipeline:
                 gated=gated,
                 receipt=receipt,
                 stage_timings_ms=dict(clock.timings_ms),
+                wall_elapsed_seconds=time.perf_counter() - run_started,
             )
             clock.record("R9", started)
         finally:
@@ -303,9 +334,13 @@ class OnlinePipeline:
             if gc_was_enabled:
                 gc.enable()
 
-        used_seconds = clock.total_seconds()
+        # True wall-clock since `run_started` (composition-root setup + R0..R9),
+        # matching what R9 recorded into the run report's budget block — not
+        # `clock.total_seconds()`, which only sums the in-pipeline R0..R8
+        # stages and misses setup cost incurred before this call began.
+        used_seconds = time.perf_counter() - run_started
         within_budget = used_seconds <= self._config.budget_limit_seconds
-        return OnlinePipelineResult(
+        result = OnlinePipelineResult(
             submission_path=report_outcome.submission_path,
             output_sha256=receipt.output_sha256,
             row_count=receipt.row_count,
@@ -315,6 +350,14 @@ class OnlinePipeline:
             peak_rss_mb=_peak_rss_mb(),
             stage_timings_ms=dict(clock.timings_ms),
         )
+        if on_result is not None:
+            # Measured at ~165s wall-clock for the full 100k-candidate pool
+            # (tens of millions of small acyclic objects still referenced by
+            # `ctx`/`gated`/`scored`/`ranking`/`reasoned` in this frame): if
+            # the hook hard-exits, we never reach `return result` below, so
+            # CPython never pays that refcount-deallocation cost at all.
+            on_result(result)
+        return result
 
     # ------------------------------------------------------------------ #
     # R0 — the only stage that builds the context (ports + artifacts)    #

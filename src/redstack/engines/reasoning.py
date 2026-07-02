@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Callable, Mapping
 from datetime import date
 from typing import Final, Literal, final
@@ -42,6 +43,15 @@ _ConcernBuilder = Callable[
 # a ScoreComponentValue, because JD-latent reasoning is evidence-first.
 _LatentBuilder = Callable[
     [RawCandidate, CandidateRepresentation, float, str],
+    tuple[str, tuple[EvidenceRef, ...]] | None,
+]
+# Negative-latent *concern* builders additionally receive the set of company
+# names already cited as STRENGTH evidence for this candidate, so a concern
+# can never cite the same company a strength clause just praised (the
+# "production ML at Zoho... academic rather than deployment-oriented"
+# contradiction) -- see ``_strength_cited_companies``.
+_LatentConcernBuilder = Callable[
+    [RawCandidate, CandidateRepresentation, float, str, frozenset[str]],
     tuple[str, tuple[EvidenceRef, ...]] | None,
 ]
 
@@ -1785,63 +1795,104 @@ _LATENT_STRENGTH_BUILDERS: Final[Mapping[str, _LatentBuilder]] = {
 # --------------------------------------------------------------------------- #
 # Negative-latent concern builders — pattern-level concerns derived from JD   #
 # anti-patterns that do not map 1:1 to EligibilityCodes.                      #
+#                                                                               #
+# Both builders below only fire on a concrete, cue-based textual match in a   #
+# specific career_history position -- never from raw anchor cosine similarity #
+# alone. Cosine similarity to a fixed JD anchor sits in a fairly narrow band  #
+# for almost *any* profile (an artifact of how sentence embeddings cluster),  #
+# so treating "cosine clears a low bar" as a mentionable signal on its own    #
+# produced a near-universal, single-template boilerplate clause ("profile    #
+# language has modest alignment with the 'pure researcher' anti-pattern...") #
+# on ~100% of top-100 candidates in production, including ones simultaneously #
+# praised for strong production-ML evidence -- a direct contradiction within #
+# the same paragraph. Requiring a real cue hit grounds the concern in an      #
+# actual fact (career_history[i].description) instead of an ambient,         #
+# uncalibrated float, matching the anti-hallucination bar the strength       #
+# builders are already held to.                                              #
 # --------------------------------------------------------------------------- #
+_CAREER_FIELD_PATH_RE: Final[re.Pattern[str]] = re.compile(
+    r"^career_history\[(\d+)\]\."
+)
+
+
+def _strength_cited_companies(
+    strengths: tuple[ReasoningClause, ...], raw: RawCandidate
+) -> frozenset[str]:
+    """Companies already cited as STRENGTH evidence for this candidate.
+
+    Scanned from the assembled strength clauses' own evidence refs (no
+    duplicated bookkeeping) so a negative-latent concern builder can refuse
+    to cite the same company a strength clause just praised -- the concrete
+    mechanism behind the anti-contradiction guarantee described above.
+    """
+    companies: set[str] = set()
+    for clause in strengths:
+        for ref in clause.evidence:
+            match = _CAREER_FIELD_PATH_RE.match(ref.path)
+            if match is None:
+                continue
+            idx = int(match.group(1))
+            if 0 <= idx < len(raw.career_history):
+                companies.add(raw.career_history[idx].company)
+    return frozenset(companies)
+
+
 def _jd_pure_researcher_concern(
     raw: RawCandidate,
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
-) -> tuple[str, tuple[EvidenceRef, ...]]:
-    """Anti-pattern: pure research career with no production counterpart."""
-    _ = representation
-    word = _bucket_word(seed, sim)
-    dump = _dump(raw)
-    evidence: list[EvidenceRef] = []
-    templates: tuple[str, ...]
+    excluded_companies: frozenset[str],
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Anti-pattern: pure research career with no production counterpart.
 
+    Returns ``None`` (no clause) unless a concrete research-only cue is found
+    in a specific position's description -- see the module note above -- and
+    also returns ``None`` if that position's company was already cited as
+    STRENGTH evidence elsewhere in this candidate's reasoning, which would
+    otherwise contradict a "shipped production ML at X" clause with "X reads
+    as academic" in the same paragraph.
+    """
+    _ = (representation, sim)
     idx = _best_position_for_cues(raw, _RESEARCH_ONLY_CUES)
-    if idx is not None:
-        pos = raw.career_history[idx]
-        evidence.append(
-            mint(
-                dump,
-                kind=EvidenceKind.CAREER_FIELD,
-                path=f"career_history[{idx}].company",
-            )
-        )
-        evidence.append(
-            mint(
-                dump,
-                kind=EvidenceKind.CAREER_FIELD,
-                path=f"career_history[{idx}].description",
-            )
-        )
-        company = pos.company
-        templates = (
-            f"career pattern leans toward research ({company} context): "
-            f"this is one of the JD's explicit anti-patterns -- the role "
-            f"needs production ML, not research output alone",
-            f"the {company} context reads as research-oriented (publications, "
-            f"papers, or prototype-level work) rather than the production "
-            f"deployment this JD is hiring for",
-            f"pure-researcher signal at {company}: the JD explicitly rules "
-            f"out candidates whose recent work is research without a "
-            f"production counterpart",
-            f"research framing at {company} is visible in the description -- "
-            f"the role specifically wants someone who has shipped systems, "
-            f"not just produced results in a lab or academic context",
-        )
-    else:
-        evidence.append(
-            make_evidence(
-                EvidenceKind.DERIVED, "semantic.anchor.pure_researcher", round(sim, 4)
-            )
-        )
-        templates = (
-            f"profile language has {word} alignment with the 'pure researcher' "
-            f"anti-pattern this JD calls out -- the work framing is academic "
-            f"rather than deployment-oriented",
-        )
+    if idx is None:
+        return None
+    pos = raw.career_history[idx]
+    if pos.company in excluded_companies:
+        return None
+
+    dump = _dump(raw)
+    evidence: list[EvidenceRef] = [
+        mint(
+            dump, kind=EvidenceKind.CAREER_FIELD, path=f"career_history[{idx}].company"
+        ),
+        mint(
+            dump,
+            kind=EvidenceKind.CAREER_FIELD,
+            path=f"career_history[{idx}].description",
+        ),
+    ]
+    company = pos.company
+    templates = (
+        f"career pattern leans toward research ({company} context): "
+        f"this is one of the JD's explicit anti-patterns -- the role "
+        f"needs production ML, not research output alone",
+        f"the {company} context reads as research-oriented (publications, "
+        f"papers, or prototype-level work) rather than the production "
+        f"deployment this JD is hiring for",
+        f"pure-researcher signal at {company}: the JD explicitly rules "
+        f"out candidates whose recent work is research without a "
+        f"production counterpart",
+        f"research framing at {company} is visible in the description -- "
+        f"the role specifically wants someone who has shipped systems, "
+        f"not just produced results in a lab or academic context",
+        f"the {company} stint reads as academic in framing -- publications "
+        f"or prototype language rather than the deployment language this "
+        f"JD is screening for",
+        f"weighed against the production bar this JD sets, {company} looks "
+        f"like a research counterexample: the description leans on paper- "
+        f"or prototype-level language rather than shipped-system language",
+    )
     return _pick(seed, templates), tuple(evidence)
 
 
@@ -1850,61 +1901,59 @@ def _jd_consulting_only_concern(
     representation: CandidateRepresentation,
     sim: float,
     seed: str,
-) -> tuple[str, tuple[EvidenceRef, ...]]:
-    """Anti-pattern: consulting-heavy career with limited product ownership."""
+    excluded_companies: frozenset[str],
+) -> tuple[str, tuple[EvidenceRef, ...]] | None:
+    """Anti-pattern: consulting-heavy career with limited product ownership.
+
+    Same evidence bar and anti-contradiction guarantee as
+    :func:`_jd_pure_researcher_concern` -- see its docstring and the module
+    note above ``_CAREER_FIELD_PATH_RE``.
+    """
     _ = representation
+    idx = _best_position_for_cues(raw, _CONSULTING_SIGNAL_CUES)
+    if idx is None:
+        return None
+    pos = raw.career_history[idx]
+    if pos.company in excluded_companies:
+        return None
+
     word = _bucket_word(seed, sim)
     dump = _dump(raw)
-    evidence: list[EvidenceRef] = []
-    templates: tuple[str, ...]
-
-    idx = _best_position_for_cues(raw, _CONSULTING_SIGNAL_CUES)
-    if idx is not None:
-        pos = raw.career_history[idx]
-        evidence.append(
-            mint(
-                dump,
-                kind=EvidenceKind.CAREER_FIELD,
-                path=f"career_history[{idx}].company",
-            )
-        )
-        evidence.append(
-            mint(
-                dump,
-                kind=EvidenceKind.CAREER_FIELD,
-                path=f"career_history[{idx}].description",
-            )
-        )
-        company = pos.company
-        templates = (
-            f"consulting-heavy career pattern at {company} and elsewhere: "
-            f"client-delivery work builds breadth, but not the product-company "
-            f"depth this JD is specifically screening for",
-            f"the {company} context reads as a consulting engagement rather "
-            f"than product-company ownership -- the JD is explicit that this "
-            f"is an anti-pattern for this role",
-            f"client-facing consulting at {company} is {word} evidence of "
-            f"what this JD screens against: the role wants in-house product "
-            f"engineering, not client delivery",
-            f"the {company} role description carries consulting signals -- "
-            f"a career path the JD views as a poor proxy for product-company "
-            f"ML experience",
-        )
-    else:
-        evidence.append(
-            make_evidence(
-                EvidenceKind.DERIVED, "semantic.anchor.consulting_only", round(sim, 4)
-            )
-        )
-        templates = (
-            f"profile language has {word} alignment with the consulting-heavy "
-            f"anti-pattern the JD calls out -- client-delivery framing over "
-            f"product-ownership framing",
-        )
+    evidence: list[EvidenceRef] = [
+        mint(
+            dump, kind=EvidenceKind.CAREER_FIELD, path=f"career_history[{idx}].company"
+        ),
+        mint(
+            dump,
+            kind=EvidenceKind.CAREER_FIELD,
+            path=f"career_history[{idx}].description",
+        ),
+    ]
+    company = pos.company
+    templates = (
+        f"consulting-heavy career pattern at {company} and elsewhere: "
+        f"client-delivery work builds breadth, but not the product-company "
+        f"depth this JD is specifically screening for",
+        f"the {company} context reads as a consulting engagement rather "
+        f"than product-company ownership -- the JD is explicit that this "
+        f"is an anti-pattern for this role",
+        f"client-facing consulting at {company} is {word} evidence of "
+        f"what this JD screens against: the role wants in-house product "
+        f"engineering, not client delivery",
+        f"the {company} role description carries consulting signals -- "
+        f"a career path the JD views as a poor proxy for product-company "
+        f"ML experience",
+        f"{company} reads as client-services work -- billable delivery "
+        f"rather than in-house product ownership, which is {word} evidence "
+        f"against the product-company bar this JD sets",
+        f"the pattern at {company} leans consulting: staff-augmentation or "
+        f"client-delivery framing rather than the product-ownership arc "
+        f"this role is scoped for",
+    )
     return _pick(seed, templates), tuple(evidence)
 
 
-_LATENT_CONCERN_BUILDERS: Final[Mapping[str, _LatentBuilder]] = {
+_LATENT_CONCERN_BUILDERS: Final[Mapping[str, _LatentConcernBuilder]] = {
     "jd.pure_researcher": _jd_pure_researcher_concern,
     "jd.consulting_only": _jd_consulting_only_concern,
 }
@@ -2149,7 +2198,8 @@ class ReasoningEngine(BaseModel):
         raw = representation.require_raw()
         band = self._rank_band(ranked.rank, ranked_size=self._size_of(ranked))
         strengths = self._strength_clauses(raw, representation, ranked)
-        concerns = self._concern_clauses(raw, representation)
+        excluded_companies = _strength_cited_companies(strengths, raw)
+        concerns = self._concern_clauses(raw, representation, excluded_companies)
 
         clauses: tuple[ReasoningClause, ...] = (*strengths, *concerns)
         if not clauses:
@@ -2259,7 +2309,10 @@ class ReasoningEngine(BaseModel):
         )
 
     def _concern_clauses(
-        self, raw: RawCandidate, representation: CandidateRepresentation
+        self,
+        raw: RawCandidate,
+        representation: CandidateRepresentation,
+        excluded_companies: frozenset[str],
     ) -> tuple[ReasoningClause, ...]:
         if representation.eligibility is None:
             return ()
@@ -2271,7 +2324,11 @@ class ReasoningEngine(BaseModel):
 
         # JD negative-latent concerns: add pattern-level concerns when the
         # candidate's profile fires strongly against a JD anti-pattern anchor
-        # (e.g., pure_researcher, consulting_only) and capacity remains.
+        # (e.g., pure_researcher, consulting_only) and capacity remains. The
+        # anchor-similarity threshold alone is not a sufficient gate (see the
+        # module note above ``_CAREER_FIELD_PATH_RE``) -- the builders below
+        # additionally require a concrete textual cue and never cite a company
+        # already praised as strength evidence (``excluded_companies``).
         if len(clauses) < _MAX_CONCERNS and representation.semantic is not None:
             anchor_sims = representation.semantic.anchor_similarities
             for latent_id in _JD_NEGATIVE_LATENT_PRIORITY:
@@ -2284,7 +2341,7 @@ class ReasoningEngine(BaseModel):
                 if builder is None:
                     continue
                 seed = f"{representation.candidate_id}:{latent_id}:concern"
-                result = builder(raw, representation, sim, seed)
+                result = builder(raw, representation, sim, seed, excluded_companies)
                 if result is None:
                     continue
                 fragment, evidence = result

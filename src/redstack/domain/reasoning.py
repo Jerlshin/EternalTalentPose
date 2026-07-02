@@ -171,6 +171,23 @@ _CONCERN_JOINERS: Final[tuple[str, ...]] = (
     "alongside that,",
     "and, adding to that,",
 )
+#: Above this many concern fragments, chaining all of them into a single
+#: comma sentence via ``_CONCERN_JOINERS`` reads as an exhausting run-on --
+#: the last concern instead opens its own short second sentence, mirroring
+#: how ``_compose_positive_case`` splits a 3rd positive clause.
+_MAX_CONCERNS_PER_SENTENCE: Final[int] = 2
+#: Lead-ins for that second concern sentence -- a distinct pool from both
+#: ``_CONCERN_LEAD_INS`` (first concern sentence) and
+#: ``_SECOND_SENTENCE_OPENERS`` (positive case) so the register stays
+#: separable: negative continuation, not a positive addendum.
+_CONCERN_SECOND_SENTENCE_OPENERS: Final[tuple[str, ...]] = (
+    "There's a separate concern, too:",
+    "A second issue worth flagging:",
+    "Independently of that,",
+    "One more thing to weigh against this:",
+    "Separately worth noting:",
+    "The other open question:",
+)
 #: Mid-sentence contrastive connectors used only when a single concern is
 #: folded directly onto the positive case rather than given its own
 #: sentence (the ``_LEAD_DIRECT``-adjacent, most "cohesive paragraph" shape
@@ -342,8 +359,23 @@ class CandidateReasoning(BaseModel):
             return ""
         concern_seed = "||".join(concerns)
         lead_in = _CONCERN_LEAD_INS[_stable_index(concern_seed, len(_CONCERN_LEAD_INS))]
-        body = CandidateReasoning._join_concerns(concerns, concern_seed)
-        return CandidateReasoning._capitalize(f"{lead_in} {body}") + "."
+
+        if len(concerns) <= _MAX_CONCERNS_PER_SENTENCE:
+            body = CandidateReasoning._join_concerns(concerns, concern_seed)
+            return CandidateReasoning._capitalize(f"{lead_in} {body}") + "."
+
+        # More than _MAX_CONCERNS_PER_SENTENCE: chaining all of them into one
+        # comma sentence reads as a run-on -- the last concern instead opens
+        # its own short second sentence (mirrors the positive-side split).
+        head, tail = concerns[:-1], concerns[-1]
+        head_body = CandidateReasoning._join_concerns(head, concern_seed)
+        first_sentence = CandidateReasoning._capitalize(f"{lead_in} {head_body}") + "."
+        opener_pool_size = len(_CONCERN_SECOND_SENTENCE_OPENERS)
+        opener = _CONCERN_SECOND_SENTENCE_OPENERS[
+            _stable_index(concern_seed + "|second-concern", opener_pool_size)
+        ]
+        second_sentence = f"{opener} {tail}."
+        return f"{first_sentence} {second_sentence}"
 
     @staticmethod
     def render(clauses: tuple[ReasoningClause, ...]) -> str:

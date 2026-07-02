@@ -22,6 +22,31 @@ make rank
 
 ---
 
+## Compute Compliance — Submission Spec §3
+
+Every constraint below applies to the **ranking step only** (`rank.py` / `redstack rank`, stages R0–R9). Pre-computation (`redstack build`, stages O0–O18) is offline and unconstrained by this table — see [§10.3 of the spec](docs/guide/submission_spec.docx).
+
+| Constraint | Limit | RedStack's guarantee | Measured (100k pool, 10-core / 16 GB host) |
+|---|---|---|---|
+| Total runtime | ≤ 5 minutes wall-clock | `redstack rank` enforces `budget_limit_seconds=300.0` (`configs/base.yaml: budget.max_wall_seconds`) against true wall-clock — from before adapter construction through submission write — and exits non-zero if exceeded. | **~256s real** (`/usr/bin/time`), `run_report.json.budget.used_seconds ≈ 253s`. See the timing note below. |
+| Memory | ≤ 16 GB RAM | O(1) streaming memory over `candidates.jsonl` — no full-pool materialization. `run_report.json` records `peak_rss_mb` from the OS high-water mark. | ~3 GB peak RSS |
+| Compute | CPU only — no GPU | `redstack.pipelines.online.*` and `redstack.engines.*` are forbidden, by `import-linter` contract, from importing any GPU-capable runtime; the online path loads a CPU-only ONNX encoder only as a fallback. | n/a (statically enforced) |
+| Network | Off — no hosted LLM/API calls | `import-linter` contract "7. Online pipeline containment" forbids `socket`, `requests`, `httpx`, `sentence-transformers`, and `scikit-learn` anywhere under `pipelines/online/` or `engines/`, transitively. Verify with `uv run lint-imports`. | n/a (statically enforced) |
+| Disk | ≤ 5 GB intermediate state | The online run reads the frozen `artifacts/` tree (produced once, offline) and writes only `submission.csv` + `run_report.json` — no intermediate spill files. | n/a |
+
+**Timing note.** At full 100k-candidate scale, the representation set held by the end of R9 (`ctx`, `gated`, `scored`, `ranking`, `reasoned`) is tens of millions of small Python objects. Letting `redstack rank` return normally would force CPython to refcount-deallocate all of them before the process could exit — measured at **~165s**, larger than any individual R-stage, and pure waste since `submission.csv`/`run_report.json` are already durably written by R8/R9. `redstack rank` reports its result and then calls `os._exit()` immediately afterward (`cli/rank.py`), skipping that teardown — the OS reclaims the process's memory in one step instead. This changes only when the process terminates, never the ranking output: the submission's `output_sha256` is identical with or without this optimization. Margin against the 300s ceiling is real but not large (~15%); re-verify on the actual Stage-3 sandbox hardware before your final submission, since a slower CPU or cold disk cache will eat into it.
+
+Reproduce and verify locally before submitting:
+
+```bash
+uv run lint-imports          # confirms the online-containment / CPU-only / no-network boundary
+uv run redstack build        # one-time offline pre-computation (unconstrained)
+uv run redstack rank         # the constrained step — writes run_report.json with peak_rss_mb / within_budget
+uv run redstack validate     # re-checks submission.csv against the spec's format rules
+```
+
+---
+
 ## Architecture Summary
 
 RedStack is structured as a **Hexagonal (Ports & Adapters)** domain service with a strict layered import graph:
@@ -57,7 +82,7 @@ cli  ──▶  pipelines  ──▶  engines  ──▶  features  ──▶  d
 **Pipelines** (`src/redstack/pipelines/`) orchestrate two physically separated execution modes:
 
 - **Offline build** (stages O0–O18): runs once, pre-computes embeddings, clusters, calibrated weights → hash-verified artifact set in `artifacts/`.
-- **Online ranking** (stages R0–R9): CPU-only, network-isolated, O(1) streaming memory, applies artifacts to live candidates, completes in < 1 minute.
+- **Online ranking** (stages R0–R9): CPU-only, network-isolated, O(1) streaming memory, applies artifacts to live candidates. Measured ~4m16s wall-clock over the full 100k-candidate pool (well within the spec's 5-minute ceiling) — see [Compute Compliance](#compute-compliance--submission-spec-3) above.
 
 ---
 
@@ -104,7 +129,7 @@ python scripts/run.py build
 make build
 ```
 
-Approximate wall-clock time: **~11 minutes** on an 8-core CPU with 16 GB RAM. The online ranking run requires only the frozen `artifacts/` — it never retrain or re-embed.
+Approximate wall-clock time: **~12 minutes** on a 10-core CPU with 16 GB RAM (measured: 12:11 for the full 100k-candidate pool with `--no-golden-labels`). Unconstrained by the spec's 5-minute ranking budget — this step runs once, offline. The online ranking run requires only the frozen `artifacts/` — it never retrains or re-embeds.
 
 ---
 ## Build, Rank, Validate
@@ -161,7 +186,7 @@ redstack/
 ├── src/redstack/
 │   ├── domain/               pure data models + invariants
 │   ├── ports/                Protocol interfaces (the hexagon boundary)
-│   ├── features/             pure feature extraction (30 feature groups)
+│   ├── features/             pure feature extraction (32 feature groups)
 │   ├── engines/              the 11 domain services (business judgment)
 │   ├── config/               typed config schema, loader, determinism policy
 │   ├── adapters/             infrastructure implementations of the ports
@@ -182,3 +207,5 @@ redstack/
 | Full system design | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | Populate `data/` and run a first build | [docs/runbook.md](docs/runbook.md) |
 | Understand one specific package | the `README.md` inside that directory |
+
+

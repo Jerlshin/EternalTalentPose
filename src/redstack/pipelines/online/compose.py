@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -43,6 +45,7 @@ def run_online_rank(
     output_path: Path,
     report_path: Path,
     participant_id: str,
+    on_result: Callable[[OnlinePipelineResult], None] | None = None,
 ) -> OnlinePipelineResult:
     """Bind adapters, build ``OnlineRunConfig``, and execute R0→R9.
 
@@ -52,6 +55,9 @@ def run_online_rank(
         output_path: Destination ``submission.csv`` path.
         report_path: Destination ``run_report.json`` path.
         participant_id: Output filename stem recorded into the run config.
+        on_result: forwarded to :meth:`OnlinePipeline.run` — see its docstring.
+            Lets the caller report the result and hard-exit before this
+            process pays to deallocate the full candidate-pool representation.
 
     Returns:
         The terminal :class:`OnlinePipelineResult`.
@@ -59,6 +65,12 @@ def run_online_rank(
     Raises:
         ValueError: ``config.online`` is absent (wrong run mode).
     """
+    # Marks the true start of the constrained ranking step, before any adapter
+    # construction (ONNX session creation, parquet vector-store load) — those
+    # costs are real wall-clock time an external sandbox timer would charge
+    # against the spec's 5-minute ceiling, so the budget check must too.
+    wall_started = time.perf_counter()
+
     online = config.online
     if online is None:
         msg = "run_online_rank requires a config with an 'online' runtime block"
@@ -114,7 +126,11 @@ def run_online_rank(
         entropy=entropy,
         artifact_store=artifact_store,
     )
-    return pipeline.run(input_file_sha256=_sha256_file(input_path))
+    return pipeline.run(
+        input_file_sha256=_sha256_file(input_path),
+        wall_started=wall_started,
+        on_result=on_result,
+    )
 
 
 def _code_version() -> str:

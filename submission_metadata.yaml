@@ -45,7 +45,6 @@ compute:
 ai_tools_used:
   - "Claude"
   - "Gemini"
--
 
 ai_usage_summary: |
   Used Claude for architecture discussion, code review, and system design.
