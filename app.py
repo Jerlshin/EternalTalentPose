@@ -31,7 +31,7 @@ if uploaded_file is not None:
             try:
                 # 4. Invoke run.py using the exact signature from reproduce.sh
                 process = subprocess.run(
-                    ["python", "run.py", "--candidates", input_path, "--out", output_path],
+                    ["python", "scripts/run.py", "--candidates", input_path, "--out", output_path],
                     env=env,
                     capture_output=True,
                     text=True,
@@ -61,4 +61,4 @@ if uploaded_file is not None:
                 st.subheader("Error Output (stderr):")
                 st.code(e.stderr)
                 st.subheader("Standard Output (stdout):")
-                st.code(e.stdout)
+                st.code(e.stdoutscripts/)
