@@ -2,10 +2,11 @@
 title: EternalTalentSpace
 emoji: 🚀
 colorFrom: blue
-colorTo: blue
+colorTo: indigo
 sdk: streamlit
 sdk_version: 1.35.0
 app_file: app.py
+python_version: "3.12"
 pinned: false
 ---
 
