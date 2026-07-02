@@ -34,6 +34,10 @@ redstack = "redstack.cli.app:app"
 #   core    : runtime hot path (mirrors [project].dependencies; kept thin)
 #   offline : heavy authoring-time ML — NEVER reachable from pipelines.online
 #   dev     : lint / type / test / boundary tooling
+#   ui      : the Streamlit front-end (app.py, repo root) — never imported by
+#             src/redstack; exists only so the HF Space requirements.txt export
+#             can include it alongside core. Pinned to README.md's sdk_version
+#             so the deployed runtime matches exactly.
 # Future deps: add to the appropriate group; never widen `core` casually.
 # ============================================================================
 [dependency-groups]
@@ -44,7 +48,7 @@ core = [
   "onnxruntime>=1.18,<2",
   "typer>=0.12,<1",
   "pyyaml>=6,<7",
-  "tokenizers>=0.20,<1,"
+  "tokenizers>=0.20,<1",
 ]
 offline = [
   "sentence-transformers>=3,<4",
@@ -63,17 +67,25 @@ dev = [
   "pre-commit>=3.8,<4",
   "types-PyYAML>=6,<7",
 ]
+ui = [
+  "streamlit==1.46.0",
+  "pandas>=2.2,<3",
+]
 
 # ============================================================================
 # uv configuration
 # ----------------------------------------------------------------------------
 # uv.lock strategy: a single fully-resolved, committed lockfile pins the
-# ENTIRE graph (core + offline + dev) so the Stage-3 sandbox resolves byte
+# ENTIRE graph (core + offline + dev + ui) so the Stage-3 sandbox resolves byte
 # -identically to the build host. Regenerate ONLY via an explicit dep bump:
 #     uv lock                 # re-resolve after editing groups above
 #     uv sync --frozen        # CI / sandbox: install exactly from uv.lock, no re-resolve
 # The sandbox install path is `uv sync --frozen --group core` (hot path only);
 # offline artifact builds use `--group core --group offline`; CI uses all three.
+# The HF Space requirements.txt is exported with `--group core --group ui
+# --no-emit-project` (see requirements.txt's own header) — the Streamlit
+# process gets pandas/streamlit, `redstack` itself is reached via app.py's
+# PYTHONPATH=src injection, not a pip install.
 # `--frozen` guarantees the lock is authoritative — a drifted lock fails fast.
 # ============================================================================
 [tool.uv]
