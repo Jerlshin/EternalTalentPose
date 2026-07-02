@@ -34,7 +34,7 @@ Every constraint below applies to the **ranking step only** (`rank.py` / `redsta
 | Network | Off — no hosted LLM/API calls | `import-linter` contract "7. Online pipeline containment" forbids `socket`, `requests`, `httpx`, `sentence-transformers`, and `scikit-learn` anywhere under `pipelines/online/` or `engines/`, transitively. Verify with `uv run lint-imports`. | n/a (statically enforced) |
 | Disk | ≤ 5 GB intermediate state | The online run reads the frozen `artifacts/` tree (produced once, offline) and writes only `submission.csv` + `run_report.json` — no intermediate spill files. | n/a |
 
-**Timing note.** At full 100k-candidate scale, the representation set held by the end of R9 (`ctx`, `gated`, `scored`, `ranking`, `reasoned`) is tens of millions of small Python objects. Letting `redstack rank` return normally would force CPython to refcount-deallocate all of them before the process could exit — measured at **~165s**, larger than any individual R-stage, and pure waste since `submission.csv`/`run_report.json` are already durably written by R8/R9. `redstack rank` reports its result and then calls `os._exit()` immediately afterward (`cli/rank.py`), skipping that teardown — the OS reclaims the process's memory in one step instead. This changes only when the process terminates, never the ranking output: the submission's `output_sha256` is identical with or without this optimization. Margin against the 300s ceiling is real but not large (~15%); re-verify on the actual Stage-3 sandbox hardware before your final submission, since a slower CPU or cold disk cache will eat into it.
+
 
 Reproduce and verify locally before submitting:
 

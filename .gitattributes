@@ -1,3 +1,6 @@
 artifacts/**/*.onnx filter=lfs diff=lfs merge=lfs -text
 artifacts/**/*.parquet filter=lfs diff=lfs merge=lfs -text
 artifacts/**/*.npy filter=lfs diff=lfs merge=lfs -text
+artifacts/model/encoder.onnx filter=lfs diff=lfs merge=lfs -text
+artifacts/embeddings/*.parquet filter=lfs diff=lfs merge=lfs -text
+artifacts/feature_snapshot.parquet filter=lfs diff=lfs merge=lfs -text
