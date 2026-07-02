@@ -512,40 +512,6 @@ else:
                         unsafe_allow_html=True,
                     )
 
-        # ---------------- Hard-gate fired rates ----------------
-        eligibility_summary = _get(run_report, "reproducible", "eligibility_summary", default=None)
-        if eligibility_summary and candidate_count:
-            with st.container(border=True):
-                st.markdown(
-                    '<p class="rs-section-title">🚧 Hard-Gate Fired Rates <span class="rs-section-hint">'
-                    f"full pool · N = {candidate_count:,} · source: run_report.json</span></p>",
-                    unsafe_allow_html=True,
-                )
-                gate_rows = sorted(
-                    eligibility_summary.items(), key=lambda kv: kv[1], reverse=True
-                )
-                max_pct = max((fired / candidate_count) * 100 for _, fired in gate_rows) or 1.0
-                rows = []
-                for gate_code, fired in gate_rows:
-                    pct = (fired / candidate_count) * 100
-                    color = (
-                        "var(--rs-crimson)"
-                        if pct > 50
-                        else "var(--rs-amber)"
-                        if pct > 20
-                        else "var(--rs-blue)"
-                    )
-                    rows.append(
-                        {
-                            "label": gate_code,
-                            "sub": "",
-                            "pct": (pct / max_pct) * 100,
-                            "color": color,
-                            "value_label": f"{fired:,} · {pct:.2f}%",
-                        }
-                    )
-                render_bar_rows(rows)
-
         # ---------------- Candidate exploration ----------------
         df = pd.read_csv(OUTPUT_FILE)
 
