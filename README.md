@@ -1,4 +1,15 @@
-# RedStack
+---
+title: EternalTalentSpace
+emoji: 🚀
+colorFrom: blue
+colorTo: blue
+sdk: streamlit
+sdk_version: 1.35.0
+app_file: app.py
+pinned: false
+---
+
+**# RedStack
 
 **A deterministic, evidence-grounded semantic talent-intelligence and candidate-ranking platform.**
 
@@ -209,3 +220,4 @@ redstack/
 | Understand one specific package | the `README.md` inside that directory |
 
 
+**
