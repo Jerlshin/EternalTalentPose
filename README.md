@@ -10,7 +10,7 @@ python_version: "3.12"
 pinned: false
 ---
 
-**# RedStack
+# EternalTalentPose
 
 **A deterministic, evidence-grounded semantic talent-intelligence and candidate-ranking platform.**
 
